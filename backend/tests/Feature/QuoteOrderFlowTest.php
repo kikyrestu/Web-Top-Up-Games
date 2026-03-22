@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Margin;
 use App\Models\Product;
 use App\Models\Provider;
+use App\Models\ProviderProduct;
 use App\Models\ProviderPrice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -113,6 +114,14 @@ class QuoteOrderFlowTest extends TestCase
             'is_active' => true,
         ]);
 
+        ProviderProduct::query()->create([
+            'provider_id' => $digiflazz->id,
+            'product_id' => $product->id,
+            'provider_product_code' => 'SKU-DIGIFLAZZ-ML86',
+            'provider_product_name' => 'ML 86 Diamond',
+            'is_available' => true,
+        ]);
+
         ProviderPrice::query()->create([
             'provider_id' => $orderkuota->id,
             'product_id' => $product->id,
@@ -120,6 +129,14 @@ class QuoteOrderFlowTest extends TestCase
             'admin_fee' => 0,
             'commission' => 100,
             'is_active' => true,
+        ]);
+
+        ProviderProduct::query()->create([
+            'provider_id' => $orderkuota->id,
+            'product_id' => $product->id,
+            'provider_product_code' => 'SKU-ORDERKUOTA-ML86',
+            'provider_product_name' => 'ML 86 Diamond',
+            'is_available' => true,
         ]);
 
         return [
@@ -173,6 +190,14 @@ class QuoteOrderFlowTest extends TestCase
             'is_active' => true,
         ]);
 
+        ProviderProduct::query()->create([
+            'provider_id' => $digiflazz->id,
+            'product_id' => $product->id,
+            'provider_product_code' => 'SKU-DIGIFLAZZ-MF',
+            'provider_product_name' => 'Tagihan Multifinance',
+            'is_available' => true,
+        ]);
+
         ProviderPrice::query()->create([
             'provider_id' => $rajabiller->id,
             'product_id' => $product->id,
@@ -180,6 +205,14 @@ class QuoteOrderFlowTest extends TestCase
             'admin_fee' => 2000,
             'commission' => 800,
             'is_active' => true,
+        ]);
+
+        ProviderProduct::query()->create([
+            'provider_id' => $rajabiller->id,
+            'product_id' => $product->id,
+            'provider_product_code' => 'SKU-RAJABILLER-MF',
+            'provider_product_name' => 'Tagihan Multifinance',
+            'is_available' => true,
         ]);
 
         return [

@@ -22,5 +22,6 @@ Route::prefix('v1')->group(function (): void {
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{orderCode}', [OrderController::class, 'show']);
     Route::post('/payments/initiate', [PaymentController::class, 'initiate']);
+    Route::get('/payments/{gatewayReference}/status', [PaymentController::class, 'status']);
     Route::post('/payments/webhook/{gateway}', [PaymentWebhookController::class, 'handle']);
 });

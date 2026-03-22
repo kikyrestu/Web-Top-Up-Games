@@ -57,6 +57,14 @@ final class DigiflazzAdapter implements ProviderAdapterInterface
      */
     public function createOrder(array $payload): array
     {
+        if ((string) ($payload['buyer_sku_code'] ?? '') === '' || (string) ($payload['customer_no'] ?? '') === '') {
+            return [
+                'status' => 'FAILED',
+                'provider_ref' => null,
+                'raw' => ['error' => 'invalid_payload'],
+            ];
+        }
+
         $username = (string) config('services.digiflazz.username');
 
         $requestBody = [

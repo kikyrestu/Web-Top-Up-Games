@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Payment\Services\PaymentService;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Payment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -54,6 +55,41 @@ final class PaymentController extends Controller
                 'status' => $payment->status,
                 'amount' => (float) $payment->amount,
                 'method' => $payment->method,
+            ],
+        ]);
+    }
+
+    public function status(string $gatewayReference): JsonResponse
+    {
+        $payment = Payment::query()
+            ->with('order')
+            ->where('gateway_reference', $gatewayReference)
+            ->first();
+
+        if ($payment === null) {
+            return response()->json([
+                'success' => false,
+                'code' => 'PAYMENT_NOT_FOUND',
+                'message' => 'Payment reference not found',
+                'data' => null,
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'code' => 'PAYMENT_STATUS_FOUND',
+            'message' => 'Payment status loaded',
+            'data' => [
+                'gateway_reference' => $payment->gateway_reference,
+                'gateway' => $payment->gateway,
+                'status' => $payment->status,
+                'amount' => (float) $payment->amount,
+                'method' => $payment->method,
+                'order' => [
+                    'order_code' => $payment->order?->order_code,
+                    'status' => $payment->order?->status,
+                ],
+                'paid_at' => $payment->paid_at,
             ],
         ]);
     }

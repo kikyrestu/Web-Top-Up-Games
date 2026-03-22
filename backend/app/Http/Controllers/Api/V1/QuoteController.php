@@ -8,6 +8,7 @@ use App\Domain\Pricing\Services\PricingEngineService;
 use App\Http\Controllers\Controller;
 use App\Models\Margin;
 use App\Models\Product;
+use App\Models\ProviderProduct;
 use App\Models\ProviderPrice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,15 +62,26 @@ final class QuoteController extends Controller
             ], 422);
         }
 
-        $candidates = $rows->map(static function (ProviderPrice $row): array {
+        $providerProductMap = ProviderProduct::query()
+            ->where('product_id', $product->id)
+            ->where('is_available', true)
+            ->get()
+            ->keyBy(static fn (ProviderProduct $providerProduct): string => $providerProduct->provider_id.'_'.$providerProduct->product_id);
+
+        $candidates = $rows->map(function (ProviderPrice $row) use ($providerProductMap): array {
             $basePrice = (float) $row->base_price;
             $adminFee = (float) $row->admin_fee;
             $commission = (float) $row->commission;
+
+            /** @var ProviderProduct|null $providerProduct */
+            $providerProduct = $providerProductMap->get($row->provider_id.'_'.$row->product_id);
 
             return [
                 'provider_id' => $row->provider_id,
                 'provider_code' => $row->provider?->code,
                 'provider_name' => $row->provider?->name,
+                'provider_product_code' => $providerProduct?->provider_product_code,
+                'provider_product_name' => $providerProduct?->provider_product_name,
                 'base_price' => $basePrice,
                 'admin_fee' => $adminFee,
                 'commission' => $commission,

@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Margin;
 use App\Models\Product;
 use App\Models\Provider;
+use App\Models\ProviderProduct;
 use App\Models\ProviderPrice;
 use Illuminate\Database\Seeder;
 
@@ -81,6 +82,18 @@ class CatalogPricingSeeder extends Seeder
                     'provider_updated_at' => now(),
                 ]
             );
+
+            ProviderProduct::query()->updateOrCreate(
+                [
+                    'provider_id' => $providerMap[$row['code']],
+                    'product_id' => $mlProduct->id,
+                ],
+                [
+                    'provider_product_code' => 'SKU-'.$row['code'].'-ML86',
+                    'provider_product_name' => 'Mobile Legends 86 Diamond',
+                    'is_available' => true,
+                ]
+            );
         }
 
         $multifinanceRows = [
@@ -105,6 +118,18 @@ class CatalogPricingSeeder extends Seeder
                     'commission' => $row['commission'],
                     'is_active' => true,
                     'provider_updated_at' => now(),
+                ]
+            );
+
+            ProviderProduct::query()->updateOrCreate(
+                [
+                    'provider_id' => $providerMap[$row['code']],
+                    'product_id' => $finProduct->id,
+                ],
+                [
+                    'provider_product_code' => 'SKU-'.$row['code'].'-MFPLN',
+                    'provider_product_name' => 'Tagihan Listrik PLN',
+                    'is_available' => true,
                 ]
             );
         }

@@ -40,10 +40,26 @@ final class ProviderRouterService
             }
 
             $requestPayload = [
-                'buyer_sku_code' => (string) ($candidate['provider_product_code'] ?? ($candidate['provider_code'] ?? 'UNKNOWN')),
+                'buyer_sku_code' => (string) ($candidate['provider_product_code'] ?? ''),
                 'customer_no' => (string) ($payload['customer_target'] ?? ''),
                 'ref_id' => (string) ($payload['order_code'] ?? 'ORD').'-'.Str::upper(Str::random(4)),
             ];
+
+            if ($requestPayload['buyer_sku_code'] === '') {
+                OrderProviderAttempt::query()->create([
+                    'order_id' => (int) ($payload['order_id'] ?? 0),
+                    'provider_id' => $providerId,
+                    'attempt_no' => $attemptNo,
+                    'status' => 'FAILED',
+                    'provider_ref' => null,
+                    'request_payload' => $requestPayload,
+                    'response_payload' => ['error' => 'missing_provider_product_code'],
+                    'attempted_at' => now(),
+                ]);
+
+                $attemptNo++;
+                continue;
+            }
 
             $response = $this->sendToProvider($providerCode, $requestPayload);
 

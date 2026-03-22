@@ -40,4 +40,9 @@ final class Product extends Model
     {
         return $this->hasMany(ProviderPrice::class);
     }
+
+    public function providerProducts(): HasMany
+    {
+        return $this->hasMany(ProviderProduct::class);
+    }
 }

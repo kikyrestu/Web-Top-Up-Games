@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class ProviderPrice extends Model
 {
@@ -41,5 +42,11 @@ final class ProviderPrice extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function providerProduct(): HasOne
+    {
+        return $this->hasOne(ProviderProduct::class, 'provider_id', 'provider_id')
+            ->whereColumn('provider_products.product_id', 'provider_prices.product_id');
     }
 }
