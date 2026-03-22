@@ -35,4 +35,22 @@ return [
         ],
     ],
 
+    'digiflazz' => [
+        'base_url' => env('DIGIFLAZZ_BASE_URL', 'https://api.digiflazz.com/v1'),
+        'username' => env('DIGIFLAZZ_USERNAME'),
+        'api_key' => env('DIGIFLAZZ_API_KEY'),
+    ],
+
+    'rajabiller' => [
+        'base_url' => env('RAJABILLER_BASE_URL'),
+        'username' => env('RAJABILLER_USERNAME'),
+        'api_key' => env('RAJABILLER_API_KEY'),
+    ],
+
+    'orderkuota' => [
+        'base_url' => env('ORDERKUOTA_BASE_URL'),
+        'username' => env('ORDERKUOTA_USERNAME'),
+        'api_key' => env('ORDERKUOTA_API_KEY'),
+    ],
+
 ];
