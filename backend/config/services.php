@@ -53,4 +53,16 @@ return [
         'api_key' => env('ORDERKUOTA_API_KEY'),
     ],
 
+    'payment_gateways' => [
+        'KLIKQRISS' => [
+            'webhook_secret' => env('KLIKQRISS_WEBHOOK_SECRET'),
+        ],
+        'MIDTRANS' => [
+            'webhook_secret' => env('MIDTRANS_WEBHOOK_SECRET'),
+        ],
+        'DUITKU' => [
+            'webhook_secret' => env('DUITKU_WEBHOOK_SECRET'),
+        ],
+    ],
+
 ];

@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Payment\Services;
 
+use App\Models\Order;
+use App\Models\Payment;
+use App\Models\PaymentWebhook;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
 final class PaymentWebhookService
 {
     /**
@@ -15,10 +22,170 @@ final class PaymentWebhookService
      */
     public function handle(array $payload, array $headers): array
     {
-        // TODO: Add gateway-specific signature verification and idempotency.
+        $gateway = strtoupper((string) Arr::get($payload, 'gateway', 'UNKNOWN'));
+        $eventKey = (string) Arr::get($payload, 'event_key', '');
+        $orderCode = (string) Arr::get($payload, 'order_code', '');
+        $gatewayReference = (string) Arr::get($payload, 'gateway_reference', '');
+        $status = strtoupper((string) Arr::get($payload, 'status', 'PENDING'));
+        $amount = (float) Arr::get($payload, 'amount', 0);
+        $method = Arr::get($payload, 'method');
+
+        $verified = $this->verify($gateway, $payload, $headers);
+
+        if (!$verified) {
+            return [
+                'verified' => false,
+                'duplicate' => false,
+                'processed' => false,
+                'code' => 'WEBHOOK_INVALID_SIGNATURE',
+            ];
+        }
+
+        if ($eventKey !== '') {
+            $existingEvent = PaymentWebhook::query()
+                ->where('gateway', $gateway)
+                ->where('event_key', $eventKey)
+                ->first();
+
+            if ($existingEvent !== null) {
+                return [
+                    'verified' => true,
+                    'duplicate' => true,
+                    'processed' => false,
+                    'code' => 'WEBHOOK_DUPLICATE_EVENT',
+                ];
+            }
+        }
+
+        if ($orderCode === '' || $gatewayReference === '') {
+            return [
+                'verified' => true,
+                'duplicate' => false,
+                'processed' => false,
+                'code' => 'WEBHOOK_MISSING_REQUIRED_FIELD',
+            ];
+        }
+
+        $order = Order::query()->where('order_code', $orderCode)->first();
+
+        if ($order === null) {
+            return [
+                'verified' => true,
+                'duplicate' => false,
+                'processed' => false,
+                'code' => 'ORDER_NOT_FOUND',
+            ];
+        }
+
+        DB::transaction(function () use ($order, $gateway, $gatewayReference, $status, $amount, $method, $payload, $headers, $eventKey): void {
+            $payment = Payment::query()->firstOrCreate(
+                ['gateway_reference' => $gatewayReference],
+                [
+                    'order_id' => $order->id,
+                    'gateway' => $gateway,
+                    'method' => is_string($method) ? $method : null,
+                    'amount' => $amount,
+                    'status' => 'UNPAID',
+                    'meta' => [
+                        'source' => 'webhook',
+                    ],
+                ]
+            );
+
+            $payment->update([
+                'status' => $this->mapPaymentStatus($status),
+                'method' => is_string($method) ? $method : $payment->method,
+                'amount' => $amount > 0 ? $amount : $payment->amount,
+                'paid_at' => in_array($status, ['PAID', 'SUCCESS'], true) ? now() : $payment->paid_at,
+                'meta' => array_merge($payment->meta ?? [], [
+                    'last_webhook_status' => $status,
+                    'last_payload' => $payload,
+                ]),
+            ]);
+
+            PaymentWebhook::query()->create([
+                'payment_id' => $payment->id,
+                'gateway' => $gateway,
+                'event_key' => $eventKey !== '' ? $eventKey : null,
+                'signature' => $this->extractSignature($headers),
+                'is_verified' => true,
+                'headers' => $headers,
+                'payload' => $payload,
+                'received_at' => now(),
+            ]);
+
+            $orderStatus = match ($status) {
+                'PAID', 'SUCCESS' => 'PAID',
+                'FAILED' => 'FAILED',
+                'EXPIRED' => 'FAILED',
+                default => 'PENDING',
+            };
+
+            $order->update([
+                'status' => $orderStatus,
+                'paid_at' => in_array($status, ['PAID', 'SUCCESS'], true) ? now() : $order->paid_at,
+                'meta' => array_merge($order->meta ?? [], [
+                    'payment_gateway' => $gateway,
+                    'payment_reference' => $gatewayReference,
+                ]),
+            ]);
+        });
+
         return [
-            'verified' => false,
-            'payload' => $payload,
+            'verified' => true,
+            'duplicate' => false,
+            'processed' => true,
+            'code' => 'WEBHOOK_PROCESSED',
         ];
+    }
+
+    private function verify(string $gateway, array $payload, array $headers): bool
+    {
+        $providedSignature = $this->extractSignature($headers);
+
+        if ($providedSignature === null || $providedSignature === '') {
+            return false;
+        }
+
+        $secret = (string) config('services.payment_gateways.'.$gateway.'.webhook_secret', '');
+
+        if ($secret === '') {
+            return false;
+        }
+
+        $raw = json_encode($payload, JSON_UNESCAPED_SLASHES);
+
+        if (!is_string($raw)) {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $raw, $secret);
+
+        return hash_equals($expected, $providedSignature);
+    }
+
+    private function extractSignature(array $headers): ?string
+    {
+        foreach ($headers as $key => $value) {
+            if (!is_string($key)) {
+                continue;
+            }
+
+            if (Str::lower($key) === 'x-signature') {
+                return is_string($value) ? $value : null;
+            }
+        }
+
+        return null;
+    }
+
+    private function mapPaymentStatus(string $status): string
+    {
+        return match ($status) {
+            'PAID', 'SUCCESS' => 'PAID',
+            'FAILED' => 'FAILED',
+            'EXPIRED' => 'EXPIRED',
+            default => 'UNPAID',
+        };
     }
 }
