@@ -60,4 +60,9 @@ final class Order extends Model
     {
         return $this->hasOne(Payment::class);
     }
+
+    public function providerAttempts(): HasMany
+    {
+        return $this->hasMany(OrderProviderAttempt::class);
+    }
 }

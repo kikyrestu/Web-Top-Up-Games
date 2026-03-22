@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Payment\Services;
 
+use App\Jobs\FulfillPaidOrderJob;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentWebhook;
@@ -77,7 +78,11 @@ final class PaymentWebhookService
             ];
         }
 
-        DB::transaction(function () use ($order, $gateway, $gatewayReference, $status, $amount, $method, $payload, $headers, $eventKey): void {
+        $shouldDispatchFulfillment = false;
+
+        DB::transaction(function () use ($order, $gateway, $gatewayReference, $status, $amount, $method, $payload, $headers, $eventKey, &$shouldDispatchFulfillment): void {
+            $previousOrderStatus = (string) $order->status;
+
             $payment = Payment::query()->firstOrCreate(
                 ['gateway_reference' => $gatewayReference],
                 [
@@ -129,7 +134,14 @@ final class PaymentWebhookService
                     'payment_reference' => $gatewayReference,
                 ]),
             ]);
+
+            $shouldDispatchFulfillment = in_array($orderStatus, ['PAID'], true)
+                && !in_array($previousOrderStatus, ['SUCCESS', 'PROCESSING'], true);
         });
+
+        if ($shouldDispatchFulfillment) {
+            FulfillPaidOrderJob::dispatch($order->id);
+        }
 
         return [
             'verified' => true,
