@@ -1,10 +1,15 @@
 # Dokumentasi Fitur Source Code: PPOB & Top-Up Engine v1.0
 
+
 ## 1. Core Engine: Smart Price Aggregator (3 Providers)
 Ini adalah jantung dari sistem yang mengotomatisasi pencarian modal termurah secara real-time.
 
 - **Triple-Provider Integration**: Koneksi API native ke Digiflazz, Rajabiller, dan Orderkuota.
 - **Auto-Comparison Logic**: Sistem secara otomatis membandingkan harga produk yang sama dari ketiga provider tersebut dan mengambil harga terendah sebagai basis modal.
+	- **Khusus PPOB Multifinance:**
+		- Jika admin sama, sistem otomatis memilih provider dengan komisi/keuntungan tertinggi.
+		- Jika ada provider dengan admin 0 rupiah, sistem otomatis memilih provider tersebut meskipun komisinya bukan yang tertinggi.
+		- Logika ini berlaku untuk perbandingan ketiga provider (Digiflazz, Rajabiller, Orderkuota).
 - **Dynamic Profit Margin**: Input manual nominal komisi/keuntungan per kategori atau per produk melalui dashboard (bisa pilih Flat atau Percentage).
 - **Provider Failover System**: Jika salah satu provider (misal: Digiflazz) sedang maintenance atau stok kosong, sistem secara otomatis mengalihkan pesanan ke provider termurah berikutnya (Rajabiller atau Orderkuota).
 - **Automatic Product Sync**: Fitur untuk sinkronisasi otomatis nama produk, kategori, dan harga modal agar tetap up-to-date dengan provider.
