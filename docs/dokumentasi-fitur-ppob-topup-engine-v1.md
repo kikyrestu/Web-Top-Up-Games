@@ -1,45 +1,70 @@
-# Dokumentasi Fitur Source Code: PPOB & Top-Up Engine v1.0
+# 🚀 Modern PPOB & Game Top-Up Engine v1.0
+> **High-Performance API Aggregator with Smart Comparison Logic**
+> *Developed by BuildyWeb.com*
 
+Dokumentasi lengkap fitur *Source Code* website PPOB & Top-Up Games yang dirancang dengan arsitektur modern, aman, dan berorientasi pada profit maksimal.
 
-## 1. Core Engine: Smart Price Aggregator (3 Providers)
-Ini adalah jantung dari sistem yang mengotomatisasi pencarian modal termurah secara real-time.
+---
 
-- **Triple-Provider Integration**: Koneksi API native ke Digiflazz, Rajabiller, dan Orderkuota.
-- **Auto-Comparison Logic**: Sistem secara otomatis membandingkan harga produk yang sama dari ketiga provider tersebut dan mengambil harga terendah sebagai basis modal.
-	- **Khusus PPOB Multifinance:**
-		- Jika admin sama, sistem otomatis memilih provider dengan komisi/keuntungan tertinggi.
-		- Jika ada provider dengan admin 0 rupiah, sistem otomatis memilih provider tersebut meskipun komisinya bukan yang tertinggi.
-		- Logika ini berlaku untuk perbandingan ketiga provider (Digiflazz, Rajabiller, Orderkuota).
-- **Dynamic Profit Margin**: Input manual nominal komisi/keuntungan per kategori atau per produk melalui dashboard (bisa pilih Flat atau Percentage).
-- **Provider Failover System**: Jika salah satu provider (misal: Digiflazz) sedang maintenance atau stok kosong, sistem secara otomatis mengalihkan pesanan ke provider termurah berikutnya (Rajabiller atau Orderkuota).
-- **Automatic Product Sync**: Fitur untuk sinkronisasi otomatis nama produk, kategori, dan harga modal agar tetap up-to-date dengan provider.
+## 🧠 1. Core Engine: Smart Price & Routing Logic
+Sistem inti yang mengelola pengambilan produk secara cerdas dari 3 Provider: **Digiflazz, Rajabiller, dan Orderkuota**.
 
-## 2. Advanced SEO Management (High Visibility)
-Fitur ini memastikan website klien mudah dirayapi mesin pencari dan memiliki performa organik yang bagus.
+### ⚡ Game Top-Up Comparison
+* **Tri-Provider Sync:** Sinkronisasi otomatis ribuan produk dari 3 provider sekaligus.
+* **Lowest Price Detection:** Sistem secara otomatis membandingkan harga modal dan mengambil harga terendah sebagai basis harga jual.
+* **Auto-Failover:** Jika provider termurah sedang *maintenance*, sistem otomatis mengalihkan pesanan ke provider aktif berikutnya.
 
-- **Dynamic Meta Tags**: Pengaturan Meta Title, Description, dan Keywords yang berbeda untuk setiap halaman produk, kategori, dan artikel.
-- **Open Graph (OG) Tags**: Optimasi tampilan saat link website dibagikan ke media sosial (WhatsApp, Facebook, X), lengkap dengan thumbnail otomatis.
-- **Custom URL Slugs**: URL yang ramah SEO (contoh: `domain.com/top-up/mobile-legends` bukan `domain.com/p?id=123`).
-- **Sitemap & Robots.txt Generator**: Otomatis menghasilkan file sitemap untuk mempercepat indeksasi oleh Google Search Console.
-- **Image Alt Optimizer**: Otomatis menambahkan tag alt pada setiap gambar produk game untuk optimasi pencarian gambar.
+### 💰 Multifinance Smart Routing (Cicilan/Tagihan)
+* **Admin-Zero Priority:** Sistem memprioritaskan provider dengan **Biaya Admin Rp 0** (Label "Gratis Admin").
+* **Commission Optimizer:** Jika biaya admin setara, sistem memilih provider dengan **Komisi Tertinggi**.
 
-## 3. Full Dynamic CMS & Content Manager
-Memungkinkan klien mengelola tampilan visual tanpa menyentuh kode program.
+---
 
-- **Hero Section & Slider**: Atur banner utama, teks tagline, dan tombol call-to-action langsung dari dashboard.
-- **Promo Ads Management**: Slot iklan popup atau sticky banner untuk info diskon atau event terbatas.
-- **Dynamic Navigation & Footer**: Sistem Drag & Drop untuk menyusun menu navigasi atas dan tautan di bagian bawah website.
-- **Article/Blog Module**: Editor teks kaya (WYSIWYG) untuk membuat artikel tutorial, berita game, atau info promo guna mendongkrak trafik SEO.
+## 🔍 2. Advanced SEO Management
+* **Dynamic Meta Tags:** Kontrol Meta Title, Description, dan Keywords per produk.
+* **Social Graph (OG Tags):** Optimasi tampilan link saat di-share ke WhatsApp/Sosmed.
+* **Auto Sitemap Generator:** Mempercepat indeksasi Google secara otomatis.
+* **Clean URL Slugs:** Struktur URL ramah SEO (Contoh: `/top-up/free-fire`).
 
-## 4. Payment & Transaction Automated System
-Integrasi pembayaran yang aman dan serba otomatis.
+---
 
-- **API PG Configuration**: Dashboard untuk memasukkan API Key, Client Secret, dan Merchant ID dari Payment Gateway (seperti Midtrans, Duitku, atau Tripay).
-- **Automated Webhook**: Sistem penanganan notifikasi pembayaran sukses yang akan langsung memicu pengiriman produk ke user secara instan (24 jam nonstop).
-- **Order Tracking & History**: Halaman riwayat transaksi bagi user untuk mengecek status pesanan mereka (Pending, Success, atau Failed).
-- **In-App ID Validator**: Fitur pengecekan ID Game dan Server (seperti Nickname MLBB atau Free Fire) untuk memastikan user tidak salah memasukkan ID sebelum membayar.
+## 🛠️ 3. Full Dynamic CMS (Content Management)
+* **Hero & Slider Manager:** Kelola banner utama dan tombol aksi (CTA).
+* **Article & Blog System:** Editor teks untuk konten edukasi/promo guna mendongkrak SEO.
+* **Ads & Popup Management:** Slot iklan popup/sticky banner dengan pengaturan masa berlaku.
+* **Dynamic Navigation Builder:** Atur menu Header dan Footer secara fleksibel.
 
-## 5. Admin Security & Monitoring Dashboard
-- **Provider Balance Monitor**: Cek sisa saldo di Digiflazz, Rajabiller, dan Orderkuota langsung dari satu halaman admin.
-- **Transaction Logs**: Rekam jejak semua request API baik ke Payment Gateway maupun ke Provider untuk kebutuhan audit jika terjadi eror.
-- **Secure API Storage**: Enkripsi kunci API di database untuk mencegah pencurian data sensitif.
+---
+
+## 🛡️ 4. Security & Authentication
+* **Secure Login OTP:** Autentikasi modern via **WhatsApp/Email** (OTP).
+* **Session Rate Limiter:** Proteksi otomatis terhadap spamming kode OTP.
+* **API Security Layer:** Enkripsi kunci API dan validasi *Signature* (HMAC).
+
+---
+
+## 🌟 5. Social Proof & Payment Integration
+* **Integrated Payment Gateway:** Siap pakai untuk **KlikQRISS (MDR 0%)**, Midtrans, dan Duitku.
+* **MDR 0% Optimization:** Dukungan penuh API KlikQRISS untuk memastikan profit maksimal tanpa potongan biaya transaksi QRIS.
+* **Verified Testimonials:** Ulasan hanya bisa diberikan oleh pelanggan dengan transaksi "Success".
+* **In-App ID Validator:** Pengecekan Nickname otomatis untuk mencegah kesalahan input ID Game.
+* **Automated Webhook:** Pengiriman produk instan segera setelah pembayaran sukses terdeteksi.
+
+---
+
+## ⚙️ 6. Admin Control Center
+* **Multi-PG & Provider Manager:** Input API Key Payment Gateway (**KlikQRISS**, Midtrans, dll) dan Provider (Digiflazz, Rajabiller, Orderkuota) langsung dari UI.
+* **Provider Balance Monitor:** Pantau sisa saldo di ketiga provider dari satu layar.
+* **Profit Margin Settings:** Atur margin keuntungan (Flat/Persentase) secara manual.
+
+---
+
+## 💻 Technical Specifications
+* **Architecture:** API-First Design (Fast & Scalable).
+* **Stack:** Modern Web Performance (Next.js / Laravel).
+* **Performance:** Integrated Caching System (Redis/File) untuk load data super cepat.
+* **Responsiveness:** Mobile-First Design (Sempurna di semua perangkat).
+
+---
+**2026 © BuildyWeb.com**
+*"Logic Driven, Result Oriented."*
