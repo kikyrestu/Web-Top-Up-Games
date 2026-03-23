@@ -10,6 +10,7 @@ use App\Models\Review;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 final class AccountController extends Controller
@@ -133,6 +134,13 @@ final class AccountController extends Controller
     public function storeReview(Request $request): RedirectResponse
     {
         $userId = (int) $request->user()->id;
+        $cooldownKey = 'account:review:cooldown:user:'.$userId;
+
+        if (!Cache::add($cooldownKey, '1', now()->addSeconds(20))) {
+            return back()->withErrors([
+                'order_code' => 'Terlalu cepat mengirim ulasan. Coba lagi dalam beberapa detik.',
+            ])->withInput();
+        }
 
         $validated = $request->validate([
             'order_code' => ['required', 'string', 'max:50'],
