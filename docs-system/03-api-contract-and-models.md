@@ -24,6 +24,46 @@
 - GET /api/v1/reviews/product/{slug}
 - GET /api/v1/cms/page/{slug}
 
+## Implemented Snapshot (2026-03-23)
+
+### Public and User API
+- POST /api/v1/validation/game-id
+- POST /api/v1/orders/quote
+- POST /api/v1/orders
+- GET /api/v1/orders/{orderCode}
+- POST /api/v1/payments/initiate
+- GET /api/v1/payments/{gatewayReference}/status
+- POST /api/v1/payments/webhook/{gateway}
+- GET /api/v1/catalog/categories
+- GET /api/v1/catalog/products
+- GET /api/v1/cms/page/{slug}
+- GET /api/v1/reviews/product/{slug}
+- POST /api/v1/reviews (auth:sanctum)
+- GET /api/v1/account/transactions (auth:sanctum)
+- POST /api/v1/uploads/scan (auth:sanctum)
+
+### Admin API
+- GET /api/v1/admin/system/readiness
+- GET /api/v1/admin/dashboard/overview
+- GET /api/v1/admin/dashboard/metrics
+- GET /api/v1/admin/dashboard/alerts
+- GET /api/v1/admin/dashboard/housekeeping
+- GET /api/v1/admin/dashboard/housekeeping/history
+- GET /api/v1/admin/dashboard/housekeeping/trend
+- GET /api/v1/admin/dashboard/uploads/trend
+- GET /api/v1/admin/dashboard/metrics/excel
+- GET /api/v1/admin/security-events
+- GET /api/v1/admin/audit-logs
+- GET /api/v1/admin/audit-logs/export/csv
+- POST /api/v1/admin/providers/sync-products
+- GET /api/v1/admin/orders/{orderCode}/provider-attempts
+- POST /api/v1/admin/orders/{orderCode}/reprocess
+
+### Still Pending from Initial Draft
+- POST /api/v1/auth/otp/request
+- POST /api/v1/auth/otp/verify
+- POST /api/v1/guest/session/init
+
 ## Entity and Table Draft (PostgreSQL)
 - users
 - guest_sessions
