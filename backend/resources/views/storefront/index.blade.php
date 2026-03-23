@@ -30,6 +30,28 @@
             background: #0f1e39;
         }
 
+        .hero-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #5f7eaf;
+            background: #0f203f;
+            color: #e9f1ff;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            z-index: 3;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-prev { left: 10px; }
+        .hero-next { right: 10px; }
+
         .hero-track {
             display: flex;
             transition: transform .5s ease;
@@ -37,7 +59,7 @@
 
         .hero-slide {
             min-width: 100%;
-            min-height: 260px;
+            min-height: 300px;
             padding: 28px;
             display: flex;
             flex-direction: column;
@@ -135,7 +157,7 @@
         .popular-rail,
         .category-rail {
             display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
+            grid-template-columns: repeat(8, minmax(0, 1fr));
             gap: 12px;
         }
 
@@ -143,7 +165,7 @@
             border: 1px solid #33517f;
             border-radius: 10px;
             background: #0e1e38;
-            padding: 10px;
+            padding: 8px;
             display: grid;
             gap: 8px;
             text-align: left;
@@ -156,7 +178,7 @@
         }
 
         .card-thumb {
-            aspect-ratio: 4 / 5;
+            aspect-ratio: 3 / 4;
             border-radius: 8px;
             border: 1px solid #2c456e;
             background: linear-gradient(130deg, #27426b, #3e659f);
@@ -175,14 +197,14 @@
         }
 
         .card-name {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
-            min-height: 28px;
+            min-height: 24px;
             line-height: 1.3;
         }
 
         .card-price {
-            font-size: 11px;
+            font-size: 10px;
             color: #9bc1ff;
             font-weight: 800;
         }
@@ -190,11 +212,28 @@
         .mini-button {
             border: 1px solid #3f6296;
             border-radius: 6px;
-            padding: 5px 0;
+            padding: 4px 0;
             text-align: center;
             font-size: 10px;
             font-weight: 800;
             color: #dbe8ff;
+            background: #102543;
+        }
+
+        .section-foot {
+            margin-top: 12px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .section-foot a {
+            border: 1px solid #3f6296;
+            border-radius: 999px;
+            padding: 6px 12px;
+            text-decoration: none;
+            color: #dbe8ff;
+            font-size: 11px;
+            font-weight: 800;
             background: #102543;
         }
 
@@ -394,7 +433,7 @@
         @media (max-width: 1080px) {
             .popular-rail,
             .category-rail {
-                grid-template-columns: repeat(5, minmax(0, 1fr));
+                grid-template-columns: repeat(6, minmax(0, 1fr));
             }
 
             .promo-grid {
@@ -406,6 +445,10 @@
             .hero-slide {
                 min-height: 210px;
                 padding: 18px;
+            }
+
+            .hero-nav {
+                display: none;
             }
 
             .hero-slide h1 {
@@ -463,6 +506,8 @@
                 <button class="hero-dot" type="button" data-slide="1"></button>
                 <button class="hero-dot" type="button" data-slide="2"></button>
             </div>
+            <button class="hero-nav hero-prev" type="button" aria-label="Slide sebelumnya" id="hero-prev">‹</button>
+            <button class="hero-nav hero-next" type="button" aria-label="Slide berikutnya" id="hero-next">›</button>
         </section>
 
         <section class="section-box" id="catalog">
@@ -526,6 +571,9 @@
                             <span class="mini-button">Top Up</span>
                         </button>
                     @endforeach
+                </div>
+                <div class="section-foot">
+                    <a href="#quick-checkout">Lihat Produk</a>
                 </div>
             </section>
         @endforeach
@@ -691,6 +739,8 @@
             const estimateGateway = document.getElementById('estimate-gateway');
             const estimateTotal = document.getElementById('estimate-total');
             const cards = document.querySelectorAll('[data-product-id]');
+            const heroPrev = document.getElementById('hero-prev');
+            const heroNext = document.getElementById('hero-next');
 
             function formatRupiah(value) {
                 return new Intl.NumberFormat('id-ID', {
@@ -759,6 +809,20 @@
                     showSlide(currentSlide);
                 });
             });
+
+            if (heroPrev) {
+                heroPrev.addEventListener('click', function () {
+                    currentSlide = (currentSlide - 1 + heroDots.length) % heroDots.length;
+                    showSlide(currentSlide);
+                });
+            }
+
+            if (heroNext) {
+                heroNext.addEventListener('click', function () {
+                    currentSlide = (currentSlide + 1) % heroDots.length;
+                    showSlide(currentSlide);
+                });
+            }
 
             if (heroDots.length > 1) {
                 setInterval(function () {
