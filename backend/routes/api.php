@@ -35,6 +35,8 @@ Route::prefix('v1')->group(function (): void {
     Route::post('/payments/webhook/{gateway}', [PaymentWebhookController::class, 'handle']);
 
     Route::middleware('auth:sanctum')->group(function (): void {
+        Route::get('/auth/me', [AuthTokenController::class, 'me']);
+        Route::post('/auth/token/revoke-all', [AuthTokenController::class, 'revokeAll']);
         Route::post('/auth/token/logout', [AuthTokenController::class, 'logout']);
     });
 
