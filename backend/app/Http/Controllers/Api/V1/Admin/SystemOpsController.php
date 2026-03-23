@@ -8,6 +8,7 @@ use App\Domain\Audit\Services\AuditLogService;
 use App\Domain\Catalog\Services\ProductSyncService;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\IdempotencyRequest;
 use App\Models\Order;
 use App\Models\OrderProviderAttempt;
 use App\Models\Payment;
@@ -156,6 +157,50 @@ final class SystemOpsController extends Controller
                 'window_hours' => $hours,
                 'generated_at' => $metrics['generated_at'] ?? now()->toISOString(),
                 'alerts' => $alerts,
+            ],
+        ]);
+    }
+
+    public function dashboardHousekeeping(Request $request): JsonResponse
+    {
+        $hours = $this->normalizedHours($request->integer('hours', 24));
+        $from = now()->subHours($hours);
+
+        $purgeLogs = AuditLog::query()
+            ->where('event_type', 'IDEMPOTENCY_PURGE_COMPLETED')
+            ->where('occurred_at', '>=', $from)
+            ->orderByDesc('occurred_at')
+            ->get(['payload', 'occurred_at']);
+
+        $totalDeleted = $purgeLogs->sum(static function (AuditLog $log): int {
+            $payload = is_array($log->payload) ? $log->payload : [];
+
+            return (int) ($payload['deleted_records'] ?? 0);
+        });
+
+        $lastPurge = $purgeLogs->first();
+
+        $totalIdempotencyRecords = IdempotencyRequest::query()->count();
+        $expiredIdempotencyRecords = IdempotencyRequest::query()
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now())
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'code' => 'ADMIN_DASHBOARD_HOUSEKEEPING',
+            'message' => 'Housekeeping summary loaded',
+            'data' => [
+                'window_hours' => $hours,
+                'generated_at' => now()->toISOString(),
+                'idempotency' => [
+                    'total_records' => $totalIdempotencyRecords,
+                    'expired_records' => $expiredIdempotencyRecords,
+                    'purge_runs' => $purgeLogs->count(),
+                    'purge_total_deleted' => $totalDeleted,
+                    'purge_last_run_at' => $lastPurge?->occurred_at?->toISOString(),
+                    'purge_last_deleted' => (int) ((is_array($lastPurge?->payload) ? $lastPurge?->payload['deleted_records'] ?? 0 : 0)),
+                ],
             ],
         ]);
     }

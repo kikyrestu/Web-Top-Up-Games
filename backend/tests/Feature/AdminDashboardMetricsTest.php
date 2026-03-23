@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\AuditLog;
+use App\Models\IdempotencyRequest;
 use App\Models\Order;
 use App\Models\OrderProviderAttempt;
 use App\Models\Payment;
@@ -148,6 +149,37 @@ class AdminDashboardMetricsTest extends TestCase
             ->assertJsonPath('data.alerts.providers.0.provider_code', 'DIGIFLAZZ')
             ->assertJsonPath('data.alerts.payments.0.gateway', 'MIDTRANS');
 
+        IdempotencyRequest::query()->create([
+            'scope' => 'POST:api/v1/payments/initiate',
+            'idempotency_key' => 'expired-dashboard-1',
+            'actor_fingerprint' => 'guest:dashboard',
+            'request_hash' => hash('sha256', 'expired-dashboard-1'),
+            'response_status' => 200,
+            'response_body' => ['ok' => true],
+            'expires_at' => now()->subMinutes(30),
+        ]);
+
+        IdempotencyRequest::query()->create([
+            'scope' => 'POST:api/v1/payments/initiate',
+            'idempotency_key' => 'active-dashboard-1',
+            'actor_fingerprint' => 'guest:dashboard-2',
+            'request_hash' => hash('sha256', 'active-dashboard-1'),
+            'response_status' => 200,
+            'response_body' => ['ok' => true],
+            'expires_at' => now()->addMinutes(30),
+        ]);
+
+        $housekeepingResponse = $this->getJson('/api/v1/admin/dashboard/housekeeping?hours=24');
+
+        $housekeepingResponse
+            ->assertOk()
+            ->assertJsonPath('code', 'ADMIN_DASHBOARD_HOUSEKEEPING')
+            ->assertJsonPath('data.idempotency.total_records', 2)
+            ->assertJsonPath('data.idempotency.expired_records', 1)
+            ->assertJsonPath('data.idempotency.purge_runs', 1)
+            ->assertJsonPath('data.idempotency.purge_total_deleted', 12)
+            ->assertJsonPath('data.idempotency.purge_last_deleted', 12);
+
         $excelResponse = $this->get('/api/v1/admin/dashboard/metrics/excel?hours=24&alert_min_attempts=1&alert_success_rate_threshold=85');
 
         $excelResponse->assertOk();
@@ -165,6 +197,10 @@ class AdminDashboardMetricsTest extends TestCase
             ->assertJsonPath('code', 'FORBIDDEN');
 
         $this->getJson('/api/v1/admin/dashboard/alerts')
+            ->assertStatus(403)
+            ->assertJsonPath('code', 'FORBIDDEN');
+
+        $this->getJson('/api/v1/admin/dashboard/housekeeping')
             ->assertStatus(403)
             ->assertJsonPath('code', 'FORBIDDEN');
 
