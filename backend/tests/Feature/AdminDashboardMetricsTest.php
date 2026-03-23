@@ -201,6 +201,19 @@ class AdminDashboardMetricsTest extends TestCase
             ->assertJsonPath('data.count', 1)
             ->assertJsonPath('data.runs.0.deleted_records', 7);
 
+        $trendResponse = $this->getJson('/api/v1/admin/dashboard/housekeeping/trend?days=3');
+
+        $trendResponse
+            ->assertOk()
+            ->assertJsonPath('code', 'ADMIN_DASHBOARD_HOUSEKEEPING_TREND')
+            ->assertJsonPath('data.days', 3)
+            ->assertJsonCount(3, 'data.trend');
+
+        $trendRows = $trendResponse->json('data.trend');
+        $this->assertIsArray($trendRows);
+        $this->assertGreaterThanOrEqual(2, count($trendRows));
+        $this->assertSame(19, (int) ($trendRows[count($trendRows) - 1]['deleted_records'] ?? 0));
+
         $excelResponse = $this->get('/api/v1/admin/dashboard/metrics/excel?hours=24&alert_min_attempts=1&alert_success_rate_threshold=85');
 
         $excelResponse->assertOk();
@@ -226,6 +239,10 @@ class AdminDashboardMetricsTest extends TestCase
             ->assertJsonPath('code', 'FORBIDDEN');
 
         $this->getJson('/api/v1/admin/dashboard/housekeeping/history')
+            ->assertStatus(403)
+            ->assertJsonPath('code', 'FORBIDDEN');
+
+        $this->getJson('/api/v1/admin/dashboard/housekeeping/trend')
             ->assertStatus(403)
             ->assertJsonPath('code', 'FORBIDDEN');
 

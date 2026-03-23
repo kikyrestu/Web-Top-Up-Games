@@ -240,6 +240,53 @@ final class SystemOpsController extends Controller
         ]);
     }
 
+    public function dashboardHousekeepingTrend(Request $request): JsonResponse
+    {
+        $days = max(1, min($request->integer('days', 7), 90));
+        $from = now()->startOfDay()->subDays($days - 1);
+
+        $logs = AuditLog::query()
+            ->where('event_type', 'IDEMPOTENCY_PURGE_COMPLETED')
+            ->where('occurred_at', '>=', $from)
+            ->orderBy('occurred_at')
+            ->get(['payload', 'occurred_at']);
+
+        $buckets = [];
+
+        for ($i = 0; $i < $days; $i++) {
+            $date = $from->copy()->addDays($i)->toDateString();
+            $buckets[$date] = [
+                'date' => $date,
+                'runs' => 0,
+                'deleted_records' => 0,
+            ];
+        }
+
+        foreach ($logs as $log) {
+            $date = $log->occurred_at?->toDateString();
+            if ($date === null || !isset($buckets[$date])) {
+                continue;
+            }
+
+            $payload = is_array($log->payload) ? $log->payload : [];
+            $buckets[$date]['runs']++;
+            $buckets[$date]['deleted_records'] += (int) ($payload['deleted_records'] ?? 0);
+        }
+
+        $trend = array_values($buckets);
+
+        return response()->json([
+            'success' => true,
+            'code' => 'ADMIN_DASHBOARD_HOUSEKEEPING_TREND',
+            'message' => 'Housekeeping trend loaded',
+            'data' => [
+                'days' => $days,
+                'generated_at' => now()->toISOString(),
+                'trend' => $trend,
+            ],
+        ]);
+    }
+
     public function dashboardMetricsExcel(Request $request): StreamedResponse
     {
         $hours = $this->normalizedHours($request->integer('hours', 24));
