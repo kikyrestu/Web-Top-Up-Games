@@ -1,5 +1,53 @@
 <x-layouts.app :title="'Admin Review Moderation'">
+    @php
+        $statsData = is_array($stats ?? null) ? $stats : [];
+        $dailyStats = is_iterable($statsData['daily'] ?? null) ? collect($statsData['daily']) : collect();
+    @endphp
+
     <div class="grid">
+        <div class="panel">
+            <h1>Moderation Stats</h1>
+            <div class="cards" style="margin-top:12px;">
+                <div class="card">
+                    <div class="k">Pending Reviews</div>
+                    <div class="v">{{ (int) ($statsData['pending_count'] ?? 0) }}</div>
+                </div>
+                <div class="card">
+                    <div class="k">Today Approve</div>
+                    <div class="v">{{ (int) ($statsData['today_approve_count'] ?? 0) }}</div>
+                </div>
+                <div class="card">
+                    <div class="k">Today Reject</div>
+                    <div class="v">{{ (int) ($statsData['today_reject_count'] ?? 0) }}</div>
+                </div>
+            </div>
+
+            <table style="margin-top:12px;">
+                <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Approve</th>
+                    <th>Reject</th>
+                    <th>Approve Rate</th>
+                    <th>Reject Rate</th>
+                </tr>
+                </thead>
+                <tbody>
+                @forelse ($dailyStats as $row)
+                    <tr>
+                        <td>{{ $row['date'] }}</td>
+                        <td>{{ (int) ($row['approve_count'] ?? 0) }}</td>
+                        <td>{{ (int) ($row['reject_count'] ?? 0) }}</td>
+                        <td>{{ (float) ($row['approve_rate_pct'] ?? 0) }}%</td>
+                        <td>{{ (float) ($row['reject_rate_pct'] ?? 0) }}%</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="muted">Belum ada data moderasi harian.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+
         <div class="panel">
             <h1>Review Moderation</h1>
             <form method="get" action="{{ route('admin.reviews.index') }}" class="grid" style="grid-template-columns:2fr 1fr auto; align-items:end; margin-top:12px;">

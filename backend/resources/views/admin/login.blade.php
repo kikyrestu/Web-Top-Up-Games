@@ -3,7 +3,7 @@
         <h1>Admin Sign In</h1>
         <p class="muted">Masuk menggunakan akun admin yang sudah di-bootstrap.</p>
 
-        <form method="post" action="{{ route('admin.login.submit') }}" class="grid" style="margin-top:14px;">
+        <form method="post" action="{{ route('admin.login.submit') }}?=AdminPanel" class="grid" style="margin-top:14px;">
             @csrf
             <div>
                 <label for="email">Email</label>

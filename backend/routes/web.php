@@ -31,9 +31,13 @@ Route::get('/track/{orderCode}', [StorefrontController::class, 'track'])->name('
 Route::get('/history', [StorefrontController::class, 'history'])->name('storefront.history');
 
 Route::get('/login-otp', [OtpAuthController::class, 'showLogin'])->name('account.login-otp');
-Route::post('/login-otp', [OtpAuthController::class, 'requestOtp'])->name('account.login-otp.request');
+Route::post('/login-otp', [OtpAuthController::class, 'requestOtp'])
+    ->middleware('global.rate:otp-login')
+    ->name('account.login-otp.request');
 Route::get('/verify-otp', [OtpAuthController::class, 'showVerify'])->name('account.verify-otp');
-Route::post('/verify-otp', [OtpAuthController::class, 'verifyOtp'])->name('account.verify-otp.submit');
+Route::post('/verify-otp', [OtpAuthController::class, 'verifyOtp'])
+    ->middleware('global.rate:otp-verify')
+    ->name('account.verify-otp.submit');
 Route::post('/akun/logout', [OtpAuthController::class, 'logout'])->name('account.logout');
 
 Route::prefix('akun')->name('account.')->middleware('web.auth')->group(function (): void {
@@ -43,14 +47,16 @@ Route::prefix('akun')->name('account.')->middleware('web.auth')->group(function 
     Route::get('/profil', [AccountController::class, 'profile'])->name('profile');
     Route::post('/profil', [AccountController::class, 'updateProfile'])->name('profile.update');
     Route::get('/ulasan', [AccountController::class, 'reviews'])->name('reviews');
-    Route::post('/ulasan', [AccountController::class, 'storeReview'])->name('reviews.store');
+    Route::post('/ulasan', [AccountController::class, 'storeReview'])
+        ->middleware('global.rate:review-submit')
+        ->name('reviews.store');
 });
 
 Route::prefix('admin')->name('admin.')->group(function (): void {
-    Route::get('/login', [AdminAuthController::class, 'showLogin'])
+    Route::get('/buildywebadmin/Login', [AdminAuthController::class, 'showLogin'])
         ->middleware('guest')
         ->name('login');
-    Route::post('/login', [AdminAuthController::class, 'login'])
+    Route::post('/buildywebadmin/Login', [AdminAuthController::class, 'login'])
         ->middleware('guest')
         ->name('login.submit');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');

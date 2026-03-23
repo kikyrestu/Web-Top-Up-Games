@@ -42,17 +42,60 @@ final class AdminReviewModerationController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $pendingCount = Review::query()->where('status', 'PENDING_APPROVAL')->count();
+        $today = now();
+        $todayApproveCount = ReviewModeration::query()
+            ->where('action', 'APPROVE')
+            ->whereBetween('moderated_at', [$today->copy()->startOfDay(), $today->copy()->endOfDay()])
+            ->count();
+        $todayRejectCount = ReviewModeration::query()
+            ->where('action', 'REJECT')
+            ->whereBetween('moderated_at', [$today->copy()->startOfDay(), $today->copy()->endOfDay()])
+            ->count();
+
+        $dailyStats = collect(range(0, 6))->map(static function (int $offset): array {
+            $date = now()->subDays(6 - $offset);
+            $start = $date->copy()->startOfDay();
+            $end = $date->copy()->endOfDay();
+
+            $approveCount = ReviewModeration::query()
+                ->where('action', 'APPROVE')
+                ->whereBetween('moderated_at', [$start, $end])
+                ->count();
+            $rejectCount = ReviewModeration::query()
+                ->where('action', 'REJECT')
+                ->whereBetween('moderated_at', [$start, $end])
+                ->count();
+            $total = $approveCount + $rejectCount;
+
+            return [
+                'date' => $start->format('Y-m-d'),
+                'approve_count' => $approveCount,
+                'reject_count' => $rejectCount,
+                'approve_rate_pct' => $total > 0 ? round(($approveCount / $total) * 100, 2) : 0.0,
+                'reject_rate_pct' => $total > 0 ? round(($rejectCount / $total) * 100, 2) : 0.0,
+            ];
+        })->all();
+
         return view('admin.reviews.index', [
             'reviews' => $reviews,
             'filters' => [
                 'status' => $status,
                 'q' => $search,
             ],
+            'stats' => [
+                'pending_count' => $pendingCount,
+                'today_approve_count' => $todayApproveCount,
+                'today_reject_count' => $todayRejectCount,
+                'daily' => $dailyStats,
+            ],
         ]);
     }
 
-    public function show(Review $review): View
+    public function show(Request $request, Review $review): View
     {
+        $historySearch = trim((string) $request->query('history_q', ''));
+
         $review->load([
             'product:id,name,slug',
             'user:id,name,email',
@@ -62,12 +105,28 @@ final class AdminReviewModerationController extends Controller
         ]);
 
         $moderationHistory = $review->moderations
+            ->filter(function ($row) use ($historySearch): bool {
+                if ($historySearch === '') {
+                    return true;
+                }
+
+                $needle = mb_strtolower($historySearch);
+                $haystack = implode(' ', [
+                    mb_strtolower((string) ($row->action ?? '')),
+                    mb_strtolower((string) ($row->reason ?? '')),
+                    mb_strtolower((string) ($row->adminUser?->name ?? '')),
+                    mb_strtolower((string) ($row->adminUser?->email ?? '')),
+                ]);
+
+                return str_contains($haystack, $needle);
+            })
             ->sortByDesc(static fn ($row) => $row->moderated_at ?? $row->created_at)
             ->values();
 
         return view('admin.reviews.show', [
             'review' => $review,
             'moderationHistory' => $moderationHistory,
+            'historySearch' => $historySearch,
         ]);
     }
 

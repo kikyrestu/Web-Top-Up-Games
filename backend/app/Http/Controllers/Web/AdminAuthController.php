@@ -12,13 +12,21 @@ use Illuminate\Support\Facades\Auth;
 
 final class AdminAuthController extends Controller
 {
-    public function showLogin(): View
+    public function showLogin(Request $request): View
     {
+        if (!$this->hasAdminPanelQuery($request)) {
+            abort(404);
+        }
+
         return view('admin.login');
     }
 
     public function login(Request $request): RedirectResponse
     {
+        if (!$this->hasAdminPanelQuery($request)) {
+            abort(404);
+        }
+
         $validated = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string', 'min:6'],
@@ -52,6 +60,16 @@ final class AdminAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('admin.login');
+        return redirect()->to($this->adminLoginUrl());
+    }
+
+    private function hasAdminPanelQuery(Request $request): bool
+    {
+        return (string) ($request->server('QUERY_STRING') ?? '') === '=AdminPanel';
+    }
+
+    private function adminLoginUrl(): string
+    {
+        return url('/admin/buildywebadmin/Login?=AdminPanel');
     }
 }

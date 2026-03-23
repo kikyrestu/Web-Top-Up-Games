@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAdminRole;
+use App\Http\Middleware\GlobalRateLimit;
 use App\Http\Middleware\EnsureWebAuth;
 use App\Http\Middleware\EnsureWebAdminRole;
 use App\Http\Middleware\HandleIdempotency;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin.role' => EnsureAdminRole::class,
+            'global.rate' => GlobalRateLimit::class,
             'web.auth' => EnsureWebAuth::class,
             'web.admin' => EnsureWebAdminRole::class,
             'idempotency' => HandleIdempotency::class,

@@ -51,6 +51,15 @@
 
         <div class="panel">
             <h2>Moderation History</h2>
+            <form method="get" action="{{ route('admin.reviews.show', ['review' => $review->id]) }}" class="grid" style="grid-template-columns:1fr auto; align-items:end; margin:10px 0;">
+                <div>
+                    <label for="history_q">Cari Action / Reason / Admin</label>
+                    <input id="history_q" name="history_q" type="text" value="{{ $historySearch }}" placeholder="APPROVE / REJECT / alasan / nama admin">
+                </div>
+                <div>
+                    <button class="btn" type="submit">Cari</button>
+                </div>
+            </form>
             <table>
                 <thead>
                 <tr>

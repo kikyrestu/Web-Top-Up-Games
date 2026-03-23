@@ -19,7 +19,7 @@ final class EnsureWebAdminRole
         $user = $request->user();
 
         if ($user === null) {
-            return new RedirectResponse(route('admin.login'));
+            return new RedirectResponse(url('/admin/buildywebadmin/Login?=AdminPanel'));
         }
 
         if ((string) ($user->role ?? 'user') !== 'admin') {
