@@ -18,10 +18,10 @@
             --fs-hero: clamp(28px, 3.1vw, 38px);
             --fs-section: clamp(22px, 2.2vw, 30px);
             --fs-subsection: clamp(17px, 1.6vw, 21px);
-            --fs-body: 12px;
-            --fs-meta: 11px;
-            --space-section: 16px;
-            --space-box: 16px;
+            --fs-body: 14px;
+            --fs-meta: 12px;
+            --space-section: 18px;
+            --space-box: 18px;
             --radius-lg: 12px;
             --radius-md: 10px;
             --border-strong: 1px;
@@ -31,7 +31,7 @@
             display: grid;
             gap: var(--space-section);
             color: #eaf1ff;
-            max-width: 1560px;
+            max-width: 1440px;
             margin: 0 auto;
         }
 
@@ -90,7 +90,7 @@
 
         .hero-slide p {
             margin: 0;
-            font-size: 14px;
+            font-size: 15px;
             color: #d2e2ff;
             line-height: 1.45;
         }
@@ -103,7 +103,7 @@
             background: #3f6ff0;
             color: #fff;
             text-decoration: none;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 800;
         }
 
@@ -248,7 +248,7 @@
             padding: 6px 12px;
             text-decoration: none;
             color: #dbe8ff;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 800;
             background: #102543;
         }
@@ -330,7 +330,7 @@
 
         .faq-box summary {
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 800;
             color: #f2f7ff;
             line-height: 1.45;
@@ -393,7 +393,7 @@
             padding: 10px 13px;
             background: linear-gradient(120deg, #3f6ff0, #2b57cc);
             color: #fff;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 800;
             cursor: pointer;
         }
@@ -456,7 +456,7 @@
             padding: 10px 14px;
             background: linear-gradient(120deg, #3f6ff0, #2b57cc);
             color: #fff;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 800;
             cursor: pointer;
         }
@@ -519,7 +519,7 @@
             padding-top: 8px;
             border-top: 1px solid #2f4a75;
             color: #8fa8cc;
-            font-size: 11px;
+            font-size: 12px;
         }
 
         @media (max-width: 1080px) {

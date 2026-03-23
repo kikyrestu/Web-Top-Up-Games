@@ -62,8 +62,8 @@
         }
 
         .content-pad {
-            padding: 0 22px;
-            max-width: 1560px;
+            padding: 0 clamp(20px, 2.2vw, 32px);
+            max-width: 1440px;
             margin: 0 auto;
         }
 
@@ -77,12 +77,12 @@
             border-left: 0;
             border-right: 0;
             border-radius: 0;
-            padding: 12px 22px;
+            padding: 12px clamp(20px, 2.2vw, 32px);
         }
 
         .topbar-frame {
             width: 100%;
-            max-width: 1560px;
+            max-width: 1440px;
             margin: 0 auto;
         }
 
@@ -94,7 +94,7 @@
             border-bottom: 1px solid #223a5f;
             padding-bottom: 8px;
             color: #8ea8cf;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.03em;
@@ -142,13 +142,13 @@
 
         .brand-sub {
             color: #8ea8cf;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
         }
 
         .topbar-center {
             flex: 1;
-            max-width: 420px;
+            max-width: 520px;
             margin: 0 10px;
         }
 
@@ -158,8 +158,8 @@
             border-radius: 10px;
             background: #0a1830;
             color: #dce8ff;
-            padding: 9px 11px;
-            font-size: 12px;
+            padding: 10px 12px;
+            font-size: 13px;
         }
 
         .top-search::placeholder {
@@ -177,11 +177,11 @@
         .action-link {
             border: 1px solid #2f4a74;
             border-radius: 8px;
-            padding: 8px 10px;
+            padding: 9px 12px;
             text-decoration: none;
             color: #cfe0ff;
             font-weight: 800;
-            font-size: 12px;
+            font-size: 13px;
             background: #102543;
         }
 
@@ -201,7 +201,7 @@
             border-radius: 999px;
             padding: 6px 10px;
             color: #cfe0ff;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 800;
             background: #102543;
             text-decoration: none;
@@ -224,7 +224,7 @@
             padding: 6px 9px;
             color: #cfe0ff;
             text-decoration: none;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 800;
             background: #102543;
         }
@@ -268,7 +268,7 @@
             border-radius: 999px;
             padding: 7px 11px;
             text-decoration: none;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 800;
             color: #cfe0ff;
             background: #102543;
@@ -280,7 +280,7 @@
             padding: 8px 12px;
             background: #102543;
             color: #dce8ff;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 800;
             cursor: pointer;
             font-family: 'Manrope', sans-serif;
