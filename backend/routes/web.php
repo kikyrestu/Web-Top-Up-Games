@@ -13,6 +13,8 @@ use App\Http\Controllers\Web\StorefrontController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [StorefrontController::class, 'index'])->name('storefront.index');
+Route::get('/sitemap.xml', [PublicPageController::class, 'sitemap'])->name('public.sitemap');
+Route::get('/robots.txt', [PublicPageController::class, 'robots'])->name('public.robots');
 Route::get('/top-up', [PublicPageController::class, 'topUpIndex'])->name('public.topup.index');
 Route::get('/top-up/{gameSlug}', [PublicPageController::class, 'topUpShow'])->name('public.topup.show');
 Route::get('/ppob', [PublicPageController::class, 'ppobIndex'])->name('public.ppob.index');

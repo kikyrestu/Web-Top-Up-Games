@@ -10,6 +10,7 @@ use App\Models\CmsBanner;
 use App\Models\CmsPage;
 use App\Models\Product;
 use App\Models\Review;
+use Illuminate\Http\Response;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -208,6 +209,122 @@ final class PublicPageController extends Controller
 
         return redirect()->route('storefront.track', [
             'orderCode' => $validated['order_code'],
+        ]);
+    }
+
+    public function sitemap(): Response
+    {
+        $urls = [
+            [
+                'loc' => route('storefront.index'),
+                'changefreq' => 'hourly',
+                'priority' => '1.0',
+                'lastmod' => now()->toAtomString(),
+            ],
+            ['loc' => route('public.topup.index'), 'changefreq' => 'daily', 'priority' => '0.9', 'lastmod' => now()->toAtomString()],
+            ['loc' => route('public.ppob.index'), 'changefreq' => 'daily', 'priority' => '0.9', 'lastmod' => now()->toAtomString()],
+            ['loc' => route('public.promo'), 'changefreq' => 'daily', 'priority' => '0.8', 'lastmod' => now()->toAtomString()],
+            ['loc' => route('public.articles.index'), 'changefreq' => 'daily', 'priority' => '0.8', 'lastmod' => now()->toAtomString()],
+            ['loc' => route('public.reviews.index'), 'changefreq' => 'daily', 'priority' => '0.7', 'lastmod' => now()->toAtomString()],
+            ['loc' => route('public.check-transaction'), 'changefreq' => 'weekly', 'priority' => '0.6', 'lastmod' => now()->toAtomString()],
+        ];
+
+        $topups = Product::query()
+            ->where('is_active', true)
+            ->whereRaw("UPPER(type) = 'TOPUP'")
+            ->select(['slug', 'updated_at'])
+            ->limit(1000)
+            ->get();
+
+        foreach ($topups as $product) {
+            $urls[] = [
+                'loc' => route('public.topup.show', ['gameSlug' => $product->slug]),
+                'changefreq' => 'daily',
+                'priority' => '0.8',
+                'lastmod' => $product->updated_at?->toAtomString(),
+            ];
+        }
+
+        $categories = Category::query()
+            ->where('is_active', true)
+            ->whereRaw("UPPER(type) <> 'TOPUP'")
+            ->select(['slug', 'updated_at'])
+            ->limit(1000)
+            ->get();
+
+        foreach ($categories as $category) {
+            $urls[] = [
+                'loc' => route('public.ppob.show', ['categorySlug' => $category->slug]),
+                'changefreq' => 'daily',
+                'priority' => '0.7',
+                'lastmod' => $category->updated_at?->toAtomString(),
+            ];
+        }
+
+        $articles = CmsPage::query()
+            ->where('is_published', true)
+            ->whereRaw("UPPER(type) = 'ARTICLE'")
+            ->select(['slug', 'updated_at'])
+            ->limit(2000)
+            ->get();
+
+        foreach ($articles as $article) {
+            $urls[] = [
+                'loc' => route('public.articles.show', ['slug' => $article->slug]),
+                'changefreq' => 'weekly',
+                'priority' => '0.7',
+                'lastmod' => $article->updated_at?->toAtomString(),
+            ];
+        }
+
+        $xmlLines = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ];
+
+        foreach ($urls as $item) {
+            $loc = htmlspecialchars((string) ($item['loc'] ?? ''), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+            $lastmod = htmlspecialchars((string) ($item['lastmod'] ?? ''), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+            $changefreq = htmlspecialchars((string) ($item['changefreq'] ?? ''), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+            $priority = htmlspecialchars((string) ($item['priority'] ?? ''), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+
+            $xmlLines[] = '<url>';
+            $xmlLines[] = '<loc>'.$loc.'</loc>';
+
+            if ($lastmod !== '') {
+                $xmlLines[] = '<lastmod>'.$lastmod.'</lastmod>';
+            }
+
+            if ($changefreq !== '') {
+                $xmlLines[] = '<changefreq>'.$changefreq.'</changefreq>';
+            }
+
+            if ($priority !== '') {
+                $xmlLines[] = '<priority>'.$priority.'</priority>';
+            }
+
+            $xmlLines[] = '</url>';
+        }
+
+        $xmlLines[] = '</urlset>';
+        $content = implode("\n", $xmlLines);
+
+        return response($content, 200, [
+            'Content-Type' => 'application/xml; charset=UTF-8',
+        ]);
+    }
+
+    public function robots(): Response
+    {
+        $content = implode("\n", [
+            'User-agent: *',
+            'Allow: /',
+            'Disallow: /admin',
+            'Sitemap: '.url('/sitemap.xml'),
+        ]);
+
+        return response($content, 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
         ]);
     }
 }
