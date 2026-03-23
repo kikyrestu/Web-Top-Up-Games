@@ -137,11 +137,12 @@
         .section-head h3 {
             margin: 0;
             color: #fff;
-            font-size: 24px;
+            font-size: 28px;
+            letter-spacing: -0.01em;
         }
 
         .section-head h3 {
-            font-size: 18px;
+            font-size: 19px;
         }
 
         .section-head a {
@@ -313,7 +314,7 @@
 
         .faq-box summary {
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 800;
             color: #f2f7ff;
         }
@@ -383,6 +384,79 @@
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 12px;
+        }
+
+        .subscribe-box {
+            border: 1px solid #274069;
+            border-radius: 12px;
+            background: #132544;
+            padding: 16px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .subscribe-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .subscribe-head h3 {
+            margin: 0;
+            font-size: 24px;
+            color: #fff;
+        }
+
+        .subscribe-head p {
+            margin: 0;
+            color: #a5bbdd;
+            font-size: 13px;
+        }
+
+        .subscribe-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .subscribe-input {
+            border: 1px solid #2f4a74;
+            border-radius: 10px;
+            background: #0f1f39;
+            color: #e8f0ff;
+            padding: 10px 12px;
+            font-size: 13px;
+            width: 100%;
+        }
+
+        .subscribe-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            background: linear-gradient(120deg, #3f6ff0, #2b57cc);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .social-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .social-chip {
+            border: 1px solid #35547f;
+            border-radius: 999px;
+            padding: 6px 11px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #cfe0ff;
+            background: #102543;
         }
 
         .support-item {
@@ -474,6 +548,10 @@
 
             .support-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .subscribe-row {
+                grid-template-columns: 1fr;
             }
 
             .footer-grid {
@@ -686,6 +764,23 @@
                 <div class="support-item">Email</div>
                 <div class="support-item">FAQ</div>
                 <div class="support-item">Laporan Balik</div>
+            </div>
+        </section>
+
+        <section class="subscribe-box">
+            <div class="subscribe-head">
+                <h3>Berlangganan</h3>
+                <p>Dapatkan promo terbaru langsung ke email kamu.</p>
+            </div>
+            <div class="subscribe-row">
+                <input class="subscribe-input" type="email" placeholder="Masukkan email aktif...">
+                <button class="subscribe-btn" type="button">Langganan Sekarang</button>
+            </div>
+            <div class="social-row">
+                <span class="social-chip">Facebook</span>
+                <span class="social-chip">Instagram</span>
+                <span class="social-chip">YouTube</span>
+                <span class="social-chip">X / Twitter</span>
             </div>
         </section>
 
