@@ -48,8 +48,10 @@ final class AdminOrderController extends Controller
         ]);
     }
 
-    public function show(string $orderCode): View
+    public function show(Request $request, string $orderCode): View
     {
+        $payloadSearch = trim((string) $request->query('payload_q', ''));
+
         $order = Order::query()
             ->with([
                 'product:id,name,type',
@@ -61,8 +63,28 @@ final class AdminOrderController extends Controller
             ->where('order_code', $orderCode)
             ->firstOrFail();
 
+        $filteredAttempts = $order->providerAttempts
+            ->sortBy('attempt_no')
+            ->filter(function ($attempt) use ($payloadSearch): bool {
+                if ($payloadSearch === '') {
+                    return true;
+                }
+
+                $needle = mb_strtolower($payloadSearch);
+                $requestJson = mb_strtolower(json_encode($attempt->request_payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '');
+                $responseJson = mb_strtolower(json_encode($attempt->response_payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '');
+
+                return str_contains($requestJson, $needle)
+                    || str_contains($responseJson, $needle)
+                    || str_contains(mb_strtolower((string) $attempt->status), $needle)
+                    || str_contains(mb_strtolower((string) $attempt->provider_ref), $needle);
+            })
+            ->values();
+
         return view('admin.orders.show', [
             'order' => $order,
+            'attempts' => $filteredAttempts,
+            'payloadSearch' => $payloadSearch,
         ]);
     }
 

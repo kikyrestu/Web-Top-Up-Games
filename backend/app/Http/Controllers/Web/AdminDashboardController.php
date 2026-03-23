@@ -60,17 +60,36 @@ final class AdminDashboardController extends Controller
     {
         $alertsResponse = $this->systemOpsController->dashboardAlerts($request);
         $metricsResponse = $this->systemOpsController->dashboardMetrics();
+        $severity = strtoupper(trim((string) $request->query('severity', 'ALL')));
 
         /** @var array<string, mixed> $alertsPayload */
         $alertsPayload = $alertsResponse->getData(true);
         /** @var array<string, mixed> $metricsPayload */
         $metricsPayload = $metricsResponse->getData(true);
 
+        $alertsData = is_array($alertsPayload['data'] ?? null) ? $alertsPayload['data'] : [];
+
+        if (in_array($severity, ['HIGH', 'MEDIUM'], true)) {
+            $providerAlerts = collect(is_iterable($alertsData['alerts']['providers'] ?? null) ? $alertsData['alerts']['providers'] : [])
+                ->filter(static fn (array $row): bool => strtoupper((string) ($row['severity'] ?? '')) === $severity)
+                ->values()
+                ->all();
+
+            $paymentAlerts = collect(is_iterable($alertsData['alerts']['payments'] ?? null) ? $alertsData['alerts']['payments'] : [])
+                ->filter(static fn (array $row): bool => strtoupper((string) ($row['severity'] ?? '')) === $severity)
+                ->values()
+                ->all();
+
+            $alertsData['alerts']['providers'] = $providerAlerts;
+            $alertsData['alerts']['payments'] = $paymentAlerts;
+        }
+
         return view('admin.alerts', [
-            'alerts' => is_array($alertsPayload['data'] ?? null) ? $alertsPayload['data'] : [],
+            'alerts' => $alertsData,
             'metrics' => is_array($metricsPayload['data'] ?? null) ? $metricsPayload['data'] : [],
             'filters' => [
                 'hours' => (int) $request->integer('hours', 24),
+                'severity' => $severity,
                 'alert_success_rate_threshold' => (float) $request->input('alert_success_rate_threshold', config('services.dashboard.provider_success_rate_alert_threshold', 85)),
                 'alert_min_attempts' => (int) $request->input('alert_min_attempts', config('services.dashboard.provider_alert_min_attempts', 5)),
                 'payment_alert_paid_rate_threshold' => (float) $request->input('payment_alert_paid_rate_threshold', config('services.dashboard.payment_paid_rate_alert_threshold', 75)),

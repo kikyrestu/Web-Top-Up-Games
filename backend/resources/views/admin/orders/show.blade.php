@@ -49,12 +49,21 @@
 
         <div class="panel">
             <h2>Provider Attempts</h2>
+            <form method="get" action="{{ route('admin.orders.show', ['orderCode' => $order->order_code]) }}" style="display:flex; gap:10px; margin-bottom:10px; align-items:end;">
+                <div style="flex:1;">
+                    <label for="payload_q">Cari di payload/status/ref</label>
+                    <input id="payload_q" name="payload_q" type="text" value="{{ $payloadSearch }}" placeholder="contoh: timeout, provider_ref, error code">
+                </div>
+                <button class="btn" type="submit">Search</button>
+                <a class="pill" href="{{ route('admin.orders.show', ['orderCode' => $order->order_code]) }}">Reset</a>
+            </form>
+
             <table>
                 <thead>
                 <tr><th>No</th><th>Provider</th><th>Status</th><th>Ref</th><th>At</th><th>Payload</th></tr>
                 </thead>
                 <tbody>
-                @forelse ($order->providerAttempts->sortBy('attempt_no') as $attempt)
+                @forelse ($attempts as $attempt)
                     <tr>
                         <td>#{{ $attempt->attempt_no }}</td>
                         <td>{{ $attempt->provider?->code }} - {{ $attempt->provider?->name }}</td>

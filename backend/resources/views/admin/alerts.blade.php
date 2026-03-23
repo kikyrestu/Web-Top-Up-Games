@@ -12,10 +12,24 @@
             <h1>Alert Center</h1>
             <p class="muted">Filter threshold alert provider dan payment, lalu pantau hasilnya.</p>
 
-            <form method="get" action="{{ route('admin.dashboard.alerts') }}" class="grid" style="grid-template-columns:repeat(5, minmax(0, 1fr)); margin-top:12px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+                <a class="pill" href="{{ route('admin.dashboard.alerts', array_merge(request()->query(), ['severity' => 'ALL'])) }}">Severity: ALL</a>
+                <a class="pill" href="{{ route('admin.dashboard.alerts', array_merge(request()->query(), ['severity' => 'HIGH'])) }}">Severity: HIGH</a>
+                <a class="pill" href="{{ route('admin.dashboard.alerts', array_merge(request()->query(), ['severity' => 'MEDIUM'])) }}">Severity: MEDIUM</a>
+            </div>
+
+            <form method="get" action="{{ route('admin.dashboard.alerts') }}" class="grid" style="grid-template-columns:repeat(6, minmax(0, 1fr)); margin-top:12px;">
                 <div>
                     <label for="hours">Window Hours</label>
                     <input id="hours" name="hours" type="number" min="1" max="168" value="{{ $filters['hours'] }}">
+                </div>
+                <div>
+                    <label for="severity">Severity</label>
+                    <select id="severity" name="severity">
+                        <option value="ALL" @selected($filters['severity'] === 'ALL')>ALL</option>
+                        <option value="HIGH" @selected($filters['severity'] === 'HIGH')>HIGH</option>
+                        <option value="MEDIUM" @selected($filters['severity'] === 'MEDIUM')>MEDIUM</option>
+                    </select>
                 </div>
                 <div>
                     <label for="alert_success_rate_threshold">Provider Success Threshold (%)</label>
