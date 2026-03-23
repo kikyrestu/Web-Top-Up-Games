@@ -61,7 +61,7 @@
             width: fit-content;
             border-radius: 9px;
             padding: 8px 12px;
-            background: #f39a2d;
+            background: #3f6ff0;
             color: #fff;
             text-decoration: none;
             font-size: 12px;
@@ -69,8 +69,8 @@
         }
 
         .h1 { background: linear-gradient(130deg, #0d1630, #0f2b5a 55%, #3553bf); }
-        .h2 { background: linear-gradient(130deg, #102737, #156251 55%, #1ea56d); }
-        .h3 { background: linear-gradient(130deg, #2b1d12, #7d461d 55%, #d07b2f); }
+        .h2 { background: linear-gradient(130deg, #0f1e3f, #1f3f8c 55%, #3f6fcf); }
+        .h3 { background: linear-gradient(130deg, #101a37, #203976 55%, #355eb8); }
 
         .hero-dots {
             position: absolute;
@@ -90,8 +90,8 @@
         }
 
         .hero-dot.is-active {
-            background: #f39a2d;
-            border-color: #f39a2d;
+            background: #5f8bff;
+            border-color: #5f8bff;
         }
 
         .section-box {
@@ -181,7 +181,7 @@
 
         .card-price {
             font-size: 11px;
-            color: #ffcd88;
+            color: #9bc1ff;
             font-weight: 800;
         }
 
@@ -240,12 +240,12 @@
 
         .promo-card strong { font-size: 15px; }
         .promo-card span { font-size: 12px; color: #d9e8ff; }
-        .promo-1 { background: linear-gradient(130deg, #1a2f84, #464dd1); }
-        .promo-2 { background: linear-gradient(130deg, #1c633f, #2fa06a); }
-        .promo-3 { background: linear-gradient(130deg, #7d3a14, #d07b2f); }
-        .promo-4 { background: linear-gradient(130deg, #5a1f6f, #9f3fc4); }
-        .promo-5 { background: linear-gradient(130deg, #1f5667, #2d88a8); }
-        .promo-6 { background: linear-gradient(130deg, #5f1f2f, #ab3f5c); }
+        .promo-1 { background: linear-gradient(130deg, #172d73, #3056c1); }
+        .promo-2 { background: linear-gradient(130deg, #193066, #335dbe); }
+        .promo-3 { background: linear-gradient(130deg, #162a62, #2f54ad); }
+        .promo-4 { background: linear-gradient(130deg, #1d356d, #3a67ca); }
+        .promo-5 { background: linear-gradient(130deg, #1a325f, #3561b4); }
+        .promo-6 { background: linear-gradient(130deg, #182b57, #2e54a3); }
 
         .checkout-area {
             display: grid;
@@ -317,7 +317,7 @@
         .estimate-row.total {
             border-top: 1px dashed #37547f;
             padding-top: 7px;
-            color: #ffcf8f;
+            color: #9bc1ff;
             font-weight: 800;
         }
 
@@ -331,7 +331,7 @@
             border: none;
             border-radius: 9px;
             padding: 10px 13px;
-            background: linear-gradient(120deg, #ffab39, #f07d2f);
+            background: linear-gradient(120deg, #3f6ff0, #2b57cc);
             color: #fff;
             font-size: 12px;
             font-weight: 800;

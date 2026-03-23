@@ -38,11 +38,11 @@
             --ink-soft: #9ab0d1;
             --line: #2b4368;
             --panel: #122445;
-            --accent: #ff9f2d;
-            --accent-2: #ffd166;
+            --accent: #4f7dff;
+            --accent-2: #8ab0ff;
             --danger: #b00020;
-            --ok: #59cb8d;
-            --warn: #d7ad57;
+            --ok: #6e9dff;
+            --warn: #6e9dff;
         }
 
         * { box-sizing: border-box; }
@@ -175,7 +175,7 @@
 
         .cta-link {
             border-color: transparent;
-            background: linear-gradient(120deg, #ffab39, #f07d2f);
+            background: linear-gradient(120deg, #3f6ff0, #2b57cc);
             color: #fff;
         }
 
@@ -344,7 +344,7 @@
             font-weight: 800;
             font-family: 'Manrope', sans-serif;
             cursor: pointer;
-            background: linear-gradient(120deg, #ffab39, #f07d2f);
+            background: linear-gradient(120deg, #3f6ff0, #2b57cc);
             color: #fff;
         }
 
