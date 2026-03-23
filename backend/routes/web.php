@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\AdminCatalogController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminNominalController;
 use App\Http\Controllers\Web\AdminOrderController;
+use App\Http\Controllers\Web\AdminPaymentManagementController;
 use App\Http\Controllers\Web\AdminReviewModerationController;
 use App\Http\Controllers\Web\AdminSecurityEventController;
 use App\Http\Controllers\Web\AdminSeoController;
@@ -118,6 +119,13 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/nominal/prices/{price}/edit', [AdminNominalController::class, 'pricesEdit'])->name('nominal.prices.edit');
         Route::put('/nominal/prices/{price}', [AdminNominalController::class, 'pricesUpdate'])->name('nominal.prices.update');
         Route::delete('/nominal/prices/{price}', [AdminNominalController::class, 'pricesDestroy'])->name('nominal.prices.destroy');
+
+        Route::get('/payment/gateways', [AdminPaymentManagementController::class, 'index'])->name('payment.gateways.index');
+        Route::get('/payment/gateways/create', [AdminPaymentManagementController::class, 'create'])->name('payment.gateways.create');
+        Route::post('/payment/gateways', [AdminPaymentManagementController::class, 'store'])->name('payment.gateways.store');
+        Route::get('/payment/gateways/{gateway}/edit', [AdminPaymentManagementController::class, 'edit'])->name('payment.gateways.edit');
+        Route::put('/payment/gateways/{gateway}', [AdminPaymentManagementController::class, 'update'])->name('payment.gateways.update');
+        Route::delete('/payment/gateways/{gateway}', [AdminPaymentManagementController::class, 'destroy'])->name('payment.gateways.destroy');
 
         Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('/audit-logs/export/csv', [AdminAuditLogController::class, 'exportCsv'])->name('audit-logs.export.csv');

@@ -640,6 +640,7 @@
                     <a class="admin-nav-link {{ request()->routeIs('admin.catalog.providers.*') ? 'is-active' : '' }}" href="{{ route('admin.catalog.providers.index') }}">Catalog Providers</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.nominal.mappings.*') ? 'is-active' : '' }}" href="{{ route('admin.nominal.mappings.index') }}">Nominal Mappings</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.nominal.prices.*') ? 'is-active' : '' }}" href="{{ route('admin.nominal.prices.index') }}">Nominal Prices</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.payment.gateways.*') ? 'is-active' : '' }}" href="{{ route('admin.payment.gateways.index') }}">Payment Gateways</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.orders.*') ? 'is-active' : '' }}" href="{{ route('admin.orders.index') }}">Orders</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.reviews.*') ? 'is-active' : '' }}" href="{{ route('admin.reviews.index') }}">Reviews</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.audit-logs.*') ? 'is-active' : '' }}" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>

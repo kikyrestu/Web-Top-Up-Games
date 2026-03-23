@@ -85,8 +85,8 @@ Status:
 5. Promo campaign: PARTIAL
    - Konten promo ada via CMS, tapi voucher/cashback engine belum ada.
 
-6. Payment management: PARTIAL
-   - Gateway config sudah ada, tapi panel admin gateway/metode/fee/routing belum ada.
+6. Payment management: DONE
+   - Panel admin gateway/metode/fee/priority routing sudah tersedia.
 
 7. Order management: PARTIAL
    - List/detail/reprocess sudah ada, refund/void/dispute workflow belum lengkap.
@@ -126,7 +126,7 @@ Aturan eksekusi:
 
 - [x] Katalog game/PPOB admin (category/product/provider CRUD).
 - [x] Paket nominal/top-up item admin.
-- [ ] Payment management panel (gateway, metode, fee, routing).
+- [x] Payment management panel (gateway, metode, fee, routing).
 - [ ] Pricing rule editor (margin, admin fee, fallback rule).
 
 ### Phase 2 - Campaign and Operations
@@ -168,3 +168,10 @@ Update terbaru:
 - Scope: CRUD mapping provider product + CRUD provider price + validasi kombinasi provider-product
 - Bukti: route admin.nominal.* + AdminNominalController + view admin/nominal/* + sidebar admin
 - Catatan: berikutnya lanjut payment management panel
+
+- Item: Payment management panel
+- Phase: 1
+- Status: DONE
+- Scope: CRUD gateway setting + status active + priority routing + fee + supported methods
+- Bukti: route admin.payment.gateways.* + AdminPaymentManagementController + model/migration payment_gateway_settings + view admin/payment/*
+- Catatan: resolve gateway checkout kini membaca setting admin aktif, lalu fallback ke config

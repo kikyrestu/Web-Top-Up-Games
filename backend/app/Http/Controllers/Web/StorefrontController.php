@@ -11,6 +11,7 @@ use App\Domain\Pricing\Services\PricingEngineService;
 use App\Http\Controllers\Controller;
 use App\Models\Margin;
 use App\Models\Order;
+use App\Models\PaymentGatewaySetting;
 use App\Models\Product;
 use App\Models\ProviderPrice;
 use App\Models\ProviderProduct;
@@ -318,9 +319,22 @@ final class StorefrontController extends Controller
             ->filter(static fn (string $code): bool => $code !== '')
             ->values();
 
+        $activeGatewaySettings = PaymentGatewaySetting::query()
+            ->where('is_active', true)
+            ->orderBy('priority')
+            ->orderBy('code')
+            ->get(['code'])
+            ->map(static fn (PaymentGatewaySetting $setting): string => strtoupper((string) $setting->code))
+            ->filter(static fn (string $code) => $configuredGateways->contains($code))
+            ->values();
+
         $preferred = strtoupper(trim((string) $preferredGateway));
-        if ($preferred !== '' && $configuredGateways->contains($preferred)) {
+        if ($preferred !== '' && $activeGatewaySettings->contains($preferred)) {
             return $preferred;
+        }
+
+        if ($activeGatewaySettings->isNotEmpty()) {
+            return (string) $activeGatewaySettings->first();
         }
 
         $default = strtoupper((string) config('services.payment_default_gateway', 'MIDTRANS'));
