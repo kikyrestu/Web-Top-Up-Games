@@ -6,6 +6,7 @@
         $quickCategories = $productsByCategory->keys()->take(6);
         $quickProducts = $allProducts->take(8);
         $featuredProducts = $allProducts->take(12);
+        $allCategoryNames = $productsByCategory->keys()->values();
     @endphp
 
     <style>
@@ -129,6 +130,42 @@
             padding: 16px;
         }
 
+        .market-wrap {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 16px;
+            margin-top: 16px;
+            align-items: start;
+        }
+
+        .catalog-panel {
+            background: #fff;
+        }
+
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0 12px;
+        }
+
+        .category-tab {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--ink);
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .category-tab.is-active {
+            border-color: transparent;
+            background: linear-gradient(120deg, var(--accent), #0ea26a);
+            color: #fff;
+        }
+
         .step-shell {
             display: grid;
             gap: 12px;
@@ -182,6 +219,7 @@
             text-align: left;
             cursor: pointer;
             transition: border-color 0.15s ease, transform 0.15s ease;
+            position: relative;
         }
 
         .product-card:hover {
@@ -200,6 +238,34 @@
             font-weight: 800;
             line-height: 1.3;
             margin-bottom: 4px;
+        }
+
+        .product-thumb {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid #d3e5d9;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+            background: #f3fbf6;
+            color: #1f6f42;
+            margin-bottom: 8px;
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            border-radius: 999px;
+            padding: 3px 7px;
+            font-size: 10px;
+            font-weight: 800;
+            background: #fff2cd;
+            color: #7a5600;
+            border: 1px solid #f1d487;
         }
 
         .product-type {
@@ -231,6 +297,28 @@
             font-size: 11px;
             font-weight: 800;
             color: #2f4f3f;
+        }
+
+        .selected-product {
+            border: 1px solid #cde1d5;
+            border-radius: 12px;
+            background: #f7fbf8;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+        }
+
+        .selected-product .cap {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--ink-soft);
+            font-weight: 800;
+        }
+
+        .selected-product .name {
+            font-size: 14px;
+            font-weight: 800;
+            margin-top: 4px;
         }
 
         .mini-steps {
@@ -299,8 +387,16 @@
                 grid-template-columns: 1fr;
             }
 
+            .market-wrap {
+                grid-template-columns: 1fr;
+            }
+
             .hero-title {
                 font-size: 34px;
+            }
+
+            .checkout-panel {
+                position: static;
             }
         }
 
@@ -387,7 +483,55 @@
             </div>
         </div>
 
-        <div class="checkout-panel" id="checkout-form">
+        <div class="panel" style="background:linear-gradient(135deg, #113424, #1f6f42); color:#fff; border-color:transparent;">
+            <h2 style="font-size:26px; margin-bottom:10px;">Format Checkout ala Marketplace Top-Up</h2>
+            <p style="margin:0 0 10px; opacity:0.95;">Pilih produk di kiri, data akun di kanan, lanjut bayar. Alurnya sengaja dibuat ringkas seperti platform top-up populer.</p>
+            <div class="trust-row">
+                <span class="trust-chip" style="background:#ffffff1a; border-color:#ffffff33; color:#fff;">Live Stock Monitoring</span>
+                <span class="trust-chip" style="background:#ffffff1a; border-color:#ffffff33; color:#fff;">Secure Checkout</span>
+                <span class="trust-chip" style="background:#ffffff1a; border-color:#ffffff33; color:#fff;">Fast Payment Routing</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="market-wrap" id="checkout-form">
+        <div class="panel catalog-panel">
+            <div class="step-head">
+                <span class="step-num">1</span>
+                <span class="step-label">Pilih Nominal / Produk</span>
+            </div>
+
+            <div class="category-tabs">
+                <button type="button" class="category-tab is-active" data-filter-cat="all">Semua</button>
+                @foreach ($allCategoryNames as $categoryName)
+                    <button type="button" class="category-tab" data-filter-cat="{{ $categoryName }}">{{ $categoryName }}</button>
+                @endforeach
+            </div>
+
+            <div class="product-grid">
+                @foreach ($featuredProducts as $product)
+                    @php
+                        $thumbRaw = is_array($product->meta ?? null)
+                            ? ((string) (($product->meta['thumbnail'] ?? $product->meta['icon'] ?? '') ?: ''))
+                            : '';
+                        $thumb = $thumbRaw !== '' ? $thumbRaw : strtoupper(substr((string) $product->name, 0, 1));
+                        $categoryName = (string) ($product->category?->name ?? 'Lainnya');
+                    @endphp
+                    <button class="product-card" type="button" data-product-id="{{ (int) $product->id }}" data-category="{{ $categoryName }}">
+                        @if ($loop->iteration <= 6)
+                            <span class="popular-badge">Popular</span>
+                        @endif
+                        <span class="product-thumb">{{ $thumb }}</span>
+                        <div class="product-name">{{ $product->name }}</div>
+                        <div class="product-type">{{ $product->type }}</div>
+                    </button>
+                @endforeach
+            </div>
+
+            <p class="muted" style="margin:6px 0 0; font-size:12px;">Tip: klik kartu produk untuk langsung isi pilihan di form checkout.</p>
+        </div>
+
+        <div class="checkout-panel" style="position:sticky; top:16px;">
             <h2>Checkout Instan</h2>
             <p class="muted" style="margin-bottom:12px;">Isi data minimum, sistem akan proses order dan buat payment reference otomatis.</p>
 
@@ -401,18 +545,9 @@
                 @csrf
 
                 <section class="step-card">
-                    <div class="step-head">
-                        <span class="step-num">1</span>
-                        <span class="step-label">Pilih Nominal / Produk</span>
-                    </div>
-
-                    <div class="product-grid">
-                        @foreach ($featuredProducts as $product)
-                            <button class="product-card" type="button" data-product-id="{{ (int) $product->id }}">
-                                <div class="product-name">{{ $product->name }}</div>
-                                <div class="product-type">{{ $product->type }}</div>
-                            </button>
-                        @endforeach
+                    <div class="selected-product">
+                        <div class="cap">Produk Dipilih</div>
+                        <div class="name" id="selected-product-name">Belum dipilih</div>
                     </div>
 
                     <label for="product_id">Daftar produk lengkap</label>
@@ -498,12 +633,19 @@
         document.addEventListener('DOMContentLoaded', function () {
             const productSelect = document.getElementById('product_id');
             const quickButtons = document.querySelectorAll('[data-product-id]');
+            const categoryTabs = document.querySelectorAll('[data-filter-cat]');
+            const selectedProductName = document.getElementById('selected-product-name');
 
             function setActiveProduct(productId) {
                 quickButtons.forEach(function (node) {
                     const nodeId = String(node.getAttribute('data-product-id') || '');
                     node.classList.toggle('is-active', nodeId === productId && productId !== '');
                 });
+
+                if (selectedProductName && productSelect) {
+                    const selectedText = productSelect.options[productSelect.selectedIndex]?.text || 'Belum dipilih';
+                    selectedProductName.textContent = selectedText;
+                }
             }
 
             if (productSelect) {
@@ -512,6 +654,26 @@
                     setActiveProduct(String(productSelect.value || ''));
                 });
             }
+
+            categoryTabs.forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    const targetCategory = String(tab.getAttribute('data-filter-cat') || 'all');
+
+                    categoryTabs.forEach(function (node) {
+                        node.classList.toggle('is-active', node === tab);
+                    });
+
+                    quickButtons.forEach(function (btn) {
+                        if (!btn.classList.contains('product-card')) {
+                            return;
+                        }
+
+                        const cardCategory = String(btn.getAttribute('data-category') || '');
+                        const visible = targetCategory === 'all' || cardCategory === targetCategory;
+                        btn.style.display = visible ? '' : 'none';
+                    });
+                });
+            });
 
             quickButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
