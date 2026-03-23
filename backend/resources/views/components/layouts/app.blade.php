@@ -206,8 +206,14 @@
     <div class="topbar">
         <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
         <div class="nav">
-            <a class="pill" href="{{ route('storefront.index') }}">Storefront</a>
-            <a class="pill" href="{{ route('storefront.history') }}">Order History</a>
+            <a class="pill" href="{{ route('storefront.index') }}">Checkout</a>
+            <a class="pill" href="{{ route('public.topup.index') }}">Top Up</a>
+            <a class="pill" href="{{ route('public.ppob.index') }}">PPOB</a>
+            <a class="pill" href="{{ route('public.promo') }}">Promo</a>
+            <a class="pill" href="{{ route('public.articles.index') }}">Artikel</a>
+            <a class="pill" href="{{ route('public.reviews.index') }}">Ulasan</a>
+            <a class="pill" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
+            <a class="pill" href="{{ route('storefront.history') }}">History</a>
             <a class="pill" href="{{ route('admin.dashboard') }}">Admin</a>
             <a class="pill" href="{{ route('admin.dashboard.alerts') }}">Admin Alerts</a>
             <a class="pill" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
