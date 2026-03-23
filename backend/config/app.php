@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'admin_bootstrap_key' => env('ADMIN_BOOTSTRAP_KEY', ''),
+
 ];

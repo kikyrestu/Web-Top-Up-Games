@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\AdminBootstrapController;
 use App\Http\Controllers\Api\V1\AuthTokenController;
 use App\Http\Controllers\Api\V1\Admin\OrderProviderAttemptController;
 use App\Http\Controllers\Api\V1\Admin\OrderReprocessController;
@@ -22,7 +23,10 @@ Route::prefix('v1')->group(function (): void {
     ]);
 
     Route::post('/validation/game-id', [ValidationController::class, 'gameId']);
-    Route::post('/auth/token/login', [AuthTokenController::class, 'login']);
+    Route::post('/admin/bootstrap', [AdminBootstrapController::class, 'store'])
+        ->middleware('throttle:admin-bootstrap');
+    Route::post('/auth/token/login', [AuthTokenController::class, 'login'])
+        ->middleware('throttle:auth-token-login');
     Route::post('/orders/quote', [QuoteController::class, 'store']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{orderCode}', [OrderController::class, 'show']);
