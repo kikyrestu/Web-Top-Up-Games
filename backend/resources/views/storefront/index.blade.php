@@ -14,6 +14,14 @@
     @endphp
 
     <style>
+        :root {
+            --fs-hero: clamp(28px, 3.1vw, 38px);
+            --fs-section: clamp(22px, 2.2vw, 30px);
+            --fs-subsection: clamp(17px, 1.6vw, 21px);
+            --fs-body: 12px;
+            --fs-meta: 11px;
+        }
+
         .uni-wrap {
             display: grid;
             gap: 16px;
@@ -69,15 +77,17 @@
 
         .hero-slide h1 {
             margin: 0;
-            font-size: 34px;
+            font-size: var(--fs-hero);
             color: #fff;
             line-height: 1.05;
+            letter-spacing: -0.015em;
         }
 
         .hero-slide p {
             margin: 0;
             font-size: 14px;
             color: #d2e2ff;
+            line-height: 1.45;
         }
 
         .hero-slide a {
@@ -137,12 +147,12 @@
         .section-head h3 {
             margin: 0;
             color: #fff;
-            font-size: 28px;
+            font-size: var(--fs-section);
             letter-spacing: -0.01em;
         }
 
         .section-head h3 {
-            font-size: 19px;
+            font-size: var(--fs-subsection);
         }
 
         .section-head a {
@@ -150,7 +160,7 @@
             color: #dbe8ff;
             border-radius: 999px;
             text-decoration: none;
-            font-size: 11px;
+            font-size: var(--fs-meta);
             font-weight: 800;
             padding: 6px 10px;
         }
@@ -198,14 +208,14 @@
         }
 
         .card-name {
-            font-size: 10px;
+            font-size: var(--fs-meta);
             font-weight: 800;
             min-height: 24px;
             line-height: 1.3;
         }
 
         .card-price {
-            font-size: 10px;
+            font-size: var(--fs-meta);
             color: #9bc1ff;
             font-weight: 800;
         }
@@ -215,7 +225,7 @@
             border-radius: 6px;
             padding: 4px 0;
             text-align: center;
-            font-size: 10px;
+            font-size: var(--fs-meta);
             font-weight: 800;
             color: #dbe8ff;
             background: #102543;
@@ -254,13 +264,14 @@
         .benefit strong {
             display: block;
             color: #fff;
-            font-size: 13px;
+            font-size: 14px;
             margin-bottom: 5px;
         }
 
         .benefit span {
             color: #a9bfdf;
-            font-size: 12px;
+            font-size: var(--fs-body);
+            line-height: 1.45;
         }
 
         .promo-grid {
@@ -281,7 +292,7 @@
         }
 
         .promo-card strong { font-size: 15px; }
-        .promo-card span { font-size: 12px; color: #d9e8ff; }
+        .promo-card span { font-size: var(--fs-body); color: #d9e8ff; }
         .promo-1 { background: linear-gradient(130deg, #172d73, #3056c1); }
         .promo-2 { background: linear-gradient(130deg, #193066, #335dbe); }
         .promo-3 { background: linear-gradient(130deg, #162a62, #2f54ad); }
@@ -314,15 +325,17 @@
 
         .faq-box summary {
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 800;
             color: #f2f7ff;
+            line-height: 1.45;
         }
 
         .faq-box p {
             margin: 7px 0 0;
             color: #aac1e2;
-            font-size: 12px;
+            font-size: var(--fs-body);
+            line-height: 1.45;
         }
 
         .checkout-grid {
@@ -334,7 +347,7 @@
         .checkout-grid label {
             display: block;
             margin-bottom: 4px;
-            font-size: 12px;
+            font-size: var(--fs-body);
             color: #c3d4ee;
             font-weight: 700;
         }
@@ -351,7 +364,7 @@
         .estimate-row {
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: var(--fs-body);
             color: #d7e4fb;
             gap: 8px;
         }
@@ -405,14 +418,14 @@
 
         .subscribe-head h3 {
             margin: 0;
-            font-size: 24px;
+            font-size: var(--fs-section);
             color: #fff;
         }
 
         .subscribe-head p {
             margin: 0;
             color: #a5bbdd;
-            font-size: 13px;
+            font-size: var(--fs-body);
         }
 
         .subscribe-row {
@@ -453,7 +466,7 @@
             border: 1px solid #35547f;
             border-radius: 999px;
             padding: 6px 11px;
-            font-size: 12px;
+            font-size: var(--fs-body);
             font-weight: 800;
             color: #cfe0ff;
             background: #102543;
@@ -466,7 +479,7 @@
             padding: 12px;
             text-align: center;
             color: #dbe8ff;
-            font-size: 12px;
+            font-size: var(--fs-body);
             font-weight: 800;
         }
 
@@ -480,14 +493,14 @@
         .footer-grid h4 {
             margin: 0 0 8px;
             color: #fff;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .footer-grid p,
         .footer-grid li {
             margin: 0;
             color: #9fb7d9;
-            font-size: 12px;
+            font-size: var(--fs-body);
             line-height: 1.5;
         }
 
@@ -505,6 +518,12 @@
         }
 
         @media (max-width: 1080px) {
+            :root {
+                --fs-hero: clamp(24px, 3.4vw, 32px);
+                --fs-section: clamp(20px, 2.2vw, 26px);
+                --fs-subsection: clamp(16px, 1.8vw, 19px);
+            }
+
             .popular-rail,
             .category-rail {
                 grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -516,6 +535,12 @@
         }
 
         @media (max-width: 760px) {
+            :root {
+                --fs-hero: 26px;
+                --fs-section: 22px;
+                --fs-subsection: 18px;
+            }
+
             .hero-slide {
                 min-height: 210px;
                 padding: 18px;
@@ -526,7 +551,7 @@
             }
 
             .hero-slide h1 {
-                font-size: 25px;
+                line-height: 1.1;
             }
 
             .popular-rail,
