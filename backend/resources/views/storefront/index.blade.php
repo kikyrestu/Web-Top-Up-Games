@@ -20,19 +20,24 @@
             --fs-subsection: clamp(17px, 1.6vw, 21px);
             --fs-body: 12px;
             --fs-meta: 11px;
+            --space-section: 16px;
+            --space-box: 16px;
+            --radius-lg: 12px;
+            --radius-md: 10px;
+            --border-strong: 1px;
         }
 
         .uni-wrap {
             display: grid;
-            gap: 16px;
+            gap: var(--space-section);
             color: #eaf1ff;
             max-width: 1560px;
             margin: 0 auto;
         }
 
         .hero-banner {
-            border: 1px solid #28446f;
-            border-radius: 12px;
+            border: var(--border-strong) solid #28446f;
+            border-radius: var(--radius-lg);
             overflow: hidden;
             position: relative;
             background: #0f1e39;
@@ -129,10 +134,10 @@
         }
 
         .section-box {
-            border: 1px solid #274069;
-            border-radius: 12px;
+            border: var(--border-strong) solid #274069;
+            border-radius: var(--radius-lg);
             background: #132544;
-            padding: 16px;
+            padding: var(--space-box);
         }
 
         .section-head {
@@ -173,8 +178,8 @@
         }
 
         .card-item {
-            border: 1px solid #33517f;
-            border-radius: 10px;
+            border: var(--border-strong) solid #33517f;
+            border-radius: var(--radius-md);
             background: #0e1e38;
             padding: 8px;
             display: grid;
@@ -190,8 +195,8 @@
 
         .card-thumb {
             aspect-ratio: 3 / 4;
-            border-radius: 8px;
-            border: 1px solid #2c456e;
+            border-radius: calc(var(--radius-md) - 2px);
+            border: var(--border-strong) solid #2c456e;
             background: linear-gradient(130deg, #27426b, #3e659f);
             overflow: hidden;
             display: flex;
@@ -221,8 +226,8 @@
         }
 
         .mini-button {
-            border: 1px solid #3f6296;
-            border-radius: 6px;
+            border: var(--border-strong) solid #3f6296;
+            border-radius: 7px;
             padding: 4px 0;
             text-align: center;
             font-size: var(--fs-meta);
@@ -238,7 +243,7 @@
         }
 
         .section-foot a {
-            border: 1px solid #3f6296;
+            border: var(--border-strong) solid #3f6296;
             border-radius: 999px;
             padding: 6px 12px;
             text-decoration: none;
@@ -255,8 +260,8 @@
         }
 
         .benefit {
-            border: 1px solid #2e4a75;
-            border-radius: 10px;
+            border: var(--border-strong) solid #2e4a75;
+            border-radius: var(--radius-md);
             background: #182c4d;
             padding: 14px;
         }
@@ -282,8 +287,8 @@
 
         .promo-card {
             min-height: 125px;
-            border-radius: 10px;
-            border: 1px solid #3a5b8d;
+            border-radius: var(--radius-md);
+            border: var(--border-strong) solid #3a5b8d;
             padding: 12px;
             display: grid;
             align-content: end;
@@ -310,10 +315,10 @@
         .checkout-box,
         .support-box,
         .footer-box {
-            border: 1px solid #274069;
-            border-radius: 12px;
+            border: var(--border-strong) solid #274069;
+            border-radius: var(--radius-lg);
             background: #132544;
-            padding: 16px;
+            padding: var(--space-box);
         }
 
         .faq-box details {
@@ -353,8 +358,8 @@
         }
 
         .estimate {
-            border: 1px solid #2e4a75;
-            border-radius: 10px;
+            border: var(--border-strong) solid #2e4a75;
+            border-radius: var(--radius-md);
             background: #10213c;
             padding: 10px;
             display: grid;
@@ -384,7 +389,7 @@
 
         .checkout-submit button {
             border: none;
-            border-radius: 9px;
+            border-radius: 10px;
             padding: 10px 13px;
             background: linear-gradient(120deg, #3f6ff0, #2b57cc);
             color: #fff;
@@ -400,10 +405,10 @@
         }
 
         .subscribe-box {
-            border: 1px solid #274069;
-            border-radius: 12px;
+            border: var(--border-strong) solid #274069;
+            border-radius: var(--radius-lg);
             background: #132544;
-            padding: 16px;
+            padding: var(--space-box);
             display: grid;
             gap: 12px;
         }
@@ -436,8 +441,8 @@
         }
 
         .subscribe-input {
-            border: 1px solid #2f4a74;
-            border-radius: 10px;
+            border: var(--border-strong) solid #2f4a74;
+            border-radius: var(--radius-md);
             background: #0f1f39;
             color: #e8f0ff;
             padding: 10px 12px;
@@ -447,7 +452,7 @@
 
         .subscribe-btn {
             border: none;
-            border-radius: 10px;
+            border-radius: var(--radius-md);
             padding: 10px 14px;
             background: linear-gradient(120deg, #3f6ff0, #2b57cc);
             color: #fff;
@@ -463,7 +468,7 @@
         }
 
         .social-chip {
-            border: 1px solid #35547f;
+            border: var(--border-strong) solid #35547f;
             border-radius: 999px;
             padding: 6px 11px;
             font-size: var(--fs-body);
@@ -473,8 +478,8 @@
         }
 
         .support-item {
-            border: 1px solid #32507d;
-            border-radius: 9px;
+            border: var(--border-strong) solid #32507d;
+            border-radius: var(--radius-md);
             background: #0f1f39;
             padding: 12px;
             text-align: center;
@@ -510,7 +515,7 @@
         }
 
         .legal {
-            margin-top: 10px;
+            margin-top: 12px;
             padding-top: 8px;
             border-top: 1px solid #2f4a75;
             color: #8fa8cc;
