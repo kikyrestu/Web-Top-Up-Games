@@ -79,8 +79,8 @@ Status:
 3. Paket nominal/top-up item management: DONE
    - Panel admin untuk mapping provider product dan provider price sudah tersedia.
 
-4. Pricing engine: PARTIAL
-   - Logic pricing sudah jalan di backend checkout, tapi belum ada admin rule editor.
+4. Pricing engine: DONE
+   - Logic pricing backend sudah terhubung dengan admin pricing rule editor (scope product/category/global).
 
 5. Promo campaign: PARTIAL
    - Konten promo ada via CMS, tapi voucher/cashback engine belum ada.
@@ -127,7 +127,7 @@ Aturan eksekusi:
 - [x] Katalog game/PPOB admin (category/product/provider CRUD).
 - [x] Paket nominal/top-up item admin.
 - [x] Payment management panel (gateway, metode, fee, routing).
-- [ ] Pricing rule editor (margin, admin fee, fallback rule).
+- [x] Pricing rule editor (margin, admin fee, fallback rule).
 
 ### Phase 2 - Campaign and Operations
 
@@ -175,3 +175,10 @@ Update terbaru:
 - Scope: CRUD gateway setting + status active + priority routing + fee + supported methods
 - Bukti: route admin.payment.gateways.* + AdminPaymentManagementController + model/migration payment_gateway_settings + view admin/payment/*
 - Catatan: resolve gateway checkout kini membaca setting admin aktif, lalu fallback ke config
+
+- Item: Pricing rule editor
+- Phase: 1
+- Status: DONE
+- Scope: CRUD margin rule dengan scope PRODUCT/CATEGORY/GLOBAL + filter mode + active toggle
+- Bukti: route admin.pricing.margins.* + AdminPricingController + view admin/pricing/* + relasi Margin product/category
+- Catatan: resolve margin checkout kini menjalankan prioritas Product -> Category -> Global

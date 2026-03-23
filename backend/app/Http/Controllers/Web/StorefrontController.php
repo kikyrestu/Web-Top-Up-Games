@@ -268,6 +268,15 @@ final class StorefrontController extends Controller
         }
 
         if ($margin === null) {
+            $margin = Margin::query()
+                ->where('is_active', true)
+                ->whereNull('product_id')
+                ->whereNull('category_id')
+                ->latest('id')
+                ->first();
+        }
+
+        if ($margin === null) {
             return 0;
         }
 

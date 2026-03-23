@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminNominalController;
 use App\Http\Controllers\Web\AdminOrderController;
 use App\Http\Controllers\Web\AdminPaymentManagementController;
+use App\Http\Controllers\Web\AdminPricingController;
 use App\Http\Controllers\Web\AdminReviewModerationController;
 use App\Http\Controllers\Web\AdminSecurityEventController;
 use App\Http\Controllers\Web\AdminSeoController;
@@ -126,6 +127,13 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/payment/gateways/{gateway}/edit', [AdminPaymentManagementController::class, 'edit'])->name('payment.gateways.edit');
         Route::put('/payment/gateways/{gateway}', [AdminPaymentManagementController::class, 'update'])->name('payment.gateways.update');
         Route::delete('/payment/gateways/{gateway}', [AdminPaymentManagementController::class, 'destroy'])->name('payment.gateways.destroy');
+
+        Route::get('/pricing/margins', [AdminPricingController::class, 'marginsIndex'])->name('pricing.margins.index');
+        Route::get('/pricing/margins/create', [AdminPricingController::class, 'marginsCreate'])->name('pricing.margins.create');
+        Route::post('/pricing/margins', [AdminPricingController::class, 'marginsStore'])->name('pricing.margins.store');
+        Route::get('/pricing/margins/{margin}/edit', [AdminPricingController::class, 'marginsEdit'])->name('pricing.margins.edit');
+        Route::put('/pricing/margins/{margin}', [AdminPricingController::class, 'marginsUpdate'])->name('pricing.margins.update');
+        Route::delete('/pricing/margins/{margin}', [AdminPricingController::class, 'marginsDestroy'])->name('pricing.margins.destroy');
 
         Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('/audit-logs/export/csv', [AdminAuditLogController::class, 'exportCsv'])->name('audit-logs.export.csv');
