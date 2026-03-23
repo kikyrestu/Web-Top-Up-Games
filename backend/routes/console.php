@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Catalog\Services\ProductSyncService;
+use App\Domain\Audit\Services\AuditLogService;
 use App\Models\IdempotencyRequest;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -15,7 +16,7 @@ Artisan::command('providers:sync-products', function (ProductSyncService $syncSe
     $this->info('Provider sync completed. Updated rows: '.$count);
 })->purpose('Sync provider products and pricing into local catalog mapping');
 
-Artisan::command('idempotency:purge-expired', function (): void {
+Artisan::command('idempotency:purge-expired', function (AuditLogService $auditLogService): void {
     $deleted = 0;
 
     IdempotencyRequest::query()
@@ -30,6 +31,18 @@ Artisan::command('idempotency:purge-expired', function (): void {
 
             $deleted += IdempotencyRequest::query()->whereIn('id', $ids)->delete();
         });
+
+    $auditLogService->write([
+        'event_type' => 'IDEMPOTENCY_PURGE_COMPLETED',
+        'actor_type' => 'SYSTEM',
+        'actor_id' => null,
+        'entity_type' => 'IDEMPOTENCY',
+        'entity_id' => null,
+        'payload' => [
+            'deleted_records' => $deleted,
+        ],
+        'occurred_at' => now(),
+    ]);
 
     $this->info('Expired idempotency records purged: '.$deleted);
 })->purpose('Purge expired idempotency request records');

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\OrderProviderAttempt;
 use App\Models\Payment;
@@ -86,6 +87,18 @@ class AdminDashboardMetricsTest extends TestCase
             'status' => 'FAILED',
         ]);
 
+        AuditLog::query()->create([
+            'event_type' => 'IDEMPOTENCY_PURGE_COMPLETED',
+            'actor_type' => 'SYSTEM',
+            'actor_id' => null,
+            'entity_type' => 'IDEMPOTENCY',
+            'entity_id' => null,
+            'payload' => [
+                'deleted_records' => 12,
+            ],
+            'occurred_at' => now()->subMinutes(5),
+        ]);
+
         $response = $this->getJson('/api/v1/admin/dashboard/metrics?hours=24');
 
         $response
@@ -98,7 +111,10 @@ class AdminDashboardMetricsTest extends TestCase
             ->assertJsonPath('data.providers.0.top_fail_reasons.0.reason', 'timeout')
             ->assertJsonPath('data.payments.0.gateway', 'MIDTRANS')
             ->assertJsonPath('data.payments.0.total', 2)
-            ->assertJsonPath('data.payments.0.paid_rate_pct', 50);
+            ->assertJsonPath('data.payments.0.paid_rate_pct', 50)
+            ->assertJsonPath('data.housekeeping.idempotency_purge.runs', 1)
+            ->assertJsonPath('data.housekeeping.idempotency_purge.total_deleted', 12)
+            ->assertJsonPath('data.housekeeping.idempotency_purge.last_deleted', 12);
 
         $this->assertNotNull($response->json('data.providers.0.p95_latency_ms'));
 

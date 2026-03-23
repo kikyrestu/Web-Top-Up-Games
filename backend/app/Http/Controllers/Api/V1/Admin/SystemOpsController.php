@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Domain\Audit\Services\AuditLogService;
 use App\Domain\Catalog\Services\ProductSyncService;
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\OrderProviderAttempt;
 use App\Models\Payment;
@@ -321,9 +322,31 @@ final class SystemOpsController extends Controller
             ->values()
             ->all();
 
+        $purgeLogs = AuditLog::query()
+            ->where('event_type', 'IDEMPOTENCY_PURGE_COMPLETED')
+            ->where('occurred_at', '>=', $from)
+            ->orderByDesc('occurred_at')
+            ->get(['payload', 'occurred_at']);
+
+        $idempotencyPurgeTotalDeleted = $purgeLogs->sum(static function (AuditLog $log): int {
+            $payload = is_array($log->payload) ? $log->payload : [];
+
+            return (int) ($payload['deleted_records'] ?? 0);
+        });
+
+        $lastPurge = $purgeLogs->first();
+
         return [
             'window_hours' => $hours,
             'generated_at' => now()->toISOString(),
+            'housekeeping' => [
+                'idempotency_purge' => [
+                    'runs' => $purgeLogs->count(),
+                    'total_deleted' => $idempotencyPurgeTotalDeleted,
+                    'last_run_at' => $lastPurge?->occurred_at?->toISOString(),
+                    'last_deleted' => (int) ((is_array($lastPurge?->payload) ? $lastPurge?->payload['deleted_records'] ?? 0 : 0)),
+                ],
+            ],
             'alerts' => [
                 'config' => [
                     'provider_success_rate_threshold_pct' => $alertThreshold,
@@ -404,9 +427,20 @@ final class SystemOpsController extends Controller
             ['generated_at', (string) ($metrics['generated_at'] ?? now()->toISOString())],
         ];
 
+        $housekeeping = is_array($metrics['housekeeping'] ?? null) ? $metrics['housekeeping'] : [];
+        $idempotencyPurge = is_array($housekeeping['idempotency_purge'] ?? null) ? $housekeeping['idempotency_purge'] : [];
+
+        $housekeepingRows = [
+            ['idempotency_purge_runs', (string) ($idempotencyPurge['runs'] ?? 0)],
+            ['idempotency_purge_total_deleted', (string) ($idempotencyPurge['total_deleted'] ?? 0)],
+            ['idempotency_purge_last_run_at', (string) ($idempotencyPurge['last_run_at'] ?? '')],
+            ['idempotency_purge_last_deleted', (string) ($idempotencyPurge['last_deleted'] ?? 0)],
+        ];
+
         $xml = '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
         $xml .= $this->buildWorksheetXml('Summary', ['key', 'value'], $sheetMetaRows);
+        $xml .= $this->buildWorksheetXml('Housekeeping', ['key', 'value'], $housekeepingRows);
         $xml .= $this->buildWorksheetXml('Provider Metrics', [
             'provider_code', 'provider_name', 'attempts', 'success_count', 'failed_count', 'skipped_count', 'success_rate_pct', 'p95_latency_ms', 'top_fail_reasons',
         ], $providerRows);

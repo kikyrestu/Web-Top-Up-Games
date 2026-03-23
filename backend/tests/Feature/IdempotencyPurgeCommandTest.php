@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuditLog;
 use App\Models\IdempotencyRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -38,5 +39,12 @@ class IdempotencyPurgeCommandTest extends TestCase
         $this->assertSame(1, IdempotencyRequest::query()->count());
         $this->assertTrue(IdempotencyRequest::query()->where('idempotency_key', 'active-1')->exists());
         $this->assertFalse(IdempotencyRequest::query()->where('idempotency_key', 'expired-1')->exists());
+
+        $this->assertTrue(
+            AuditLog::query()
+                ->where('event_type', 'IDEMPOTENCY_PURGE_COMPLETED')
+                ->where('payload->deleted_records', 1)
+                ->exists()
+        );
     }
 }
