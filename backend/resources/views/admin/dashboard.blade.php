@@ -8,6 +8,7 @@
         $alertsContainer = is_array($alerts['alerts'] ?? null) ? $alerts['alerts'] : [];
         $providerAlerts = is_iterable($alertsContainer['providers'] ?? null) ? collect($alertsContainer['providers']) : collect();
         $paymentAlerts = is_iterable($alertsContainer['payments'] ?? null) ? collect($alertsContainer['payments']) : collect();
+        $uploadAlerts = is_iterable($alertsContainer['uploads'] ?? null) ? collect($alertsContainer['uploads']) : collect();
         $housekeepingIdempotency = is_array($housekeeping['idempotency'] ?? null) ? $housekeeping['idempotency'] : [];
         $housekeepingRuns = is_iterable($housekeepingHistory['runs'] ?? null) ? collect($housekeepingHistory['runs']) : collect();
         $readinessSummary = is_array($readiness['summary'] ?? null) ? $readiness['summary'] : ['pass' => 0, 'warn' => 0, 'fail' => 0];
@@ -144,7 +145,16 @@
                     </tr>
                 @empty
                 @endforelse
-                @if ($providerAlerts->isEmpty() && $paymentAlerts->isEmpty())
+                @forelse ($uploadAlerts as $alert)
+                    <tr>
+                        <td>UPLOAD</td>
+                        <td>{{ $alert['ip'] ?? '-' }}</td>
+                        <td>{{ $alert['severity'] ?? '-' }}</td>
+                        <td>Blocked {{ (float) ($alert['blocked_rate_pct'] ?? 0) }}% / {{ (float) ($alert['threshold_pct'] ?? 0) }}%</td>
+                    </tr>
+                @empty
+                @endforelse
+                @if ($providerAlerts->isEmpty() && $paymentAlerts->isEmpty() && $uploadAlerts->isEmpty())
                     <tr><td colspan="4" class="muted">Tidak ada alert pada window ini.</td></tr>
                 @endif
                 </tbody>
