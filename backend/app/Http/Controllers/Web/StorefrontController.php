@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Security\Services\TamperRiskService;
 use App\Domain\Order\Services\OrderService;
 use App\Domain\Payment\Services\PaymentService;
 use App\Domain\Pricing\Services\PricingEngineService;
@@ -13,6 +14,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProviderPrice;
 use App\Models\ProviderProduct;
+use App\Models\SecurityEvent;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +26,7 @@ final class StorefrontController extends Controller
         private readonly PricingEngineService $pricingEngine,
         private readonly OrderService $orderService,
         private readonly PaymentService $paymentService,
+        private readonly TamperRiskService $tamperRiskService,
     ) {
     }
 
@@ -51,7 +54,50 @@ final class StorefrontController extends Controller
             'customer_target' => ['nullable', 'string', 'max:120'],
             'gateway' => ['required', 'string', 'max:40'],
             'method' => ['nullable', 'string', 'max:50'],
+            'security_challenge_answer' => ['nullable', 'string', 'max:20'],
         ]);
+
+        $risk = $this->tamperRiskService->evaluateCheckout($request, $validated);
+        $riskScore = (int) ($risk['score'] ?? 0);
+        $riskLevel = (string) ($risk['level'] ?? 'LOW');
+
+        if ($riskLevel === 'HIGH') {
+            $this->logSecurityEvent($request, 'CHECKOUT_TAMPER_BLOCKED', 'HIGH', $riskScore, [
+                'reasons' => $risk['reasons'] ?? [],
+                'product_id' => (int) ($validated['product_id'] ?? 0),
+                'gateway' => (string) ($validated['gateway'] ?? ''),
+            ]);
+
+            return back()
+                ->withErrors(['checkout' => 'Permintaan checkout terdeteksi berisiko tinggi dan diblok sementara.'])
+                ->withInput();
+        }
+
+        if ($riskLevel === 'MEDIUM') {
+            $challengeAnswer = trim((string) ($validated['security_challenge_answer'] ?? ''));
+            if (!$this->tamperRiskService->verifyChallenge($request, $challengeAnswer)) {
+                $challengeQuestion = $this->tamperRiskService->getOrCreateChallenge($request);
+
+                $this->logSecurityEvent($request, 'CHECKOUT_TAMPER_CHALLENGE_REQUIRED', 'MEDIUM', $riskScore, [
+                    'reasons' => $risk['reasons'] ?? [],
+                    'product_id' => (int) ($validated['product_id'] ?? 0),
+                    'gateway' => (string) ($validated['gateway'] ?? ''),
+                ]);
+
+                return back()
+                    ->withErrors(['checkout' => 'Verifikasi keamanan diperlukan sebelum checkout dilanjutkan.'])
+                    ->withInput()
+                    ->with('checkout_challenge_question', $challengeQuestion);
+            }
+
+            $this->tamperRiskService->clearChallenge($request);
+
+            $this->logSecurityEvent($request, 'CHECKOUT_TAMPER_CHALLENGE_PASSED', 'LOW', $riskScore, [
+                'reasons' => $risk['reasons'] ?? [],
+                'product_id' => (int) ($validated['product_id'] ?? 0),
+                'gateway' => (string) ($validated['gateway'] ?? ''),
+            ]);
+        }
 
         $quantity = (int) ($validated['quantity'] ?? 1);
 
@@ -231,5 +277,23 @@ final class StorefrontController extends Controller
             ->all();
 
         $request->session()->put('recent_order_codes', $recent);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function logSecurityEvent(Request $request, string $eventCode, string $severity, int $riskScore, array $context): void
+    {
+        SecurityEvent::query()->create([
+            'event_code' => $eventCode,
+            'severity' => $severity,
+            'user_id' => auth()->id(),
+            'device_id' => null,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'risk_score' => max(0, min($riskScore, 100)),
+            'context' => $context,
+            'occurred_at' => now(),
+        ]);
     }
 }

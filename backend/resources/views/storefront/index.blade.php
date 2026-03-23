@@ -48,6 +48,14 @@
                 <input id="method" name="method" type="text" value="{{ old('method') }}" placeholder="VA / QRIS / E-Wallet">
             </div>
 
+            @if (session('checkout_challenge_question'))
+                <div style="grid-column:1/-1; border:1px solid var(--line); border-radius:12px; padding:12px; background:#fff9e6;">
+                    <label for="security_challenge_answer">Verifikasi Keamanan</label>
+                    <p class="muted" style="margin:6px 0 10px;">{{ session('checkout_challenge_question') }}</p>
+                    <input id="security_challenge_answer" name="security_challenge_answer" type="text" value="{{ old('security_challenge_answer') }}" placeholder="Masukkan jawaban challenge">
+                </div>
+            @endif
+
             <div style="grid-column:1/-1; display:flex; justify-content:flex-end;">
                 <button class="btn" type="submit">Buat Order + Payment</button>
             </div>
