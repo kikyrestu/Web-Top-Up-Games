@@ -11,7 +11,7 @@
                     <label for="status">Status</label>
                     <select id="status" name="status">
                         <option value="">Semua</option>
-                        @foreach (['PENDING', 'PAID', 'PROCESSING', 'SUCCESS', 'FAILED'] as $status)
+                        @foreach (['PENDING', 'PAID', 'PROCESSING', 'SUCCESS', 'FAILED', 'VOIDED', 'REFUNDED', 'DISPUTED'] as $status)
                             <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ $status }}</option>
                         @endforeach
                     </select>

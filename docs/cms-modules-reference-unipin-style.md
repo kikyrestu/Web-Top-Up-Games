@@ -88,8 +88,8 @@ Status:
 6. Payment management: DONE
    - Panel admin gateway/metode/fee/priority routing sudah tersedia.
 
-7. Order management: PARTIAL
-   - List/detail/reprocess sudah ada, refund/void/dispute workflow belum lengkap.
+7. Order management: DONE
+   - List/detail/reprocess + manual workflow refund/void/dispute + operation log sudah tersedia.
 
 8. User/customer management: PARTIAL
    - Area akun customer ada, panel admin customer segmentation/lifecycle belum ada.
@@ -132,7 +132,7 @@ Aturan eksekusi:
 ### Phase 2 - Campaign and Operations
 
 - [x] Promo campaign engine (voucher/cashback/rule period).
-- [ ] Order operation extension (refund/void/dispute/manual action log).
+- [x] Order operation extension (refund/void/dispute/manual action log).
 - [ ] User/customer admin panel (search, segment, status, profile ops).
 - [ ] Customer support tools (ticket, complaint, SLA status).
 
@@ -189,3 +189,10 @@ Update terbaru:
 - Scope: CRUD promo campaign voucher/cashback + period/quota/scope + apply promo code di checkout + redemption log
 - Bukti: route admin.promo.campaigns.* + AdminPromoCampaignController + model/migration promo_campaigns/promo_redemptions + PromoEngineService + integrasi StorefrontController
 - Catatan: cashback dicatat sebagai reward metadata order/redemption, sementara voucher mengurangi nominal bayar
+
+- Item: Order operation extension
+- Phase: 2
+- Status: DONE
+- Scope: aksi manual refund/void/dispute dari panel order + reprocess logging + riwayat operation log per order
+- Bukti: route admin.orders.(void/refund/dispute) + migration/model order_operation_logs + AdminOrderController + view admin/orders/show
+- Catatan: setiap aksi manual tercatat ke operation log sekaligus audit log

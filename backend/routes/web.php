@@ -150,6 +150,9 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{orderCode}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{orderCode}/reprocess', [AdminOrderController::class, 'reprocess'])->name('orders.reprocess');
+        Route::post('/orders/{orderCode}/void', [AdminOrderController::class, 'voidOrder'])->name('orders.void');
+        Route::post('/orders/{orderCode}/refund', [AdminOrderController::class, 'refundOrder'])->name('orders.refund');
+        Route::post('/orders/{orderCode}/dispute', [AdminOrderController::class, 'disputeOrder'])->name('orders.dispute');
 
         Route::get('/reviews', [AdminReviewModerationController::class, 'index'])->name('reviews.index');
         Route::post('/reviews/bulk-moderate', [AdminReviewModerationController::class, 'bulkModerate'])->name('reviews.bulk-moderate');

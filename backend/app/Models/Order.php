@@ -65,4 +65,9 @@ final class Order extends Model
     {
         return $this->hasMany(OrderProviderAttempt::class);
     }
+
+    public function operationLogs(): HasMany
+    {
+        return $this->hasMany(OrderOperationLog::class);
+    }
 }

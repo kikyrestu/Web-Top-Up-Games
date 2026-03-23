@@ -1,4 +1,11 @@
 <x-layouts.app :title="'Admin Order ' . $order->order_code">
+    @php
+        $orderStatus = strtoupper((string) $order->status);
+        $canReprocess = $orderStatus === 'FAILED';
+        $canVoid = in_array($orderStatus, ['PENDING', 'PAID'], true);
+        $canRefund = in_array($orderStatus, ['PAID', 'PROCESSING', 'SUCCESS', 'FAILED', 'DISPUTED'], true);
+        $canDispute = in_array($orderStatus, ['PENDING', 'PAID', 'PROCESSING', 'SUCCESS', 'FAILED'], true);
+    @endphp
     <div class="grid">
         <div class="panel">
             <h1>Order Detail</h1>
@@ -13,11 +20,51 @@
                 <div class="card"><div class="k">Final Amount</div><div class="v">Rp {{ number_format((float) $order->final_amount, 0, ',', '.') }}</div></div>
             </div>
 
-            @if ($order->status === 'FAILED')
+            @if ($canReprocess)
                 <form method="post" action="{{ route('admin.orders.reprocess', ['orderCode' => $order->order_code]) }}" style="margin-top:14px;">
                     @csrf
                     <button type="submit" class="btn">Reprocess Order</button>
                 </form>
+            @endif
+        </div>
+
+        <div class="panel">
+            <h2>Manual Actions</h2>
+            <p class="muted">Aksi operasional ini akan tercatat ke audit log dan operation log.</p>
+
+            @if ($canVoid)
+                <form method="post" action="{{ route('admin.orders.void', ['orderCode' => $order->order_code]) }}" class="grid" style="margin-top:10px;">
+                    @csrf
+                    <label for="void_note">Void Note</label>
+                    <textarea id="void_note" name="note" rows="2" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 11px; font-size:14px; background:#0d1d38; color:#e8f0ff;" placeholder="Alasan void order...">{{ old('note') }}</textarea>
+                    <div><button type="submit" class="btn btn-ghost">Void Order</button></div>
+                </form>
+            @endif
+
+            @if ($canRefund)
+                <form method="post" action="{{ route('admin.orders.refund', ['orderCode' => $order->order_code]) }}" class="grid" style="margin-top:14px;">
+                    @csrf
+                    <label for="refund_note">Refund Note</label>
+                    <textarea id="refund_note" name="note" rows="2" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 11px; font-size:14px; background:#0d1d38; color:#e8f0ff;" placeholder="Alasan refund...">{{ old('note') }}</textarea>
+                    <div>
+                        <label for="refund_amount">Refund Amount (opsional)</label>
+                        <input id="refund_amount" name="refund_amount" type="number" min="0" step="0.01" value="{{ old('refund_amount') }}" placeholder="Kosong = full refund">
+                    </div>
+                    <div><button type="submit" class="btn btn-ghost">Refund Order</button></div>
+                </form>
+            @endif
+
+            @if ($canDispute)
+                <form method="post" action="{{ route('admin.orders.dispute', ['orderCode' => $order->order_code]) }}" class="grid" style="margin-top:14px;">
+                    @csrf
+                    <label for="dispute_note">Dispute Note</label>
+                    <textarea id="dispute_note" name="note" rows="2" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 11px; font-size:14px; background:#0d1d38; color:#e8f0ff;" placeholder="Alasan dispute...">{{ old('note') }}</textarea>
+                    <div><button type="submit" class="btn btn-ghost">Mark as Dispute</button></div>
+                </form>
+            @endif
+
+            @if (!$canVoid && !$canRefund && !$canDispute)
+                <p class="muted" style="margin-top:10px;">Tidak ada aksi manual yang tersedia untuk status order saat ini.</p>
             @endif
         </div>
 
@@ -86,6 +133,29 @@
                     </tr>
                 @empty
                     <tr><td colspan="6" class="muted">Belum ada provider attempts.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>Operation Logs</h2>
+            <table>
+                <thead>
+                <tr><th>At</th><th>Actor</th><th>Action</th><th>Status</th><th>Refund</th><th>Note</th></tr>
+                </thead>
+                <tbody>
+                @forelse ($operationLogs as $log)
+                    <tr>
+                        <td>{{ $log->acted_at }}</td>
+                        <td>{{ $log->actor?->name ?: 'system' }}</td>
+                        <td>{{ $log->action_type }}</td>
+                        <td>{{ $log->previous_status ?: '-' }} -> {{ $log->new_status ?: '-' }}</td>
+                        <td>{{ $log->refund_amount !== null ? 'Rp '.number_format((float) $log->refund_amount, 0, ',', '.') : '-' }}</td>
+                        <td>{{ $log->note ?: '-' }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="muted">Belum ada operation logs.</td></tr>
                 @endforelse
                 </tbody>
             </table>
