@@ -168,7 +168,6 @@ final class SystemOpsController extends Controller
     {
         $hours = $this->normalizedHours($request->integer('hours', 24));
         $from = now()->subHours($hours);
-
         $purgeLogs = AuditLog::query()
             ->where('event_type', 'IDEMPOTENCY_PURGE_COMPLETED')
             ->where('occurred_at', '>=', $from)
@@ -204,6 +203,113 @@ final class SystemOpsController extends Controller
                     'purge_last_run_at' => $lastPurge?->occurred_at?->toISOString(),
                     'purge_last_deleted' => (int) ((is_array($lastPurge?->payload) ? $lastPurge?->payload['deleted_records'] ?? 0 : 0)),
                 ],
+            ],
+        ]);
+    }
+
+    public function dashboardUploadTrend(Request $request): JsonResponse
+    {
+        $granularity = strtolower(trim((string) $request->query('granularity', 'hour')));
+        if (!in_array($granularity, ['hour', 'day'], true)) {
+            $granularity = 'hour';
+        }
+
+        $points = max(1, min((int) $request->integer('points', $granularity === 'day' ? 14 : 24), $granularity === 'day' ? 60 : 168));
+        $now = now();
+
+        if ($granularity === 'day') {
+            $from = $now->copy()->startOfDay()->subDays($points - 1);
+            $logs = FileUploadLog::query()
+                ->where('created_at', '>=', $from)
+                ->get(['created_at', 'verdict']);
+
+            $buckets = [];
+            for ($i = 0; $i < $points; $i++) {
+                $bucketDate = $from->copy()->addDays($i)->toDateString();
+                $buckets[$bucketDate] = [
+                    'bucket' => $bucketDate,
+                    'total' => 0,
+                    'accepted_count' => 0,
+                    'rejected_count' => 0,
+                    'quarantined_count' => 0,
+                    'blocked_rate_pct' => 0.0,
+                ];
+            }
+
+            foreach ($logs as $row) {
+                $bucket = $row->created_at?->toDateString();
+                if ($bucket === null || !array_key_exists($bucket, $buckets)) {
+                    continue;
+                }
+
+                $verdict = strtoupper((string) $row->verdict);
+                $buckets[$bucket]['total']++;
+                if ($verdict === 'ACCEPTED') {
+                    $buckets[$bucket]['accepted_count']++;
+                } elseif ($verdict === 'REJECTED') {
+                    $buckets[$bucket]['rejected_count']++;
+                } elseif ($verdict === 'QUARANTINED') {
+                    $buckets[$bucket]['quarantined_count']++;
+                }
+            }
+
+            foreach ($buckets as $key => $bucket) {
+                $blocked = (int) $bucket['rejected_count'] + (int) $bucket['quarantined_count'];
+                $total = max((int) $bucket['total'], 1);
+                $buckets[$key]['blocked_rate_pct'] = round(($blocked / $total) * 100, 2);
+            }
+        } else {
+            $from = $now->copy()->startOfHour()->subHours($points - 1);
+            $logs = FileUploadLog::query()
+                ->where('created_at', '>=', $from)
+                ->get(['created_at', 'verdict']);
+
+            $buckets = [];
+            for ($i = 0; $i < $points; $i++) {
+                $bucketHour = $from->copy()->addHours($i)->format('Y-m-d H:00');
+                $buckets[$bucketHour] = [
+                    'bucket' => $bucketHour,
+                    'total' => 0,
+                    'accepted_count' => 0,
+                    'rejected_count' => 0,
+                    'quarantined_count' => 0,
+                    'blocked_rate_pct' => 0.0,
+                ];
+            }
+
+            foreach ($logs as $row) {
+                $bucket = $row->created_at?->copy()->startOfHour()->format('Y-m-d H:00');
+                if ($bucket === null || !array_key_exists($bucket, $buckets)) {
+                    continue;
+                }
+
+                $verdict = strtoupper((string) $row->verdict);
+                $buckets[$bucket]['total']++;
+                if ($verdict === 'ACCEPTED') {
+                    $buckets[$bucket]['accepted_count']++;
+                } elseif ($verdict === 'REJECTED') {
+                    $buckets[$bucket]['rejected_count']++;
+                } elseif ($verdict === 'QUARANTINED') {
+                    $buckets[$bucket]['quarantined_count']++;
+                }
+            }
+
+            foreach ($buckets as $key => $bucket) {
+                $blocked = (int) $bucket['rejected_count'] + (int) $bucket['quarantined_count'];
+                $total = max((int) $bucket['total'], 1);
+                $buckets[$key]['blocked_rate_pct'] = round(($blocked / $total) * 100, 2);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'code' => 'ADMIN_DASHBOARD_UPLOAD_TREND',
+            'message' => 'Upload trend loaded',
+            'data' => [
+                'granularity' => $granularity,
+                'points' => $points,
+                'generated_at' => now()->toISOString(),
+                'buckets' => array_values($buckets),
             ],
         ]);
     }

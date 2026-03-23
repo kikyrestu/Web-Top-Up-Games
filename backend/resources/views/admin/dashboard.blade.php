@@ -5,6 +5,8 @@
         $providersOverview = is_iterable($overview['providers'] ?? null) ? collect($overview['providers']) : collect();
         $providerMetrics = is_iterable($metrics['providers'] ?? null) ? collect($metrics['providers']) : collect();
         $paymentMetrics = is_iterable($metrics['payments'] ?? null) ? collect($metrics['payments']) : collect();
+        $uploadMetrics = is_iterable($metrics['uploads'] ?? null) ? collect($metrics['uploads']) : collect();
+        $uploadSummary = is_array($uploadMetrics->first() ?? null) ? $uploadMetrics->first() : [];
         $alertsContainer = is_array($alerts['alerts'] ?? null) ? $alerts['alerts'] : [];
         $providerAlerts = is_iterable($alertsContainer['providers'] ?? null) ? collect($alertsContainer['providers']) : collect();
         $paymentAlerts = is_iterable($alertsContainer['payments'] ?? null) ? collect($alertsContainer['payments']) : collect();
@@ -115,6 +117,35 @@
                     </tr>
                 @empty
                     <tr><td colspan="6" class="muted">Belum ada data payment.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>Upload Scan Metrics (24h)</h2>
+            <div class="cards" style="margin:10px 0 12px;">
+                <div class="card"><div class="k">Total Scan</div><div class="v">{{ (int) ($uploadSummary['total'] ?? 0) }}</div></div>
+                <div class="card"><div class="k">Accepted</div><div class="v">{{ (int) ($uploadSummary['accepted_count'] ?? 0) }}</div></div>
+                <div class="card"><div class="k">Rejected</div><div class="v">{{ (int) ($uploadSummary['rejected_count'] ?? 0) }}</div></div>
+                <div class="card"><div class="k">Quarantined</div><div class="v">{{ (int) ($uploadSummary['quarantined_count'] ?? 0) }}</div></div>
+                <div class="card"><div class="k">Blocked Rate</div><div class="v">{{ (float) ($uploadSummary['blocked_rate_pct'] ?? 0) }}%</div></div>
+            </div>
+            <table>
+                <thead>
+                <tr><th>Total</th><th>Accepted</th><th>Rejected</th><th>Quarantined</th><th>Blocked Rate</th></tr>
+                </thead>
+                <tbody>
+                @forelse ($uploadMetrics as $row)
+                    <tr>
+                        <td>{{ (int) ($row['total'] ?? 0) }}</td>
+                        <td>{{ (int) ($row['accepted_count'] ?? 0) }}</td>
+                        <td>{{ (int) ($row['rejected_count'] ?? 0) }}</td>
+                        <td>{{ (int) ($row['quarantined_count'] ?? 0) }}</td>
+                        <td>{{ (float) ($row['blocked_rate_pct'] ?? 0) }}%</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="muted">Belum ada data upload scan.</td></tr>
                 @endforelse
                 </tbody>
             </table>
