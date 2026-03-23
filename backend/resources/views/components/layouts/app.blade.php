@@ -63,6 +63,8 @@
 
         .content-pad {
             padding: 0 22px;
+            max-width: 1560px;
+            margin: 0 auto;
         }
 
         .topbar {
@@ -76,6 +78,12 @@
             border-right: 0;
             border-radius: 0;
             padding: 12px 22px;
+        }
+
+        .topbar-frame {
+            width: 100%;
+            max-width: 1560px;
+            margin: 0 auto;
         }
 
         .top-utility {
@@ -98,6 +106,15 @@
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
+        }
+
+        .utility-link {
+            color: #8ea8cf;
+            text-decoration: none;
+        }
+
+        .utility-link:hover {
+            color: #dce8ff;
         }
 
         .topbar-main {
@@ -418,72 +435,76 @@
         $isAdminRoute = request()->routeIs('admin.*');
     @endphp
     <div class="topbar">
-        <div class="top-utility">
-            <div class="left">
-                <span>Instant Top Up</span>
-                <span>|</span>
-                <span>Pembayaran Aman</span>
-                <span>|</span>
-                <span>Layanan 24 Jam</span>
+        <div class="topbar-frame">
+            <div class="top-utility">
+                <div class="left">
+                    <a class="utility-link" href="{{ route('storefront.index') }}">Instant Top Up</a>
+                    <span>|</span>
+                    <a class="utility-link" href="{{ route('public.promo') }}">Promo dan Acara</a>
+                    <span>|</span>
+                    <a class="utility-link" href="{{ route('public.reviews.index') }}">Keanggotaan</a>
+                    <span>|</span>
+                    <a class="utility-link" href="{{ route('public.articles.index') }}">Lainnya</a>
+                </div>
+                <div class="right">
+                    <a class="locale-pill" href="#">Indonesia</a>
+                    <a class="locale-pill" href="#">IDR</a>
+                </div>
             </div>
-            <div class="right">
-                <a class="locale-pill" href="#">Indonesia</a>
-                <a class="locale-pill" href="#">IDR</a>
+
+            <div class="topbar-main">
+                <div class="brand-wrap">
+                    <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
+                    <span class="brand-sub">Top up game and PPOB platform</span>
+                </div>
+
+                <div class="topbar-center">
+                    <input class="top-search" type="text" placeholder="Cari game, voucher, atau layanan...">
+                </div>
+
+                <div class="quick-actions">
+                    <a class="action-link" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
+                    <a class="action-link" href="{{ route('public.promo') }}">Promo</a>
+                    <a class="action-link" href="{{ route('storefront.history') }}">Riwayat</a>
+                    @auth
+                        <a class="action-link" href="{{ route('account.dashboard') }}">Akun Saya</a>
+                    @else
+                        <a class="action-link cta-link" href="{{ route('account.login-otp') }}">Masuk</a>
+                    @endauth
+
+                    @auth
+                        <form method="post" action="{{ route('account.logout') }}">
+                            @csrf
+                            <button class="logout-btn" type="submit">Logout</button>
+                        </form>
+                    @endauth
+                </div>
             </div>
+
+            <div class="market-strip">
+                <a class="market-link" href="{{ route('public.topup.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8l8-4 8 4-8 4-8-4z"></path><path d="M6 10v6l6 3 6-3v-6"></path></svg></span> Game</a>
+                <a class="market-link" href="{{ route('public.ppob.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M4 10h16"></path></svg></span> PPOB</a>
+                <a class="market-link" href="{{ route('public.articles.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"></path><path d="M8 9h8M8 13h8M8 17h5"></path></svg></span> Artikel</a>
+                <a class="market-link" href="{{ route('public.reviews.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.9 5.9L21 9.8l-4.5 4.4 1.1 6.2L12 17.7 6.4 20.4l1.1-6.2L3 9.8l6.1-.9z"></path></svg></span> Ulasan</a>
+            </div>
+
+            @if ($isAdminUser)
+                <div class="admin-strip">
+                    <a class="admin-link" href="{{ route('admin.dashboard') }}">Admin</a>
+
+                    @if ($isAdminRoute)
+                        <a class="admin-link" href="{{ route('admin.dashboard.alerts') }}">Alerts</a>
+                        <a class="admin-link" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
+                        <a class="admin-link" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
+                        <a class="admin-link" href="{{ route('admin.seo.index') }}">SEO</a>
+                        <a class="admin-link" href="{{ route('admin.audit-logs.index') }}">Audit</a>
+                        <a class="admin-link" href="{{ route('admin.security-events.index') }}">Security</a>
+                        <a class="admin-link" href="{{ route('admin.orders.index') }}">Orders</a>
+                        <a class="admin-link" href="{{ route('admin.reviews.index') }}">Reviews</a>
+                    @endif
+                </div>
+            @endif
         </div>
-
-        <div class="topbar-main">
-            <div class="brand-wrap">
-                <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
-                <span class="brand-sub">Top up game and PPOB platform</span>
-            </div>
-
-            <div class="topbar-center">
-                <input class="top-search" type="text" placeholder="Cari game, voucher, atau layanan...">
-            </div>
-
-            <div class="quick-actions">
-                <a class="action-link" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
-                <a class="action-link" href="{{ route('public.promo') }}">Promo</a>
-                <a class="action-link" href="{{ route('storefront.history') }}">Riwayat</a>
-                @auth
-                    <a class="action-link" href="{{ route('account.dashboard') }}">Akun Saya</a>
-                @else
-                    <a class="action-link cta-link" href="{{ route('account.login-otp') }}">Masuk</a>
-                @endauth
-
-                @auth
-                    <form method="post" action="{{ route('account.logout') }}">
-                        @csrf
-                        <button class="logout-btn" type="submit">Logout</button>
-                    </form>
-                @endauth
-            </div>
-        </div>
-
-        <div class="market-strip">
-            <a class="market-link" href="{{ route('public.topup.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8l8-4 8 4-8 4-8-4z"></path><path d="M6 10v6l6 3 6-3v-6"></path></svg></span> Game</a>
-            <a class="market-link" href="{{ route('public.ppob.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M4 10h16"></path></svg></span> PPOB</a>
-            <a class="market-link" href="{{ route('public.articles.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"></path><path d="M8 9h8M8 13h8M8 17h5"></path></svg></span> Artikel</a>
-            <a class="market-link" href="{{ route('public.reviews.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.9 5.9L21 9.8l-4.5 4.4 1.1 6.2L12 17.7 6.4 20.4l1.1-6.2L3 9.8l6.1-.9z"></path></svg></span> Ulasan</a>
-        </div>
-
-        @if ($isAdminUser)
-            <div class="admin-strip">
-                <a class="admin-link" href="{{ route('admin.dashboard') }}">Admin</a>
-
-                @if ($isAdminRoute)
-                    <a class="admin-link" href="{{ route('admin.dashboard.alerts') }}">Alerts</a>
-                    <a class="admin-link" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
-                    <a class="admin-link" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
-                    <a class="admin-link" href="{{ route('admin.seo.index') }}">SEO</a>
-                    <a class="admin-link" href="{{ route('admin.audit-logs.index') }}">Audit</a>
-                    <a class="admin-link" href="{{ route('admin.security-events.index') }}">Security</a>
-                    <a class="admin-link" href="{{ route('admin.orders.index') }}">Orders</a>
-                    <a class="admin-link" href="{{ route('admin.reviews.index') }}">Reviews</a>
-                @endif
-            </div>
-        @endif
     </div>
 
     <div class="content-pad">

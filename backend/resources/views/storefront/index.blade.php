@@ -18,6 +18,8 @@
             display: grid;
             gap: 16px;
             color: #eaf1ff;
+            max-width: 1560px;
+            margin: 0 auto;
         }
 
         .hero-banner {
