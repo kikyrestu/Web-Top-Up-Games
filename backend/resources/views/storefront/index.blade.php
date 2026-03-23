@@ -522,6 +522,39 @@
             font-size: 12px;
         }
 
+        @media (min-width: 1700px) {
+            :root {
+                --fs-hero: clamp(32px, 2.2vw, 42px);
+                --space-section: 20px;
+                --space-box: 20px;
+            }
+
+            .uni-wrap {
+                max-width: 1600px;
+            }
+
+            .popular-rail,
+            .category-rail {
+                grid-template-columns: repeat(9, minmax(0, 1fr));
+            }
+
+            .hero-slide {
+                min-height: 330px;
+                padding: 32px;
+            }
+        }
+
+        @media (min-width: 2200px) {
+            .uni-wrap {
+                max-width: 1760px;
+            }
+
+            .popular-rail,
+            .category-rail {
+                grid-template-columns: repeat(10, minmax(0, 1fr));
+            }
+        }
+
         @media (max-width: 1080px) {
             :root {
                 --fs-hero: clamp(24px, 3.4vw, 32px);

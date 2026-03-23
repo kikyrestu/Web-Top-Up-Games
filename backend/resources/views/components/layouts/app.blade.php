@@ -402,6 +402,33 @@
         .card .k { color: var(--ink-soft); font-size: 12px; text-transform: uppercase; font-weight: 700; }
         .card .v { font-size: 26px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
 
+        @media (min-width: 1700px) {
+            .content-pad,
+            .topbar-frame {
+                max-width: 1600px;
+            }
+
+            .topbar {
+                padding-top: 14px;
+                padding-bottom: 14px;
+            }
+
+            .topbar-center {
+                max-width: 620px;
+            }
+
+            .quick-actions {
+                gap: 10px;
+            }
+        }
+
+        @media (min-width: 2200px) {
+            .content-pad,
+            .topbar-frame {
+                max-width: 1760px;
+            }
+        }
+
         @media (max-width: 900px) {
             .cards { grid-template-columns: 1fr 1fr; }
         }
