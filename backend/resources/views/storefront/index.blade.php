@@ -43,28 +43,6 @@
             background: #0f1e39;
         }
 
-        .hero-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 1px solid #5f7eaf;
-            background: #0f203f;
-            color: #e9f1ff;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            z-index: 3;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .hero-prev { left: 10px; }
-        .hero-next { right: 10px; }
-
         .hero-track {
             display: flex;
             transition: transform .5s ease;
@@ -584,10 +562,6 @@
                 padding: 18px;
             }
 
-            .hero-nav {
-                display: none;
-            }
-
             .hero-slide h1 {
                 line-height: 1.1;
             }
@@ -647,8 +621,6 @@
                 <button class="hero-dot" type="button" data-slide="1"></button>
                 <button class="hero-dot" type="button" data-slide="2"></button>
             </div>
-            <button class="hero-nav hero-prev" type="button" aria-label="Slide sebelumnya" id="hero-prev">‹</button>
-            <button class="hero-nav hero-next" type="button" aria-label="Slide berikutnya" id="hero-next">›</button>
         </section>
 
         <section class="section-box" id="catalog">
@@ -897,8 +869,6 @@
             const estimateGateway = document.getElementById('estimate-gateway');
             const estimateTotal = document.getElementById('estimate-total');
             const cards = document.querySelectorAll('[data-product-id]');
-            const heroPrev = document.getElementById('hero-prev');
-            const heroNext = document.getElementById('hero-next');
 
             function formatRupiah(value) {
                 return new Intl.NumberFormat('id-ID', {
@@ -967,20 +937,6 @@
                     showSlide(currentSlide);
                 });
             });
-
-            if (heroPrev) {
-                heroPrev.addEventListener('click', function () {
-                    currentSlide = (currentSlide - 1 + heroDots.length) % heroDots.length;
-                    showSlide(currentSlide);
-                });
-            }
-
-            if (heroNext) {
-                heroNext.addEventListener('click', function () {
-                    currentSlide = (currentSlide + 1) % heroDots.length;
-                    showSlide(currentSlide);
-                });
-            }
 
             if (heroDots.length > 1) {
                 setInterval(function () {
