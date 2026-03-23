@@ -64,11 +64,17 @@
         }
 
         .topbar {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .topbar-main {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            padding: 8px 0;
         }
 
         .brand {
@@ -80,24 +86,63 @@
             letter-spacing: -0.02em;
         }
 
-        .nav {
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .action-link {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: var(--ink);
+            font-weight: 800;
+            font-size: 12px;
+            background: #fff;
+        }
+
+        .action-link:hover { border-color: var(--accent); }
+
+        .cta-link {
+            border-color: transparent;
+            background: linear-gradient(120deg, var(--accent), #0ea26a);
+            color: #fff;
+        }
+
+        .admin-strip {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            border-top: 1px dashed #bcd4c3;
+            padding-top: 10px;
         }
 
-        .pill {
+        .admin-link {
+            border: 1px solid #bcd4c3;
+            border-radius: 999px;
+            padding: 7px 11px;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 800;
+            color: #1f5e3c;
+            background: #f4fbf7;
+        }
+
+        .logout-btn {
             border: 1px solid var(--line);
             border-radius: 999px;
-            padding: 8px 14px;
-            text-decoration: none;
+            padding: 8px 12px;
+            background: #fff;
             color: var(--ink);
-            font-weight: 700;
-            font-size: 13px;
-            background: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: 'Manrope', sans-serif;
         }
-
-        .pill:hover { border-color: var(--accent); }
 
         .panel {
             background: var(--panel);
@@ -221,7 +266,11 @@
         @media (max-width: 640px) {
             .cards { grid-template-columns: 1fr; }
             .shell { padding: 16px 12px 36px; }
-            .topbar { align-items: flex-start; flex-direction: column; }
+            .topbar-main {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .quick-actions { justify-content: flex-start; }
         }
     </style>
 </head>
@@ -232,43 +281,43 @@
         $isAdminRoute = request()->routeIs('admin.*');
     @endphp
     <div class="topbar">
-        <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
-        <div class="nav">
-            <a class="pill" href="{{ route('storefront.index') }}">Checkout</a>
-            <a class="pill" href="{{ route('public.topup.index') }}">Top Up</a>
-            <a class="pill" href="{{ route('public.ppob.index') }}">PPOB</a>
-            <a class="pill" href="{{ route('public.promo') }}">Promo</a>
-            <a class="pill" href="{{ route('public.articles.index') }}">Artikel</a>
-            <a class="pill" href="{{ route('public.reviews.index') }}">Ulasan</a>
-            <a class="pill" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
-            <a class="pill" href="{{ route('storefront.history') }}">History</a>
-            @auth
-                <a class="pill" href="{{ route('account.dashboard') }}">Akun Saya</a>
-            @else
-                <a class="pill" href="{{ route('account.login-otp') }}">Login OTP</a>
-            @endauth
-            @if ($isAdminUser)
-                <a class="pill" href="{{ route('admin.dashboard') }}">Admin</a>
-            @endif
+        <div class="topbar-main">
+            <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
+            <div class="quick-actions">
+                <a class="action-link" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
+                <a class="action-link" href="{{ route('public.promo') }}">Promo</a>
+                <a class="action-link" href="{{ route('storefront.history') }}">Riwayat</a>
+                @auth
+                    <a class="action-link" href="{{ route('account.dashboard') }}">Akun Saya</a>
+                @else
+                    <a class="action-link cta-link" href="{{ route('account.login-otp') }}">Masuk</a>
+                @endauth
 
-            @if ($isAdminUser && $isAdminRoute)
-                <a class="pill" href="{{ route('admin.dashboard.alerts') }}">Admin Alerts</a>
-                <a class="pill" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
-                <a class="pill" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
-                <a class="pill" href="{{ route('admin.seo.index') }}">SEO Manager</a>
-                <a class="pill" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
-                <a class="pill" href="{{ route('admin.security-events.index') }}">Security Events</a>
-                <a class="pill" href="{{ route('admin.orders.index') }}">Admin Orders</a>
-                <a class="pill" href="{{ route('admin.reviews.index') }}">Review Mod</a>
-            @endif
-
-            @auth
-                <form method="post" action="{{ route('account.logout') }}">
-                    @csrf
-                    <button class="pill" type="submit">Logout</button>
-                </form>
-            @endauth
+                @auth
+                    <form method="post" action="{{ route('account.logout') }}">
+                        @csrf
+                        <button class="logout-btn" type="submit">Logout</button>
+                    </form>
+                @endauth
+            </div>
         </div>
+
+        @if ($isAdminUser)
+            <div class="admin-strip">
+                <a class="admin-link" href="{{ route('admin.dashboard') }}">Admin</a>
+
+                @if ($isAdminRoute)
+                    <a class="admin-link" href="{{ route('admin.dashboard.alerts') }}">Alerts</a>
+                    <a class="admin-link" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
+                    <a class="admin-link" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
+                    <a class="admin-link" href="{{ route('admin.seo.index') }}">SEO</a>
+                    <a class="admin-link" href="{{ route('admin.audit-logs.index') }}">Audit</a>
+                    <a class="admin-link" href="{{ route('admin.security-events.index') }}">Security</a>
+                    <a class="admin-link" href="{{ route('admin.orders.index') }}">Orders</a>
+                    <a class="admin-link" href="{{ route('admin.reviews.index') }}">Reviews</a>
+                @endif
+            </div>
+        @endif
     </div>
 
     @if (session('checkout_summary'))
