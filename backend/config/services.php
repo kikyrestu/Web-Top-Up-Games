@@ -104,4 +104,10 @@ return [
         'ttl_hours' => env('IDEMPOTENCY_TTL_HOURS', 24),
     ],
 
+    'upload_scan' => [
+        'max_size_kb' => env('UPLOAD_SCAN_MAX_SIZE_KB', 5120),
+        'max_image_width' => env('UPLOAD_SCAN_MAX_IMAGE_WIDTH', 4000),
+        'max_image_height' => env('UPLOAD_SCAN_MAX_IMAGE_HEIGHT', 4000),
+    ],
+
 ];

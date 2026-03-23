@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Admin\SystemOpsController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\QuoteController;
+use App\Http\Controllers\Api\V1\UploadController;
 use App\Http\Controllers\Api\V1\ValidationController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,7 @@ Route::prefix('v1')->group(function (): void {
     Route::post('/payments/initiate', [PaymentController::class, 'initiate'])->middleware('idempotency');
     Route::get('/payments/{gatewayReference}/status', [PaymentController::class, 'status']);
     Route::post('/payments/webhook/{gateway}', [PaymentWebhookController::class, 'handle']);
+    Route::post('/uploads/scan', [UploadController::class, 'scan'])->middleware(['auth:sanctum']);
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/auth/me', [AuthTokenController::class, 'me']);
