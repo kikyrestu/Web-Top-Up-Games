@@ -7,10 +7,13 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Api\V1\Admin\SystemOpsController;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\GlobalRateLimit;
+use App\Models\RateLimitMetric;
 use App\Models\Order;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class AdminDashboardController extends Controller
@@ -151,6 +154,8 @@ final class AdminDashboardController extends Controller
             ->map(fn (int $offset) => now()->subHours(($windowHours - 1) - $offset))
             ->values();
 
+        $dbMetrics = $this->loadRateLimitMetricsFromDatabase($profiles, $hours);
+
         $rows = [];
         $totals = [];
 
@@ -160,8 +165,11 @@ final class AdminDashboardController extends Controller
 
             foreach ($hours as $hour) {
                 $hourKey = $hour->format('YmdH');
-                $hits = (int) Cache::get('rate_limit_metric:'.$profile.':hits:'.$hourKey, 0);
-                $blocked = (int) Cache::get('rate_limit_metric:'.$profile.':blocked:'.$hourKey, 0);
+                $dbKey = $profile.'|'.$hour->copy()->startOfHour()->format('Y-m-d H:i:s');
+                $dbValue = $dbMetrics->get($dbKey);
+
+                $hits = (int) ($dbValue['hits'] ?? Cache::get('rate_limit_metric:'.$profile.':hits:'.$hourKey, 0));
+                $blocked = (int) ($dbValue['blocked'] ?? Cache::get('rate_limit_metric:'.$profile.':blocked:'.$hourKey, 0));
                 $rate = $hits > 0 ? round(($blocked / $hits) * 100, 2) : 0.0;
                 $severity = $this->severityFromRate((float) $rate);
 
@@ -211,5 +219,37 @@ final class AdminDashboardController extends Controller
         }
 
         return 'LOW';
+    }
+
+    /**
+     * @param array<int, string> $profiles
+     */
+    private function loadRateLimitMetricsFromDatabase(array $profiles, \Illuminate\Support\Collection $hours): \Illuminate\Support\Collection
+    {
+        if (!Schema::hasTable('rate_limit_metrics')) {
+            return collect();
+        }
+
+        $start = $hours->first();
+        $end = $hours->last();
+
+        if ($start === null || $end === null) {
+            return collect();
+        }
+
+        try {
+            return RateLimitMetric::query()
+                ->whereIn('profile', $profiles)
+                ->whereBetween('hour_bucket', [$start->copy()->startOfHour(), $end->copy()->endOfHour()])
+                ->get()
+                ->mapWithKeys(static fn (RateLimitMetric $row): array => [
+                    $row->profile.'|'.$row->hour_bucket?->copy()->startOfHour()->format('Y-m-d H:i:s') => [
+                        'hits' => (int) $row->hits,
+                        'blocked' => (int) $row->blocked,
+                    ],
+                ]);
+        } catch (QueryException) {
+            return collect();
+        }
     }
 }

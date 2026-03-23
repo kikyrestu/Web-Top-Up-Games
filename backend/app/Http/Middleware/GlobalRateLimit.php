@@ -5,14 +5,19 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 
 final class GlobalRateLimit
 {
+    private static ?bool $hasMetricsTable = null;
+
     /**
      * @return array<int, string>
      */
@@ -76,5 +81,46 @@ final class GlobalRateLimit
         }
 
         Cache::increment($key);
+
+        $this->incrementDatabaseMetric($profile, $type);
+    }
+
+    private function incrementDatabaseMetric(string $profile, string $type): void
+    {
+        if (!$this->hasMetricsTable()) {
+            return;
+        }
+
+        $hourBucket = now()->copy()->startOfHour()->format('Y-m-d H:i:s');
+
+        try {
+            DB::table('rate_limit_metrics')->upsert([
+                [
+                    'profile' => $profile,
+                    'hour_bucket' => $hourBucket,
+                    'hits' => $type === 'hits' ? 1 : 0,
+                    'blocked' => $type === 'blocked' ? 1 : 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            ], ['profile', 'hour_bucket'], [
+                'hits' => DB::raw('rate_limit_metrics.hits + '.($type === 'hits' ? '1' : '0')),
+                'blocked' => DB::raw('rate_limit_metrics.blocked + '.($type === 'blocked' ? '1' : '0')),
+                'updated_at' => now(),
+            ]);
+        } catch (QueryException) {
+            self::$hasMetricsTable = false;
+        }
+    }
+
+    private function hasMetricsTable(): bool
+    {
+        if (self::$hasMetricsTable !== null) {
+            return self::$hasMetricsTable;
+        }
+
+        self::$hasMetricsTable = Schema::hasTable('rate_limit_metrics');
+
+        return self::$hasMetricsTable;
     }
 }
