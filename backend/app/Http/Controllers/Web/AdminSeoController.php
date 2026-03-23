@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Upload\Services\AdminImageUploadService;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\CmsPage;
@@ -17,6 +18,10 @@ use Illuminate\Validation\Rule;
 
 final class AdminSeoController extends Controller
 {
+    public function __construct(private readonly AdminImageUploadService $imageUploadService)
+    {
+    }
+
     /**
      * @var array<int, string>
      */
@@ -67,6 +72,10 @@ final class AdminSeoController extends Controller
     {
         $data = $this->validateSeo($request);
 
+        if ($request->hasFile('og_image_upload')) {
+            $data['og_image_path'] = $this->imageUploadService->upload($request, $request->file('og_image_upload'), 'seo/og-images');
+        }
+
         SeoMeta::query()->create($data);
 
         return redirect()->route('admin.seo.index')->with('notice', 'SEO meta berhasil dibuat.');
@@ -86,6 +95,11 @@ final class AdminSeoController extends Controller
     public function update(Request $request, SeoMeta $seo): RedirectResponse
     {
         $data = $this->validateSeo($request, $seo->id);
+
+        if ($request->hasFile('og_image_upload')) {
+            $data['og_image_path'] = $this->imageUploadService->upload($request, $request->file('og_image_upload'), 'seo/og-images');
+        }
+
         $seo->update($data);
 
         return redirect()->route('admin.seo.index')->with('notice', 'SEO meta berhasil diperbarui.');
@@ -112,6 +126,7 @@ final class AdminSeoController extends Controller
             'og_title' => ['nullable', 'string', 'max:255'],
             'og_description' => ['nullable', 'string'],
             'og_image_path' => ['nullable', 'string', 'max:255'],
+            'og_image_upload' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
         $exists = SeoMeta::query()
@@ -134,6 +149,7 @@ final class AdminSeoController extends Controller
 
         $validated['entity_type'] = strtoupper((string) $validated['entity_type']);
         $validated['entity_id'] = (int) $validated['entity_id'];
+        unset($validated['og_image_upload']);
 
         return $validated;
     }

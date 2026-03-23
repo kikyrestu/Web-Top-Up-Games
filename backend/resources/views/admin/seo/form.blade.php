@@ -2,7 +2,7 @@
     <div class="grid" style="max-width: 920px;">
         <div class="panel">
             <h1>{{ $formMode === 'create' ? 'Tambah SEO Meta' : 'Edit SEO Meta' }}</h1>
-            <form method="post" action="{{ $formMode === 'create' ? route('admin.seo.store') : route('admin.seo.update', ['seo' => $seo->id]) }}" class="grid" style="margin-top:12px;">
+            <form method="post" enctype="multipart/form-data" action="{{ $formMode === 'create' ? route('admin.seo.store') : route('admin.seo.update', ['seo' => $seo->id]) }}" class="grid" style="margin-top:12px;">
                 @csrf
                 @if ($formMode === 'edit')
                     @method('put')
@@ -72,6 +72,15 @@
                 <div>
                     <label for="og_image_path">OG Image Path</label>
                     <input id="og_image_path" name="og_image_path" type="text" maxlength="255" value="{{ old('og_image_path', $seo->og_image_path) }}" placeholder="/uploads/seo/og-image.jpg">
+                    <div class="muted" style="margin-top:6px; font-size:13px;">Boleh isi path manual atau upload file OG image.</div>
+                </div>
+
+                <div>
+                    <label for="og_image_upload">Upload OG Image</label>
+                    <input id="og_image_upload" name="og_image_upload" type="file" accept=".jpg,.jpeg,.png,.webp">
+                    @if (!empty($seo->og_image_path))
+                        <div class="muted" style="margin-top:6px; font-size:13px;">Current: {{ $seo->og_image_path }}</div>
+                    @endif
                 </div>
 
                 <div style="display:flex; gap:10px;">

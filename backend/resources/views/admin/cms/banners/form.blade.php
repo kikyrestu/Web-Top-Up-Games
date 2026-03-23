@@ -2,7 +2,7 @@
     <div class="grid" style="max-width: 860px;">
         <div class="panel">
             <h1>{{ $formMode === 'create' ? 'Tambah Banner' : 'Edit Banner' }}</h1>
-            <form method="post" action="{{ $formMode === 'create' ? route('admin.cms.banners.store') : route('admin.cms.banners.update', ['banner' => $banner->id]) }}" class="grid" style="margin-top:12px;">
+            <form method="post" enctype="multipart/form-data" action="{{ $formMode === 'create' ? route('admin.cms.banners.store') : route('admin.cms.banners.update', ['banner' => $banner->id]) }}" class="grid" style="margin-top:12px;">
                 @csrf
                 @if ($formMode === 'edit')
                     @method('put')
@@ -26,7 +26,16 @@
 
                 <div>
                     <label for="image_path">Image Path</label>
-                    <input id="image_path" name="image_path" type="text" value="{{ old('image_path', $banner->image_path) }}" placeholder="/uploads/banner/hero-01.jpg" required>
+                    <input id="image_path" name="image_path" type="text" value="{{ old('image_path', $banner->image_path) }}" placeholder="/uploads/banner/hero-01.jpg">
+                    <div class="muted" style="margin-top:6px; font-size:13px;">Boleh isi path manual atau upload file di bawah.</div>
+                </div>
+
+                <div>
+                    <label for="uploaded_image">Upload Banner Image</label>
+                    <input id="uploaded_image" name="uploaded_image" type="file" accept=".jpg,.jpeg,.png,.webp">
+                    @if (!empty($banner->image_path))
+                        <div class="muted" style="margin-top:6px; font-size:13px;">Current: {{ $banner->image_path }}</div>
+                    @endif
                 </div>
 
                 <div class="grid" style="grid-template-columns:1fr 1fr 140px; align-items:end;">
