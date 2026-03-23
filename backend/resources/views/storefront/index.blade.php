@@ -132,12 +132,19 @@
 
         .promo-rail {
             margin-top: 16px;
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+
+        .promo-track {
+            display: flex;
+            transition: transform 0.45s ease;
+            will-change: transform;
         }
 
         .promo-card {
+            min-width: 100%;
             border-radius: 16px;
             padding: 14px;
             color: #fff;
@@ -146,6 +153,29 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+        }
+
+        .promo-dots {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            display: flex;
+            gap: 6px;
+            z-index: 2;
+        }
+
+        .promo-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1px solid #ffffff88;
+            background: #ffffff55;
+            cursor: pointer;
+        }
+
+        .promo-dot.is-active {
+            background: #fff;
+            border-color: #fff;
         }
 
         .promo-card h3 {
@@ -374,6 +404,30 @@
             margin-top: 4px;
         }
 
+        .estimate-box {
+            border: 1px solid #cde1d5;
+            border-radius: 12px;
+            background: #f1fbf5;
+            padding: 10px;
+            display: grid;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .estimate-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .estimate-total {
+            border-top: 1px dashed #bddbc8;
+            padding-top: 7px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
         .mini-steps {
             display: flex;
             flex-wrap: wrap;
@@ -456,10 +510,6 @@
                 position: static;
             }
 
-            .promo-rail {
-                grid-template-columns: 1fr;
-            }
-        }
 
         @media (max-width: 640px) {
             .checkout-grid,
@@ -592,27 +642,34 @@
     </div>
 
     <div class="promo-rail">
-        <article class="promo-card promo-a">
-            <div>
-                <h3>Flash Deal MLBB</h3>
-                <p>Top up favorit dengan jalur pembayaran tercepat.</p>
-            </div>
-            <a href="#checkout-form">Pilih Produk Sekarang</a>
-        </article>
-        <article class="promo-card promo-b">
-            <div>
-                <h3>Voucher & PPOB</h3>
-                <p>Dari pulsa, token listrik, sampai paket data dalam satu alur checkout.</p>
-            </div>
-            <a href="{{ route('public.ppob.index') }}">Lihat Layanan PPOB</a>
-        </article>
-        <article class="promo-card promo-c">
-            <div>
-                <h3>Promo Harian</h3>
-                <p>Voucher diskon harian untuk produk game dan digital favorit.</p>
-            </div>
-            <a href="{{ route('public.promo') }}">Buka Halaman Promo</a>
-        </article>
+        <div class="promo-track" id="promo-track">
+            <article class="promo-card promo-a">
+                <div>
+                    <h3>Flash Deal MLBB</h3>
+                    <p>Top up favorit dengan jalur pembayaran tercepat.</p>
+                </div>
+                <a href="#checkout-form">Pilih Produk Sekarang</a>
+            </article>
+            <article class="promo-card promo-b">
+                <div>
+                    <h3>Voucher & PPOB</h3>
+                    <p>Dari pulsa, token listrik, sampai paket data dalam satu alur checkout.</p>
+                </div>
+                <a href="{{ route('public.ppob.index') }}">Lihat Layanan PPOB</a>
+            </article>
+            <article class="promo-card promo-c">
+                <div>
+                    <h3>Promo Harian</h3>
+                    <p>Voucher diskon harian untuk produk game dan digital favorit.</p>
+                </div>
+                <a href="{{ route('public.promo') }}">Buka Halaman Promo</a>
+            </article>
+        </div>
+        <div class="promo-dots">
+            <button class="promo-dot is-active" type="button" data-slide="0" aria-label="Promo 1"></button>
+            <button class="promo-dot" type="button" data-slide="1" aria-label="Promo 2"></button>
+            <button class="promo-dot" type="button" data-slide="2" aria-label="Promo 3"></button>
+        </div>
     </div>
 
     <div class="market-wrap" id="checkout-form">
@@ -677,13 +734,32 @@
                         @foreach ($productsByCategory as $category => $products)
                             <optgroup label="{{ $category }}">
                                 @foreach ($products as $product)
-                                    <option value="{{ $product->id }}" @selected((string) old('product_id') === (string) $product->id)>
+                                    @php
+                                        $metaPrice = 0.0;
+                                        if (is_array($product->meta ?? null)) {
+                                            foreach (['display_price', 'price', 'nominal'] as $priceKey) {
+                                                $raw = $product->meta[$priceKey] ?? null;
+                                                if (is_numeric($raw)) {
+                                                    $metaPrice = (float) $raw;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    <option value="{{ $product->id }}" data-price="{{ $metaPrice }}" @selected((string) old('product_id') === (string) $product->id)>
                                         {{ $product->name }} ({{ $product->type }})
                                     </option>
                                 @endforeach
                             </optgroup>
                         @endforeach
                     </select>
+
+                    <div class="estimate-box" id="estimate-box">
+                        <div class="estimate-row"><span>Produk</span><strong id="estimate-product">-</strong></div>
+                        <div class="estimate-row"><span>Quantity</span><strong id="estimate-qty">1</strong></div>
+                        <div class="estimate-row"><span>Gateway</span><strong id="estimate-gateway">MIDTRANS</strong></div>
+                        <div class="estimate-row estimate-total"><span>Estimasi Total</span><strong id="estimate-total">Dihitung otomatis</strong></div>
+                    </div>
                 </section>
 
                 <section class="step-card">
@@ -761,6 +837,55 @@
             const quickButtons = document.querySelectorAll('[data-product-id]');
             const categoryTabs = document.querySelectorAll('[data-filter-cat]');
             const selectedProductName = document.getElementById('selected-product-name');
+            const quantityInput = document.getElementById('quantity');
+            const gatewaySelect = document.getElementById('gateway');
+            const estimateProduct = document.getElementById('estimate-product');
+            const estimateQty = document.getElementById('estimate-qty');
+            const estimateGateway = document.getElementById('estimate-gateway');
+            const estimateTotal = document.getElementById('estimate-total');
+            const promoTrack = document.getElementById('promo-track');
+            const promoDots = document.querySelectorAll('.promo-dot');
+
+            function formatRupiah(value) {
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    maximumFractionDigits: 0
+                }).format(value);
+            }
+
+            function updateEstimate() {
+                if (!productSelect || !estimateProduct || !estimateQty || !estimateGateway || !estimateTotal) {
+                    return;
+                }
+
+                const option = productSelect.options[productSelect.selectedIndex] || null;
+                const productLabel = option ? String(option.text || '-').trim() : '-';
+                const qty = Math.max(1, parseInt(String(quantityInput?.value || '1'), 10) || 1);
+                const gateway = String(gatewaySelect?.value || '-');
+                const unitPrice = option ? parseFloat(String(option.getAttribute('data-price') || '0')) : 0;
+
+                estimateProduct.textContent = productLabel === '' ? '-' : productLabel;
+                estimateQty.textContent = String(qty);
+                estimateGateway.textContent = gateway;
+
+                if (unitPrice > 0) {
+                    estimateTotal.textContent = formatRupiah(unitPrice * qty);
+                } else {
+                    estimateTotal.textContent = 'Dihitung otomatis';
+                }
+            }
+
+            function showPromo(index) {
+                if (!promoTrack) {
+                    return;
+                }
+
+                promoTrack.style.transform = 'translateX(-' + (index * 100) + '%)';
+                promoDots.forEach(function (dot, dotIndex) {
+                    dot.classList.toggle('is-active', dotIndex === index);
+                });
+            }
 
             function setActiveProduct(productId) {
                 quickButtons.forEach(function (node) {
@@ -772,6 +897,8 @@
                     const selectedText = productSelect.options[productSelect.selectedIndex]?.text || 'Belum dipilih';
                     selectedProductName.textContent = selectedText;
                 }
+
+                updateEstimate();
             }
 
             if (productSelect) {
@@ -779,6 +906,15 @@
                 productSelect.addEventListener('change', function () {
                     setActiveProduct(String(productSelect.value || ''));
                 });
+            }
+
+            if (quantityInput) {
+                quantityInput.addEventListener('input', updateEstimate);
+                quantityInput.addEventListener('change', updateEstimate);
+            }
+
+            if (gatewaySelect) {
+                gatewaySelect.addEventListener('change', updateEstimate);
             }
 
             categoryTabs.forEach(function (tab) {
@@ -812,6 +948,25 @@
                     productSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 });
             });
+
+            let currentPromo = 0;
+            const promoCount = promoDots.length;
+            promoDots.forEach(function (dot) {
+                dot.addEventListener('click', function () {
+                    currentPromo = parseInt(String(dot.getAttribute('data-slide') || '0'), 10) || 0;
+                    showPromo(currentPromo);
+                });
+            });
+
+            if (promoCount > 1) {
+                setInterval(function () {
+                    currentPromo = (currentPromo + 1) % promoCount;
+                    showPromo(currentPromo);
+                }, 4500);
+            }
+
+            showPromo(0);
+            updateEstimate();
         });
     </script>
 </x-layouts.app>

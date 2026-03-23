@@ -167,8 +167,16 @@
             justify-content: center;
             background: #315a84;
             color: #ffffff;
-            font-size: 10px;
-            letter-spacing: 0.03em;
+        }
+
+        .market-icon svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         .admin-strip {
@@ -365,10 +373,10 @@
         </div>
 
         <div class="market-strip">
-            <a class="market-link" href="{{ route('public.topup.index') }}"><span class="market-icon">GM</span> Game</a>
-            <a class="market-link" href="{{ route('public.ppob.index') }}"><span class="market-icon">PP</span> PPOB</a>
-            <a class="market-link" href="{{ route('public.articles.index') }}"><span class="market-icon">NW</span> Artikel</a>
-            <a class="market-link" href="{{ route('public.reviews.index') }}"><span class="market-icon">RV</span> Ulasan</a>
+            <a class="market-link" href="{{ route('public.topup.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8l8-4 8 4-8 4-8-4z"></path><path d="M6 10v6l6 3 6-3v-6"></path></svg></span> Game</a>
+            <a class="market-link" href="{{ route('public.ppob.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M4 10h16"></path></svg></span> PPOB</a>
+            <a class="market-link" href="{{ route('public.articles.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"></path><path d="M8 9h8M8 13h8M8 17h5"></path></svg></span> Artikel</a>
+            <a class="market-link" href="{{ route('public.reviews.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.9 5.9L21 9.8l-4.5 4.4 1.1 6.2L12 17.7 6.4 20.4l1.1-6.2L3 9.8l6.1-.9z"></path></svg></span> Ulasan</a>
         </div>
 
         @if ($isAdminUser)
