@@ -5,6 +5,7 @@
         $productCount = $allProducts->count();
         $quickCategories = $productsByCategory->keys()->take(6);
         $quickProducts = $allProducts->take(8);
+        $featuredProducts = $allProducts->take(12);
     @endphp
 
     <style>
@@ -128,6 +129,110 @@
             padding: 16px;
         }
 
+        .step-shell {
+            display: grid;
+            gap: 12px;
+        }
+
+        .step-card {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 12px;
+            background: #fbfcfb;
+        }
+
+        .step-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .step-label {
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .product-card {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+            padding: 10px;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .product-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .product-card.is-active {
+            border-color: transparent;
+            background: linear-gradient(120deg, var(--accent), #0ea26a);
+            color: #fff;
+        }
+
+        .product-name {
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+
+        .product-type {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            opacity: 0.9;
+        }
+
+        .step-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .gateway-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .gateway-chip {
+            border: 1px solid #cde1d5;
+            border-radius: 999px;
+            padding: 6px 10px;
+            background: #f7fbf8;
+            font-size: 11px;
+            font-weight: 800;
+            color: #2f4f3f;
+        }
+
         .mini-steps {
             display: flex;
             flex-wrap: wrap;
@@ -201,7 +306,9 @@
 
         @media (max-width: 640px) {
             .checkout-grid,
-            .kpi-row {
+            .kpi-row,
+            .step-grid,
+            .product-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -290,11 +397,25 @@
                 <span>3. Bayar & Selesai</span>
             </div>
 
-            <form method="post" action="{{ route('storefront.checkout') }}" class="checkout-grid">
+            <form method="post" action="{{ route('storefront.checkout') }}" class="step-shell">
                 @csrf
 
-                <div style="grid-column:1/-1;">
-                    <label for="product_id">Produk</label>
+                <section class="step-card">
+                    <div class="step-head">
+                        <span class="step-num">1</span>
+                        <span class="step-label">Pilih Nominal / Produk</span>
+                    </div>
+
+                    <div class="product-grid">
+                        @foreach ($featuredProducts as $product)
+                            <button class="product-card" type="button" data-product-id="{{ (int) $product->id }}">
+                                <div class="product-name">{{ $product->name }}</div>
+                                <div class="product-type">{{ $product->type }}</div>
+                            </button>
+                        @endforeach
+                    </div>
+
+                    <label for="product_id">Daftar produk lengkap</label>
                     <select id="product_id" name="product_id" required>
                         <option value="">Pilih produk</option>
                         @foreach ($productsByCategory as $category => $products)
@@ -307,31 +428,55 @@
                             </optgroup>
                         @endforeach
                     </select>
-                </div>
+                </section>
 
-                <div>
-                    <label for="customer_target">Target Customer</label>
-                    <input id="customer_target" name="customer_target" type="text" value="{{ old('customer_target') }}" placeholder="User ID / Phone / Meter Number">
-                </div>
+                <section class="step-card">
+                    <div class="step-head">
+                        <span class="step-num">2</span>
+                        <span class="step-label">Masukkan Data Akun</span>
+                    </div>
 
-                <div>
-                    <label for="quantity">Quantity</label>
-                    <input id="quantity" name="quantity" type="number" min="1" max="10" value="{{ old('quantity', 1) }}">
-                </div>
+                    <div class="step-grid">
+                        <div>
+                            <label for="customer_target">Target Customer</label>
+                            <input id="customer_target" name="customer_target" type="text" value="{{ old('customer_target') }}" placeholder="User ID / Phone / Meter Number">
+                        </div>
 
-                <div>
-                    <label for="gateway">Payment Gateway</label>
-                    <select id="gateway" name="gateway" required>
+                        <div>
+                            <label for="quantity">Quantity</label>
+                            <input id="quantity" name="quantity" type="number" min="1" max="10" value="{{ old('quantity', 1) }}">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="step-card">
+                    <div class="step-head">
+                        <span class="step-num">3</span>
+                        <span class="step-label">Pilih Pembayaran & Konfirmasi</span>
+                    </div>
+
+                    <div class="step-grid">
+                        <div>
+                            <label for="gateway">Payment Gateway</label>
+                            <select id="gateway" name="gateway" required>
+                                @foreach ($gateways as $gateway)
+                                    <option value="{{ $gateway }}" @selected(old('gateway') === $gateway)>{{ $gateway }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="method">Metode Payment (opsional)</label>
+                            <input id="method" name="method" type="text" value="{{ old('method') }}" placeholder="VA / QRIS / E-Wallet">
+                        </div>
+                    </div>
+
+                    <div class="gateway-row">
                         @foreach ($gateways as $gateway)
-                            <option value="{{ $gateway }}" @selected(old('gateway') === $gateway)>{{ $gateway }}</option>
+                            <span class="gateway-chip">{{ $gateway }}</span>
                         @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label for="method">Metode Payment (opsional)</label>
-                    <input id="method" name="method" type="text" value="{{ old('method') }}" placeholder="VA / QRIS / E-Wallet">
-                </div>
+                    </div>
+                </section>
 
                 @if (session('checkout_challenge_question'))
                     <div style="grid-column:1/-1; border:1px solid var(--line); border-radius:12px; padding:12px; background:#fff9e6;">
@@ -354,16 +499,25 @@
             const productSelect = document.getElementById('product_id');
             const quickButtons = document.querySelectorAll('[data-product-id]');
 
+            function setActiveProduct(productId) {
+                quickButtons.forEach(function (node) {
+                    const nodeId = String(node.getAttribute('data-product-id') || '');
+                    node.classList.toggle('is-active', nodeId === productId && productId !== '');
+                });
+            }
+
+            if (productSelect) {
+                setActiveProduct(String(productSelect.value || ''));
+                productSelect.addEventListener('change', function () {
+                    setActiveProduct(String(productSelect.value || ''));
+                });
+            }
+
             quickButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     if (!productSelect) {
                         return;
                     }
-
-                    quickButtons.forEach(function (node) {
-                        node.classList.remove('is-active');
-                    });
-                    button.classList.add('is-active');
 
                     productSelect.value = String(button.getAttribute('data-product-id') || '');
                     productSelect.dispatchEvent(new Event('change'));
