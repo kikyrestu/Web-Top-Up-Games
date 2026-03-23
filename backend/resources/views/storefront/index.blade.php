@@ -16,7 +16,7 @@
     <style>
         .uni-wrap {
             display: grid;
-            gap: 12px;
+            gap: 16px;
             color: #eaf1ff;
         }
 
@@ -36,11 +36,11 @@
         .hero-slide {
             min-width: 100%;
             min-height: 260px;
-            padding: 22px;
+            padding: 28px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            gap: 8px;
+            gap: 10px;
         }
 
         .hero-slide h1 {
@@ -98,14 +98,14 @@
             border: 1px solid #274069;
             border-radius: 12px;
             background: #132544;
-            padding: 12px;
+            padding: 16px;
         }
 
         .section-head {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             gap: 10px;
         }
 
@@ -134,16 +134,16 @@
         .category-rail {
             display: grid;
             grid-template-columns: repeat(7, minmax(0, 1fr));
-            gap: 10px;
+            gap: 12px;
         }
 
         .card-item {
             border: 1px solid #33517f;
             border-radius: 10px;
             background: #0e1e38;
-            padding: 8px;
+            padding: 10px;
             display: grid;
-            gap: 7px;
+            gap: 8px;
             text-align: left;
             cursor: pointer;
             color: #eef4ff;
@@ -199,14 +199,14 @@
         .benefit-row {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
+            gap: 12px;
         }
 
         .benefit {
             border: 1px solid #2e4a75;
             border-radius: 10px;
             background: #182c4d;
-            padding: 11px;
+            padding: 14px;
         }
 
         .benefit strong {
@@ -224,17 +224,17 @@
         .promo-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
+            gap: 12px;
         }
 
         .promo-card {
             min-height: 125px;
             border-radius: 10px;
             border: 1px solid #3a5b8d;
-            padding: 10px;
+            padding: 12px;
             display: grid;
             align-content: end;
-            gap: 4px;
+            gap: 6px;
             color: #fff;
         }
 
@@ -250,7 +250,7 @@
         .checkout-area {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 14px;
         }
 
         .faq-box,
@@ -260,7 +260,7 @@
             border: 1px solid #274069;
             border-radius: 12px;
             background: #132544;
-            padding: 12px;
+            padding: 16px;
         }
 
         .faq-box details {
@@ -286,7 +286,7 @@
         .checkout-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
         }
 
         .checkout-grid label {
@@ -341,14 +341,14 @@
         .support-grid {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 10px;
+            gap: 12px;
         }
 
         .support-item {
             border: 1px solid #32507d;
             border-radius: 9px;
             background: #0f1f39;
-            padding: 10px;
+            padding: 12px;
             text-align: center;
             color: #dbe8ff;
             font-size: 12px;
@@ -403,7 +403,7 @@
         @media (max-width: 760px) {
             .hero-slide {
                 min-height: 210px;
-                padding: 16px;
+                padding: 18px;
             }
 
             .hero-slide h1 {

@@ -58,16 +58,16 @@
             width: 100%;
             max-width: none;
             margin: 0;
-            padding: 0 0 48px;
+            padding: 0 0 56px;
         }
 
         .content-pad {
-            padding: 0 14px;
+            padding: 0 22px;
         }
 
         .topbar {
             display: grid;
-            gap: 8px;
+            gap: 10px;
             margin-bottom: 10px;
             background: #0a1731;
             border-top: 1px solid #1f365a;
@@ -75,7 +75,7 @@
             border-left: 0;
             border-right: 0;
             border-radius: 0;
-            padding: 10px 16px;
+            padding: 12px 22px;
         }
 
         .top-utility {
@@ -104,8 +104,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            padding: 2px 2px 0;
+            gap: 14px;
+            padding: 4px 2px 2px;
         }
 
         .brand-wrap {
@@ -407,7 +407,7 @@
             }
             .quick-actions { justify-content: flex-start; }
             .topbar { padding: 10px 12px; }
-            .content-pad { padding: 0 10px; }
+            .content-pad { padding: 0 12px; }
         }
     </style>
 </head>
