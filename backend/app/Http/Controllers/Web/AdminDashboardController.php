@@ -6,9 +6,11 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Api\V1\Admin\SystemOpsController;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\GlobalRateLimit;
 use App\Models\Order;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class AdminDashboardController extends Controller
@@ -53,6 +55,7 @@ final class AdminDashboardController extends Controller
             'housekeepingHistory' => is_array($housekeepingHistoryPayload['data'] ?? null) ? $housekeepingHistoryPayload['data'] : [],
             'readiness' => is_array($readinessPayload['data'] ?? null) ? $readinessPayload['data'] : [],
             'recentOrders' => $recentOrders,
+            'rateLimitStats' => $this->rateLimitStats(),
         ]);
     }
 
@@ -101,5 +104,55 @@ final class AdminDashboardController extends Controller
     public function metricsExcel(Request $request): StreamedResponse
     {
         return $this->systemOpsController->dashboardMetricsExcel($request);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function rateLimitStats(): array
+    {
+        $profiles = GlobalRateLimit::monitoredProfiles();
+        $hours = collect(range(0, 11))
+            ->map(static fn (int $offset) => now()->subHours(11 - $offset))
+            ->values();
+
+        $rows = [];
+        $totals = [];
+
+        foreach ($profiles as $profile) {
+            $profileHits = 0;
+            $profileBlocked = 0;
+
+            foreach ($hours as $hour) {
+                $hourKey = $hour->format('YmdH');
+                $hits = (int) Cache::get('rate_limit_metric:'.$profile.':hits:'.$hourKey, 0);
+                $blocked = (int) Cache::get('rate_limit_metric:'.$profile.':blocked:'.$hourKey, 0);
+                $rate = $hits > 0 ? round(($blocked / $hits) * 100, 2) : 0.0;
+
+                $rows[] = [
+                    'profile' => $profile,
+                    'hour' => $hour->format('Y-m-d H:00'),
+                    'hits' => $hits,
+                    'blocked' => $blocked,
+                    'blocked_rate_pct' => $rate,
+                ];
+
+                $profileHits += $hits;
+                $profileBlocked += $blocked;
+            }
+
+            $totals[] = [
+                'profile' => $profile,
+                'hits' => $profileHits,
+                'blocked' => $profileBlocked,
+                'blocked_rate_pct' => $profileHits > 0 ? round(($profileBlocked / $profileHits) * 100, 2) : 0.0,
+            ];
+        }
+
+        return [
+            'rows' => $rows,
+            'totals' => $totals,
+            'window_label' => 'Last 12 hours',
+        ];
     }
 }

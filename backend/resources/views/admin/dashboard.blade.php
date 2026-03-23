@@ -12,6 +12,9 @@
         $housekeepingRuns = is_iterable($housekeepingHistory['runs'] ?? null) ? collect($housekeepingHistory['runs']) : collect();
         $readinessSummary = is_array($readiness['summary'] ?? null) ? $readiness['summary'] : ['pass' => 0, 'warn' => 0, 'fail' => 0];
         $readinessChecks = is_iterable($readiness['checks'] ?? null) ? collect($readiness['checks']) : collect();
+        $rateLimitContainer = is_array($rateLimitStats ?? null) ? $rateLimitStats : [];
+        $rateLimitRows = is_iterable($rateLimitContainer['rows'] ?? null) ? collect($rateLimitContainer['rows']) : collect();
+        $rateLimitTotals = is_iterable($rateLimitContainer['totals'] ?? null) ? collect($rateLimitContainer['totals']) : collect();
     @endphp
 
     <div class="grid">
@@ -143,6 +146,40 @@
                 @if ($providerAlerts->isEmpty() && $paymentAlerts->isEmpty())
                     <tr><td colspan="4" class="muted">Tidak ada alert pada window ini.</td></tr>
                 @endif
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>Rate Limit Monitor</h2>
+            <p class="muted">{{ $rateLimitContainer['window_label'] ?? 'Window' }}</p>
+
+            <div class="cards" style="margin:10px 0 12px;">
+                @foreach ($rateLimitTotals as $total)
+                    <div class="card">
+                        <div class="k">{{ strtoupper((string) ($total['profile'] ?? '-')) }}</div>
+                        <div class="v" style="font-size:20px;">{{ (int) ($total['blocked'] ?? 0) }}/{{ (int) ($total['hits'] ?? 0) }}</div>
+                        <div class="muted">Blocked rate {{ (float) ($total['blocked_rate_pct'] ?? 0) }}%</div>
+                    </div>
+                @endforeach
+            </div>
+
+            <table>
+                <thead>
+                <tr><th>Profile</th><th>Hour</th><th>Hits</th><th>Blocked</th><th>Blocked Rate</th></tr>
+                </thead>
+                <tbody>
+                @forelse ($rateLimitRows as $row)
+                    <tr>
+                        <td>{{ $row['profile'] ?? '-' }}</td>
+                        <td>{{ $row['hour'] ?? '-' }}</td>
+                        <td>{{ (int) ($row['hits'] ?? 0) }}</td>
+                        <td>{{ (int) ($row['blocked'] ?? 0) }}</td>
+                        <td>{{ (float) ($row['blocked_rate_pct'] ?? 0) }}%</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="muted">Belum ada data rate limit.</td></tr>
+                @endforelse
                 </tbody>
             </table>
         </div>

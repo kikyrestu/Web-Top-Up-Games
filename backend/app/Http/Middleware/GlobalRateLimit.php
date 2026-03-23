@@ -7,11 +7,20 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\Response;
 
 final class GlobalRateLimit
 {
+    /**
+     * @return array<int, string>
+     */
+    public static function monitoredProfiles(): array
+    {
+        return ['otp-login', 'otp-verify', 'review-submit'];
+    }
+
     /**
      * @return array{0:int,1:int,2:string}
      */
@@ -29,6 +38,8 @@ final class GlobalRateLimit
     {
         [$maxAttempts, $decaySeconds, $message] = $this->profileFor($profile);
 
+        $this->incrementMetric($profile, 'hits');
+
         $identity = implode('|', [
             $profile,
             (string) ($request->ip() ?? '0.0.0.0'),
@@ -39,6 +50,8 @@ final class GlobalRateLimit
         $key = 'rate-limit:'.sha1($identity);
 
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+            $this->incrementMetric($profile, 'blocked');
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => $message,
@@ -51,5 +64,17 @@ final class GlobalRateLimit
         RateLimiter::hit($key, $decaySeconds);
 
         return $next($request);
+    }
+
+    private function incrementMetric(string $profile, string $type): void
+    {
+        $hour = now()->format('YmdH');
+        $key = 'rate_limit_metric:'.$profile.':'.$type.':'.$hour;
+
+        if (!Cache::has($key)) {
+            Cache::put($key, 0, now()->addHours(48));
+        }
+
+        Cache::increment($key);
     }
 }
