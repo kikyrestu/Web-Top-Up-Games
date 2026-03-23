@@ -207,7 +207,9 @@
         <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
         <div class="nav">
             <a class="pill" href="{{ route('storefront.index') }}">Storefront</a>
+            <a class="pill" href="{{ route('storefront.history') }}">Order History</a>
             <a class="pill" href="{{ route('admin.dashboard') }}">Admin</a>
+            <a class="pill" href="{{ route('admin.orders.index') }}">Admin Orders</a>
             @auth
                 <form method="post" action="{{ route('admin.logout') }}">
                     @csrf
@@ -220,6 +222,12 @@
     @if (session('checkout_summary'))
         <div class="flash flash-ok">
             Checkout berhasil diproses. Order sudah dibuat dan invoice payment sudah diinisiasi.
+        </div>
+    @endif
+
+    @if (session('notice'))
+        <div class="flash flash-ok">
+            {{ session('notice') }}
         </div>
     @endif
 

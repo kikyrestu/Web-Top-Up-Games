@@ -1,37 +1,52 @@
 <x-layouts.app :title="'Admin Dashboard'">
+    @php
+        $ordersOverview = is_array($overview['orders'] ?? null) ? $overview['orders'] : [];
+        $paymentsOverview = is_array($overview['payments'] ?? null) ? $overview['payments'] : [];
+        $providersOverview = is_iterable($overview['providers'] ?? null) ? collect($overview['providers']) : collect();
+        $providerMetrics = is_iterable($metrics['providers'] ?? null) ? collect($metrics['providers']) : collect();
+        $paymentMetrics = is_iterable($metrics['payments'] ?? null) ? collect($metrics['payments']) : collect();
+        $alertsContainer = is_array($alerts['alerts'] ?? null) ? $alerts['alerts'] : [];
+        $providerAlerts = is_iterable($alertsContainer['providers'] ?? null) ? collect($alertsContainer['providers']) : collect();
+        $paymentAlerts = is_iterable($alertsContainer['payments'] ?? null) ? collect($alertsContainer['payments']) : collect();
+        $housekeepingIdempotency = is_array($housekeeping['idempotency'] ?? null) ? $housekeeping['idempotency'] : [];
+        $housekeepingRuns = is_iterable($housekeepingHistory['runs'] ?? null) ? collect($housekeepingHistory['runs']) : collect();
+        $readinessSummary = is_array($readiness['summary'] ?? null) ? $readiness['summary'] : ['pass' => 0, 'warn' => 0, 'fail' => 0];
+        $readinessChecks = is_iterable($readiness['checks'] ?? null) ? collect($readiness['checks']) : collect();
+    @endphp
+
     <div class="grid">
         <div class="panel">
             <h1>System Dashboard</h1>
             <p class="muted">Ringkasan operasional 24 jam terakhir.</p>
 
             <div class="cards" style="margin-top:14px;">
-                <div class="card"><div class="k">Pending Orders</div><div class="v">{{ $overview['orders_pending'] }}</div></div>
-                <div class="card"><div class="k">Processing Orders</div><div class="v">{{ $overview['orders_processing'] }}</div></div>
-                <div class="card"><div class="k">Failed Orders</div><div class="v">{{ $overview['orders_failed'] }}</div></div>
-                <div class="card"><div class="k">Unpaid Payments</div><div class="v">{{ $overview['payments_unpaid'] }}</div></div>
-                <div class="card"><div class="k">Active Providers</div><div class="v">{{ $overview['providers_active'] }}</div></div>
-                <div class="card"><div class="k">Total Providers</div><div class="v">{{ $overview['providers_total'] }}</div></div>
+                <div class="card"><div class="k">Pending Orders</div><div class="v">{{ (int) ($ordersOverview['pending'] ?? 0) }}</div></div>
+                <div class="card"><div class="k">Processing Orders</div><div class="v">{{ (int) ($ordersOverview['processing'] ?? 0) }}</div></div>
+                <div class="card"><div class="k">Failed Orders</div><div class="v">{{ (int) ($ordersOverview['failed'] ?? 0) }}</div></div>
+                <div class="card"><div class="k">Unpaid Payments</div><div class="v">{{ (int) ($paymentsOverview['unpaid'] ?? 0) }}</div></div>
+                <div class="card"><div class="k">Active Providers</div><div class="v">{{ $providersOverview->where('is_active', true)->count() }}</div></div>
+                <div class="card"><div class="k">Total Providers</div><div class="v">{{ $providersOverview->count() }}</div></div>
             </div>
         </div>
 
         <div class="panel">
             <h2>Readiness Checks</h2>
-            <p class="muted">Readiness score: <strong>{{ $readiness['score'] }}%</strong></p>
+            <p class="muted">Readiness score: <strong>{{ (float) ($readiness['score'] ?? 0) }}%</strong></p>
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 14px;">
-                <span class="tag tag-pass">PASS {{ $readiness['summary']['pass'] }}</span>
-                <span class="tag tag-warn">WARN {{ $readiness['summary']['warn'] }}</span>
-                <span class="tag tag-fail">FAIL {{ $readiness['summary']['fail'] }}</span>
+                <span class="tag tag-pass">PASS {{ (int) ($readinessSummary['pass'] ?? 0) }}</span>
+                <span class="tag tag-warn">WARN {{ (int) ($readinessSummary['warn'] ?? 0) }}</span>
+                <span class="tag tag-fail">FAIL {{ (int) ($readinessSummary['fail'] ?? 0) }}</span>
             </div>
             <table>
                 <thead>
                 <tr><th>Check</th><th>Status</th><th>Message</th></tr>
                 </thead>
                 <tbody>
-                @foreach ($readiness['checks'] as $check)
+                @foreach ($readinessChecks as $check)
                     <tr>
-                        <td>{{ $check['code'] }}</td>
-                        <td>{{ $check['status'] }}</td>
-                        <td>{{ $check['message'] }}</td>
+                        <td>{{ $check['code'] ?? '-' }}</td>
+                        <td>{{ $check['status'] ?? '-' }}</td>
+                        <td>{{ $check['message'] ?? '-' }}</td>
                     </tr>
                 @endforeach
                 </tbody>
@@ -39,7 +54,7 @@
         </div>
 
         <div class="panel">
-            <h2>Provider Performance (24h)</h2>
+            <h2>Provider Metrics (24h)</h2>
             <table>
                 <thead>
                 <tr>
@@ -51,13 +66,13 @@
                 </tr>
                 </thead>
                 <tbody>
-                @forelse ($providerPerformance as $row)
+                @forelse ($providerMetrics as $row)
                     <tr>
-                        <td>{{ $row['provider_code'] }} - {{ $row['provider_name'] }}</td>
-                        <td>{{ $row['attempts'] }}</td>
-                        <td>{{ $row['success'] }}</td>
-                        <td>{{ $row['failed'] }}</td>
-                        <td>{{ $row['success_rate'] }}%</td>
+                        <td>{{ $row['provider_code'] ?? '-' }} - {{ $row['provider_name'] ?? '-' }}</td>
+                        <td>{{ (int) ($row['attempts'] ?? 0) }}</td>
+                        <td>{{ (int) ($row['success_count'] ?? 0) }}</td>
+                        <td>{{ (int) ($row['failed_count'] ?? 0) }}</td>
+                        <td>{{ (float) ($row['success_rate_pct'] ?? 0) }}%</td>
                     </tr>
                 @empty
                     <tr><td colspan="5" class="muted">Belum ada data attempt.</td></tr>
@@ -67,7 +82,7 @@
         </div>
 
         <div class="panel">
-            <h2>Payment Performance (24h)</h2>
+            <h2>Payment Metrics (24h)</h2>
             <table>
                 <thead>
                 <tr>
@@ -80,14 +95,14 @@
                 </tr>
                 </thead>
                 <tbody>
-                @forelse ($paymentPerformance as $row)
+                @forelse ($paymentMetrics as $row)
                     <tr>
-                        <td>{{ $row['gateway'] }}</td>
-                        <td>{{ $row['total'] }}</td>
-                        <td>{{ $row['paid'] }}</td>
-                        <td>{{ $row['unpaid'] }}</td>
-                        <td>{{ $row['failed'] }}</td>
-                        <td>{{ $row['paid_rate'] }}%</td>
+                        <td>{{ $row['gateway'] ?? '-' }}</td>
+                        <td>{{ (int) ($row['total'] ?? 0) }}</td>
+                        <td>{{ (int) ($row['paid_count'] ?? 0) }}</td>
+                        <td>{{ (int) ($row['unpaid_count'] ?? 0) }}</td>
+                        <td>{{ (int) ($row['failed_count'] ?? 0) }}</td>
+                        <td>{{ (float) ($row['paid_rate_pct'] ?? 0) }}%</td>
                     </tr>
                 @empty
                     <tr><td colspan="6" class="muted">Belum ada data payment.</td></tr>
@@ -97,19 +112,79 @@
         </div>
 
         <div class="panel">
-            <h2>Housekeeping Terakhir</h2>
+            <h2>Alerts (24h)</h2>
             <table>
                 <thead>
-                <tr><th>Waktu</th><th>Deleted Records</th></tr>
+                <tr><th>Type</th><th>Target</th><th>Severity</th><th>Info</th></tr>
                 </thead>
                 <tbody>
-                @forelse ($housekeepingLogs as $log)
+                @forelse ($providerAlerts as $alert)
                     <tr>
-                        <td>{{ $log->occurred_at }}</td>
-                        <td>{{ (int) ((is_array($log->payload) ? ($log->payload['deleted_records'] ?? 0) : 0)) }}</td>
+                        <td>PROVIDER</td>
+                        <td>{{ $alert['provider_code'] ?? '-' }}</td>
+                        <td>{{ $alert['severity'] ?? '-' }}</td>
+                        <td>Success {{ (float) ($alert['success_rate_pct'] ?? 0) }}% / {{ (float) ($alert['threshold_pct'] ?? 0) }}%</td>
+                    </tr>
+                @empty
+                @endforelse
+                @forelse ($paymentAlerts as $alert)
+                    <tr>
+                        <td>PAYMENT</td>
+                        <td>{{ $alert['gateway'] ?? '-' }}</td>
+                        <td>{{ $alert['severity'] ?? '-' }}</td>
+                        <td>Paid {{ (float) ($alert['paid_rate_pct'] ?? 0) }}% / {{ (float) ($alert['threshold_pct'] ?? 0) }}%</td>
+                    </tr>
+                @empty
+                @endforelse
+                @if ($providerAlerts->isEmpty() && $paymentAlerts->isEmpty())
+                    <tr><td colspan="4" class="muted">Tidak ada alert pada window ini.</td></tr>
+                @endif
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>Housekeeping</h2>
+            <div class="cards" style="margin-bottom:14px;">
+                <div class="card"><div class="k">Total Records</div><div class="v">{{ (int) ($housekeepingIdempotency['total_records'] ?? 0) }}</div></div>
+                <div class="card"><div class="k">Expired Records</div><div class="v">{{ (int) ($housekeepingIdempotency['expired_records'] ?? 0) }}</div></div>
+                <div class="card"><div class="k">Purge Deleted</div><div class="v">{{ (int) ($housekeepingIdempotency['purge_total_deleted'] ?? 0) }}</div></div>
+            </div>
+
+            <table>
+                <thead>
+                <tr><th>Run At</th><th>Deleted Records</th></tr>
+                </thead>
+                <tbody>
+                @forelse ($housekeepingRuns as $run)
+                    <tr>
+                        <td>{{ $run['run_at'] ?? '-' }}</td>
+                        <td>{{ (int) ($run['deleted_records'] ?? 0) }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="2" class="muted">Belum ada riwayat purge.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>Recent Orders</h2>
+            <table>
+                <thead>
+                <tr><th>Order</th><th>Status</th><th>Product</th><th>Payment</th><th>Aksi</th></tr>
+                </thead>
+                <tbody>
+                @forelse ($recentOrders as $order)
+                    <tr>
+                        <td>{{ $order->order_code }}</td>
+                        <td>{{ $order->status }}</td>
+                        <td>{{ $order->product?->name }}</td>
+                        <td>{{ $order->payment?->status ?? '-' }}</td>
+                        <td><a class="pill" href="{{ route('admin.orders.show', ['orderCode' => $order->order_code]) }}">Detail</a></td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="muted">Belum ada order.</td></tr>
                 @endforelse
                 </tbody>
             </table>

@@ -139,12 +139,35 @@ final class StorefrontController extends Controller
             $validated['method'] ?? null
         );
 
+        $this->rememberRecentOrder($request, (string) $order->order_code);
+
         return redirect()
             ->route('storefront.track', ['orderCode' => $order->order_code])
             ->with('checkout_summary', [
                 'final_amount' => $finalAmount,
                 'gateway_reference' => $payment->gateway_reference,
             ]);
+    }
+
+    public function history(Request $request): View
+    {
+        $sessionOrderCodes = collect($request->session()->get('recent_order_codes', []))
+            ->filter(static fn ($code): bool => is_string($code) && $code !== '')
+            ->values();
+
+        $orders = Order::query()
+            ->with([
+                'product:id,name,type',
+                'payment:id,order_id,gateway,gateway_reference,status,amount,expired_at',
+            ])
+            ->when($sessionOrderCodes->isNotEmpty(), static fn ($query) => $query->whereIn('order_code', $sessionOrderCodes->all()))
+            ->when($sessionOrderCodes->isEmpty(), static fn ($query) => $query->whereRaw('1 = 0'))
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('storefront.history', [
+            'orders' => $orders,
+        ]);
     }
 
     public function track(string $orderCode): View
@@ -194,5 +217,19 @@ final class StorefrontController extends Controller
         }
 
         return round($value, 2);
+    }
+
+    private function rememberRecentOrder(Request $request, string $orderCode): void
+    {
+        $existing = $request->session()->get('recent_order_codes', []);
+
+        $recent = collect(is_array($existing) ? $existing : [])
+            ->prepend($orderCode)
+            ->unique()
+            ->take(20)
+            ->values()
+            ->all();
+
+        $request->session()->put('recent_order_codes', $recent);
     }
 }
