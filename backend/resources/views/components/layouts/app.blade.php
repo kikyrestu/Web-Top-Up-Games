@@ -223,6 +223,7 @@
             <a class="pill" href="{{ route('admin.dashboard.alerts') }}">Admin Alerts</a>
             <a class="pill" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
             <a class="pill" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
+            <a class="pill" href="{{ route('admin.seo.index') }}">SEO Manager</a>
             <a class="pill" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
             <a class="pill" href="{{ route('admin.orders.index') }}">Admin Orders</a>
             <a class="pill" href="{{ route('admin.reviews.index') }}">Review Mod</a>

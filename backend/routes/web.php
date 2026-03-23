@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\AdminAuditLogController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminOrderController;
 use App\Http\Controllers\Web\AdminReviewModerationController;
+use App\Http\Controllers\Web\AdminSeoController;
 use App\Http\Controllers\Web\AccountController;
 use App\Http\Controllers\Web\OtpAuthController;
 use App\Http\Controllers\Web\PublicPageController;
@@ -81,5 +82,12 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/reviews', [AdminReviewModerationController::class, 'index'])->name('reviews.index');
         Route::post('/reviews/{review}/approve', [AdminReviewModerationController::class, 'approve'])->name('reviews.approve');
         Route::post('/reviews/{review}/reject', [AdminReviewModerationController::class, 'reject'])->name('reviews.reject');
+
+        Route::get('/seo', [AdminSeoController::class, 'index'])->name('seo.index');
+        Route::get('/seo/create', [AdminSeoController::class, 'create'])->name('seo.create');
+        Route::post('/seo', [AdminSeoController::class, 'store'])->name('seo.store');
+        Route::get('/seo/{seo}/edit', [AdminSeoController::class, 'edit'])->name('seo.edit');
+        Route::put('/seo/{seo}', [AdminSeoController::class, 'update'])->name('seo.update');
+        Route::delete('/seo/{seo}', [AdminSeoController::class, 'destroy'])->name('seo.destroy');
     });
 });
