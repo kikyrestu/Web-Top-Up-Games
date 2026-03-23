@@ -10,7 +10,6 @@ use App\Models\Review;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 final class AccountController extends Controller
@@ -100,15 +99,80 @@ final class AccountController extends Controller
 
     public function reviews(Request $request): View
     {
+        $userId = (int) $request->user()->id;
+
         $reviews = Review::query()
             ->with('product:id,name,slug')
-            ->where('user_id', (int) $request->user()->id)
+            ->where('user_id', $userId)
             ->orderByDesc('created_at')
             ->paginate(20)
             ->withQueryString();
 
+        $reviewedOrderIds = Review::query()
+            ->where('user_id', $userId)
+            ->whereNotNull('order_id')
+            ->pluck('order_id')
+            ->all();
+
+        $eligibleOrders = Order::query()
+            ->with('product:id,name,slug')
+            ->where('user_id', $userId)
+            ->where('status', 'SUCCESS')
+            ->when($reviewedOrderIds !== [], static fn ($query) => $query->whereNotIn('id', $reviewedOrderIds))
+            ->orderByDesc('completed_at')
+            ->orderByDesc('created_at')
+            ->limit(30)
+            ->get();
+
         return view('account.reviews', [
             'reviews' => $reviews,
+            'eligibleOrders' => $eligibleOrders,
         ]);
+    }
+
+    public function storeReview(Request $request): RedirectResponse
+    {
+        $userId = (int) $request->user()->id;
+
+        $validated = $request->validate([
+            'order_code' => ['required', 'string', 'max:50'],
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'content' => ['required', 'string', 'min:10', 'max:2000'],
+        ]);
+
+        $order = Order::query()
+            ->where('user_id', $userId)
+            ->where('order_code', $validated['order_code'])
+            ->where('status', 'SUCCESS')
+            ->first();
+
+        if ($order === null) {
+            return back()->withErrors([
+                'order_code' => 'Order tidak valid atau belum sukses sehingga belum bisa direview.',
+            ])->withInput();
+        }
+
+        $alreadyReviewed = Review::query()
+            ->where('user_id', $userId)
+            ->where('order_id', $order->id)
+            ->exists();
+
+        if ($alreadyReviewed) {
+            return back()->withErrors([
+                'order_code' => 'Order ini sudah pernah direview.',
+            ])->withInput();
+        }
+
+        Review::query()->create([
+            'product_id' => $order->product_id,
+            'user_id' => $userId,
+            'order_id' => $order->id,
+            'rating' => (int) $validated['rating'],
+            'content' => trim((string) $validated['content']),
+            'status' => 'PENDING_APPROVAL',
+            'approved_at' => null,
+        ]);
+
+        return back()->with('notice', 'Ulasan berhasil dikirim dan menunggu moderasi admin.');
     }
 }

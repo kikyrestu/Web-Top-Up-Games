@@ -43,6 +43,7 @@ Route::prefix('akun')->name('account.')->middleware('web.auth')->group(function 
     Route::get('/profil', [AccountController::class, 'profile'])->name('profile');
     Route::post('/profil', [AccountController::class, 'updateProfile'])->name('profile.update');
     Route::get('/ulasan', [AccountController::class, 'reviews'])->name('reviews');
+    Route::post('/ulasan', [AccountController::class, 'storeReview'])->name('reviews.store');
 });
 
 Route::prefix('admin')->name('admin.')->group(function (): void {
