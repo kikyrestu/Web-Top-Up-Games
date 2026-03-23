@@ -34,6 +34,36 @@
             margin-bottom: 16px;
         }
 
+        .hero-cta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 4px 0 14px;
+        }
+
+        .hero-cta .btn-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+            border: 1px solid var(--line);
+        }
+
+        .hero-cta .btn-main {
+            color: #fff;
+            background: linear-gradient(120deg, var(--accent), #0ea26a);
+            border-color: transparent;
+        }
+
+        .hero-cta .btn-sub {
+            color: var(--ink);
+            background: #fff;
+        }
+
         .kpi-row {
             display: grid;
             gap: 10px;
@@ -85,11 +115,37 @@
             color: var(--accent);
         }
 
+        .quick-pill.is-active {
+            border-color: transparent;
+            background: linear-gradient(120deg, var(--accent), #0ea26a);
+            color: #fff;
+        }
+
         .checkout-panel {
             background: #ffffff;
             border: 1px solid var(--line);
             border-radius: 16px;
             padding: 16px;
+        }
+
+        .mini-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0 14px;
+        }
+
+        .mini-steps span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px dashed #b9dbc9;
+            background: #f3fbf6;
+            color: #196d3a;
+            border-radius: 999px;
+            padding: 6px 11px;
+            font-size: 12px;
+            font-weight: 700;
         }
 
         .checkout-panel h2 {
@@ -119,6 +175,20 @@
             font-weight: 700;
         }
 
+        .action-row {
+            grid-column: 1/-1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 2px;
+        }
+
+        .action-hint {
+            font-size: 12px;
+            color: var(--ink-soft);
+        }
+
         @media (max-width: 920px) {
             .hero-wrap {
                 grid-template-columns: 1fr;
@@ -138,6 +208,29 @@
             .hero-title {
                 font-size: 29px;
             }
+
+            .checkout-panel {
+                padding-bottom: 12px;
+            }
+
+            .action-row {
+                position: sticky;
+                bottom: 8px;
+                background: #ffffff;
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                padding: 10px;
+                box-shadow: 0 10px 24px rgba(19, 34, 26, 0.1);
+                margin-top: 8px;
+            }
+
+            .action-row .btn {
+                width: 100%;
+            }
+
+            .action-hint {
+                display: none;
+            }
         }
     </style>
 
@@ -145,6 +238,11 @@
         <div class="panel hero-panel">
             <h1 class="hero-title">Top Up & PPOB cepat, rapi, dan aman.</h1>
             <p class="hero-sub">Pilih produk game atau PPOB, checkout dalam satu alur, lalu bayar pakai gateway favoritmu. Cocok untuk transaksi cepat tanpa ribet.</p>
+
+            <div class="hero-cta">
+                <a class="btn-link btn-main" href="#checkout-form">Mulai Checkout Sekarang</a>
+                <a class="btn-link btn-sub" href="{{ route('public.promo') }}">Lihat Promo Hari Ini</a>
+            </div>
 
             <div class="kpi-row">
                 <div class="kpi">
@@ -182,9 +280,15 @@
             </div>
         </div>
 
-        <div class="checkout-panel">
+        <div class="checkout-panel" id="checkout-form">
             <h2>Checkout Instan</h2>
             <p class="muted" style="margin-bottom:12px;">Isi data minimum, sistem akan proses order dan buat payment reference otomatis.</p>
+
+            <div class="mini-steps">
+                <span>1. Pilih Produk</span>
+                <span>2. Isi Target</span>
+                <span>3. Bayar & Selesai</span>
+            </div>
 
             <form method="post" action="{{ route('storefront.checkout') }}" class="checkout-grid">
                 @csrf
@@ -237,7 +341,8 @@
                     </div>
                 @endif
 
-                <div style="grid-column:1/-1; display:flex; justify-content:flex-end;">
+                <div class="action-row">
+                    <span class="action-hint">Order diproses otomatis setelah payment reference terbentuk.</span>
                     <button class="btn" type="submit">Buat Order + Payment</button>
                 </div>
             </form>
@@ -254,6 +359,11 @@
                     if (!productSelect) {
                         return;
                     }
+
+                    quickButtons.forEach(function (node) {
+                        node.classList.remove('is-active');
+                    });
+                    button.classList.add('is-active');
 
                     productSelect.value = String(button.getAttribute('data-product-id') || '');
                     productSelect.dispatchEvent(new Event('change'));
