@@ -91,8 +91,8 @@ Status:
 7. Order management: DONE
    - List/detail/reprocess + manual workflow refund/void/dispute + operation log sudah tersedia.
 
-8. User/customer management: PARTIAL
-   - Area akun customer ada, panel admin customer segmentation/lifecycle belum ada.
+8. User/customer management: DONE
+   - Area akun customer + panel admin customer segmentation/status/profile ops sudah tersedia.
 
 9. Content pages: DONE
    - CRUD CMS pages sudah tersedia.
@@ -133,7 +133,7 @@ Aturan eksekusi:
 
 - [x] Promo campaign engine (voucher/cashback/rule period).
 - [x] Order operation extension (refund/void/dispute/manual action log).
-- [ ] User/customer admin panel (search, segment, status, profile ops).
+- [x] User/customer admin panel (search, segment, status, profile ops).
 - [ ] Customer support tools (ticket, complaint, SLA status).
 
 ### Phase 3 - Governance and Optimization
@@ -196,3 +196,10 @@ Update terbaru:
 - Scope: aksi manual refund/void/dispute dari panel order + reprocess logging + riwayat operation log per order
 - Bukti: route admin.orders.(void/refund/dispute) + migration/model order_operation_logs + AdminOrderController + view admin/orders/show
 - Catatan: setiap aksi manual tercatat ke operation log sekaligus audit log
+
+- Item: User/customer admin panel
+- Phase: 2
+- Status: DONE
+- Scope: list customer dengan search/filter segment + profile ops (status, kontak, reset password, revoke session) + detail transaksi/review
+- Bukti: route admin.customers.* + AdminCustomerController + migration account_status + view admin/customers/* + guard login suspended
+- Catatan: status SUSPENDED akan memblok login customer dan dapat otomatis revoke session

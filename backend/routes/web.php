@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\AdminAuthController;
 use App\Http\Controllers\Web\AdminCmsController;
 use App\Http\Controllers\Web\AdminAuditLogController;
 use App\Http\Controllers\Web\AdminCatalogController;
+use App\Http\Controllers\Web\AdminCustomerController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminNominalController;
 use App\Http\Controllers\Web\AdminOrderController;
@@ -153,6 +154,10 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::post('/orders/{orderCode}/void', [AdminOrderController::class, 'voidOrder'])->name('orders.void');
         Route::post('/orders/{orderCode}/refund', [AdminOrderController::class, 'refundOrder'])->name('orders.refund');
         Route::post('/orders/{orderCode}/dispute', [AdminOrderController::class, 'disputeOrder'])->name('orders.dispute');
+
+        Route::get('/customers', [AdminCustomerController::class, 'index'])->name('customers.index');
+        Route::get('/customers/{user}', [AdminCustomerController::class, 'show'])->name('customers.show');
+        Route::put('/customers/{user}', [AdminCustomerController::class, 'update'])->name('customers.update');
 
         Route::get('/reviews', [AdminReviewModerationController::class, 'index'])->name('reviews.index');
         Route::post('/reviews/bulk-moderate', [AdminReviewModerationController::class, 'bulkModerate'])->name('reviews.bulk-moderate');

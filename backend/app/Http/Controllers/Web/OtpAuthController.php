@@ -19,6 +19,16 @@ final class OtpAuthController extends Controller
     public function showLogin(Request $request): View
     {
         if ($request->user() !== null) {
+            if (strtoupper((string) ($request->user()->account_status ?? 'ACTIVE')) === 'SUSPENDED') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return view('auth.login-otp')->withErrors([
+                    'auth' => 'Akun customer sedang dinonaktifkan. Hubungi dukungan untuk aktivasi ulang.',
+                ]);
+            }
+
             return view('account.dashboard', [
                 'summary' => $this->summaryFor((int) $request->user()->id),
                 'recentOrders' => $this->recentOrdersFor((int) $request->user()->id),
@@ -52,6 +62,17 @@ final class OtpAuthController extends Controller
         if ($userByEmail !== null || $userByUsername !== null) {
             /** @var User $existingUser */
             $existingUser = $userByEmail ?? $userByUsername;
+
+            if (strtoupper((string) ($existingUser->account_status ?? 'ACTIVE')) === 'SUSPENDED') {
+                $this->logSecurityEvent('ACCOUNT_LOGIN_BLOCKED_SUSPENDED', 'LOW', $request, [
+                    'email' => $email,
+                    'username' => $username,
+                ], 15, (int) $existingUser->id);
+
+                return back()->withErrors([
+                    'email' => 'Akun customer sedang dinonaktifkan. Hubungi dukungan untuk aktivasi ulang.',
+                ])->withInput();
+            }
 
             if (strtolower((string) $existingUser->email) !== $email || strtolower((string) ($existingUser->username ?? '')) !== $username) {
                 return back()->withErrors([
@@ -103,6 +124,7 @@ final class OtpAuthController extends Controller
             'phone_number' => $phoneNumber,
             'password' => $password,
             'role' => 'user',
+            'account_status' => 'ACTIVE',
         ]);
 
         Auth::login($newUser);
