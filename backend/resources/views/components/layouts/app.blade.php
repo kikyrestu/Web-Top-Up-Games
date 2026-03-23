@@ -3,7 +3,31 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'Web Top-Up Games' }}</title>
+    @php
+        $seoMetaTitle = $seo['meta_title'] ?? null;
+        $seoMetaDescription = $seo['meta_description'] ?? null;
+        $seoMetaKeywords = $seo['meta_keywords'] ?? null;
+        $seoOgTitle = $seo['og_title'] ?? null;
+        $seoOgDescription = $seo['og_description'] ?? null;
+        $seoOgImagePath = $seo['og_image_path'] ?? null;
+        $finalTitle = $seoMetaTitle ?: ($title ?? 'Web Top-Up Games');
+    @endphp
+    <title>{{ $finalTitle }}</title>
+    @if (!empty($seoMetaDescription))
+        <meta name="description" content="{{ $seoMetaDescription }}">
+    @endif
+    @if (!empty($seoMetaKeywords))
+        <meta name="keywords" content="{{ $seoMetaKeywords }}">
+    @endif
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ $seoOgTitle ?: $finalTitle }}">
+    @if (!empty($seoOgDescription) || !empty($seoMetaDescription))
+        <meta property="og:description" content="{{ $seoOgDescription ?: $seoMetaDescription }}">
+    @endif
+    <meta property="og:url" content="{{ url()->current() }}">
+    @if (!empty($seoOgImagePath))
+        <meta property="og:image" content="{{ str_starts_with((string) $seoOgImagePath, 'http') ? $seoOgImagePath : url((string) $seoOgImagePath) }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">

@@ -10,6 +10,7 @@ use App\Models\CmsBanner;
 use App\Models\CmsPage;
 use App\Models\Product;
 use App\Models\Review;
+use App\Models\SeoMeta;
 use Illuminate\Http\Response;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -65,6 +66,7 @@ final class PublicPageController extends Controller
         return view('public.topup.show', [
             'product' => $product,
             'reviews' => $reviews,
+            'seo' => $this->seoFor('PRODUCT', (int) $product->id),
         ]);
     }
 
@@ -104,6 +106,7 @@ final class PublicPageController extends Controller
         return view('public.ppob.show', [
             'category' => $category,
             'products' => $products,
+            'seo' => $this->seoFor('CATEGORY', (int) $category->id),
         ]);
     }
 
@@ -171,6 +174,7 @@ final class PublicPageController extends Controller
         return view('public.articles.show', [
             'article' => $article,
             'latestArticles' => $latestArticles,
+            'seo' => $this->seoFor('CMS_PAGE', (int) $article->id),
         ]);
     }
 
@@ -326,5 +330,25 @@ final class PublicPageController extends Controller
         return response($content, 200, [
             'Content-Type' => 'text/plain; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    private function seoFor(string $entityType, int $entityId): array
+    {
+        $seo = SeoMeta::query()
+            ->where('entity_type', strtoupper($entityType))
+            ->where('entity_id', $entityId)
+            ->first();
+
+        return [
+            'meta_title' => $seo?->meta_title,
+            'meta_description' => $seo?->meta_description,
+            'meta_keywords' => $seo?->meta_keywords,
+            'og_title' => $seo?->og_title,
+            'og_description' => $seo?->og_description,
+            'og_image_path' => $seo?->og_image_path,
+        ];
     }
 }
