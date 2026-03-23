@@ -61,6 +61,10 @@
             padding: 0 0 48px;
         }
 
+        .content-pad {
+            padding: 0 14px;
+        }
+
         .topbar {
             display: grid;
             gap: 8px;
@@ -403,6 +407,7 @@
             }
             .quick-actions { justify-content: flex-start; }
             .topbar { padding: 10px 12px; }
+            .content-pad { padding: 0 10px; }
         }
     </style>
 </head>
@@ -481,25 +486,27 @@
         @endif
     </div>
 
-    @if (session('checkout_summary'))
-        <div class="flash flash-ok">
-            Checkout berhasil diproses. Order sudah dibuat dan invoice payment sudah diinisiasi.
-        </div>
-    @endif
+    <div class="content-pad">
+        @if (session('checkout_summary'))
+            <div class="flash flash-ok">
+                Checkout berhasil diproses. Order sudah dibuat dan invoice payment sudah diinisiasi.
+            </div>
+        @endif
 
-    @if (session('notice'))
-        <div class="flash flash-ok">
-            {{ session('notice') }}
-        </div>
-    @endif
+        @if (session('notice'))
+            <div class="flash flash-ok">
+                {{ session('notice') }}
+            </div>
+        @endif
 
-    @if ($errors->any())
-        <div class="flash flash-err">
-            {{ $errors->first() }}
-        </div>
-    @endif
+        @if ($errors->any())
+            <div class="flash flash-err">
+                {{ $errors->first() }}
+            </div>
+        @endif
 
-    {{ $slot }}
+        {{ $slot }}
+    </div>
 </div>
 </body>
 </html>
