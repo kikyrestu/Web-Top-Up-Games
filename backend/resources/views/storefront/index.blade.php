@@ -761,6 +761,11 @@
                             <input id="method" name="method" type="text" value="{{ old('method') }}" placeholder="VA / QRIS / E-Wallet">
                         </div>
 
+                        <div style="grid-column:1/-1;">
+                            <label for="promo_code">Kode Promo (opsional)</label>
+                            <input id="promo_code" name="promo_code" type="text" value="{{ old('promo_code') }}" placeholder="Contoh: RAMADAN10">
+                        </div>
+
                         @if (session('checkout_challenge_question'))
                             <div style="grid-column:1/-1;">
                                 <label for="security_challenge_answer">Verifikasi Keamanan</label>

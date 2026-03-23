@@ -2,7 +2,30 @@
     <div class="grid">
         <div class="panel">
             <h1>Promo & Campaign</h1>
-            <p class="muted">Promo aktif dari banner dan halaman promo CMS.</p>
+            <p class="muted">Promo aktif dari campaign engine, banner, dan halaman promo CMS.</p>
+        </div>
+
+        <div class="panel">
+            <h2>Campaign Engine Aktif</h2>
+            <table>
+                <thead>
+                <tr><th>Code</th><th>Nama</th><th>Tipe</th><th>Reward</th><th>Syarat</th><th>Periode</th></tr>
+                </thead>
+                <tbody>
+                @forelse ($campaigns as $campaign)
+                    <tr>
+                        <td>{{ $campaign->code }}</td>
+                        <td>{{ $campaign->name }}</td>
+                        <td>{{ strtoupper((string) $campaign->campaign_type) }}</td>
+                        <td>{{ number_format((float) $campaign->discount_value, 2, ',', '.') }}{{ strtoupper((string) $campaign->discount_mode) === 'PERCENTAGE' ? '%' : '' }}</td>
+                        <td>Min Rp {{ number_format((float) $campaign->min_order_amount, 0, ',', '.') }}</td>
+                        <td>{{ $campaign->start_at ?: '-' }} s/d {{ $campaign->end_at ?: '-' }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="muted">Belum ada campaign engine aktif.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
         </div>
 
         <div class="panel">

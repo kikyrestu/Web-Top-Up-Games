@@ -59,6 +59,7 @@ final class OrderService
                     'quote_token' => $payload['quote_token'] ?? null,
                     'selected_provider' => $payload['selected_provider'] ?? null,
                     'candidates' => $payload['candidates'] ?? [],
+                    'promo' => $payload['promo'] ?? null,
                 ],
             ]);
 

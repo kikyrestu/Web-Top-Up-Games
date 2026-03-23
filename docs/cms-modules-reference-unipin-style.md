@@ -82,8 +82,8 @@ Status:
 4. Pricing engine: DONE
    - Logic pricing backend sudah terhubung dengan admin pricing rule editor (scope product/category/global).
 
-5. Promo campaign: PARTIAL
-   - Konten promo ada via CMS, tapi voucher/cashback engine belum ada.
+5. Promo campaign: DONE
+   - Engine campaign voucher/cashback sudah tersedia dengan period, quota, dan scope rule.
 
 6. Payment management: DONE
    - Panel admin gateway/metode/fee/priority routing sudah tersedia.
@@ -131,7 +131,7 @@ Aturan eksekusi:
 
 ### Phase 2 - Campaign and Operations
 
-- [ ] Promo campaign engine (voucher/cashback/rule period).
+- [x] Promo campaign engine (voucher/cashback/rule period).
 - [ ] Order operation extension (refund/void/dispute/manual action log).
 - [ ] User/customer admin panel (search, segment, status, profile ops).
 - [ ] Customer support tools (ticket, complaint, SLA status).
@@ -182,3 +182,10 @@ Update terbaru:
 - Scope: CRUD margin rule dengan scope PRODUCT/CATEGORY/GLOBAL + filter mode + active toggle
 - Bukti: route admin.pricing.margins.* + AdminPricingController + view admin/pricing/* + relasi Margin product/category
 - Catatan: resolve margin checkout kini menjalankan prioritas Product -> Category -> Global
+
+- Item: Promo campaign engine
+- Phase: 2
+- Status: DONE
+- Scope: CRUD promo campaign voucher/cashback + period/quota/scope + apply promo code di checkout + redemption log
+- Bukti: route admin.promo.campaigns.* + AdminPromoCampaignController + model/migration promo_campaigns/promo_redemptions + PromoEngineService + integrasi StorefrontController
+- Catatan: cashback dicatat sebagai reward metadata order/redemption, sementara voucher mengurangi nominal bayar

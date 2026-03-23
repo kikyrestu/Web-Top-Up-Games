@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\CmsBanner;
 use App\Models\CmsPage;
 use App\Models\Product;
+use App\Models\PromoCampaign;
 use App\Models\Review;
 use App\Models\SeoMeta;
 use Illuminate\Http\Response;
@@ -133,9 +134,22 @@ final class PublicPageController extends Controller
             ->orderByDesc('id')
             ->get();
 
+        $campaigns = PromoCampaign::query()
+            ->where('is_active', true)
+            ->where(static function ($query) use ($now): void {
+                $query->whereNull('start_at')->orWhere('start_at', '<=', $now);
+            })
+            ->where(static function ($query) use ($now): void {
+                $query->whereNull('end_at')->orWhere('end_at', '>=', $now);
+            })
+            ->orderByDesc('id')
+            ->limit(30)
+            ->get();
+
         return view('public.promo', [
             'banners' => $banners,
             'promoPages' => $promoPages,
+            'campaigns' => $campaigns,
         ]);
     }
 

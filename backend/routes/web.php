@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\AdminNominalController;
 use App\Http\Controllers\Web\AdminOrderController;
 use App\Http\Controllers\Web\AdminPaymentManagementController;
 use App\Http\Controllers\Web\AdminPricingController;
+use App\Http\Controllers\Web\AdminPromoCampaignController;
 use App\Http\Controllers\Web\AdminReviewModerationController;
 use App\Http\Controllers\Web\AdminSecurityEventController;
 use App\Http\Controllers\Web\AdminSeoController;
@@ -134,6 +135,13 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/pricing/margins/{margin}/edit', [AdminPricingController::class, 'marginsEdit'])->name('pricing.margins.edit');
         Route::put('/pricing/margins/{margin}', [AdminPricingController::class, 'marginsUpdate'])->name('pricing.margins.update');
         Route::delete('/pricing/margins/{margin}', [AdminPricingController::class, 'marginsDestroy'])->name('pricing.margins.destroy');
+
+        Route::get('/promo/campaigns', [AdminPromoCampaignController::class, 'index'])->name('promo.campaigns.index');
+        Route::get('/promo/campaigns/create', [AdminPromoCampaignController::class, 'create'])->name('promo.campaigns.create');
+        Route::post('/promo/campaigns', [AdminPromoCampaignController::class, 'store'])->name('promo.campaigns.store');
+        Route::get('/promo/campaigns/{campaign}/edit', [AdminPromoCampaignController::class, 'edit'])->name('promo.campaigns.edit');
+        Route::put('/promo/campaigns/{campaign}', [AdminPromoCampaignController::class, 'update'])->name('promo.campaigns.update');
+        Route::delete('/promo/campaigns/{campaign}', [AdminPromoCampaignController::class, 'destroy'])->name('promo.campaigns.destroy');
 
         Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('/audit-logs/export/csv', [AdminAuditLogController::class, 'exportCsv'])->name('audit-logs.export.csv');

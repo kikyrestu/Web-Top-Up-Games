@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Promo\Services\PromoEngineService;
 use App\Domain\Security\Services\TamperRiskService;
 use App\Domain\Order\Services\OrderService;
 use App\Domain\Payment\Services\PaymentService;
@@ -27,6 +28,7 @@ final class StorefrontController extends Controller
         private readonly PricingEngineService $pricingEngine,
         private readonly OrderService $orderService,
         private readonly PaymentService $paymentService,
+        private readonly PromoEngineService $promoEngine,
         private readonly TamperRiskService $tamperRiskService,
     ) {
     }
@@ -66,6 +68,7 @@ final class StorefrontController extends Controller
             'quantity' => ['nullable', 'integer', 'min:1', 'max:10'],
             'customer_target' => ['nullable', 'string', 'max:120'],
             'method' => ['nullable', 'string', 'max:50'],
+            'promo_code' => ['nullable', 'string', 'max:60'],
             'security_challenge_answer' => ['nullable', 'string', 'max:20'],
         ]);
 
@@ -173,7 +176,24 @@ final class StorefrontController extends Controller
 
         $margin = $this->resolveMargin($product->id, (int) $product->category_id, (float) $selected['base_price']);
         $unitPrice = (float) $selected['base_price'] + (float) $selected['admin_fee'] + $margin;
-        $finalAmount = $unitPrice * $quantity;
+        $baseFinalAmount = $unitPrice * $quantity;
+
+        $promoResult = $this->promoEngine->evaluate(
+            $validated['promo_code'] ?? null,
+            $product,
+            $baseFinalAmount,
+            auth()->id() !== null ? (int) auth()->id() : null,
+        );
+
+        if (!$promoResult['ok']) {
+            return back()
+                ->withErrors(['promo_code' => (string) $promoResult['message']])
+                ->withInput();
+        }
+
+        $discountAmount = (float) ($promoResult['discount_amount'] ?? 0);
+        $cashbackAmount = (float) ($promoResult['cashback_amount'] ?? 0);
+        $finalAmount = max(0, $baseFinalAmount - $discountAmount);
 
         $orderResult = $this->orderService->create([
             'idempotency_key' => (string) Str::uuid(),
@@ -189,10 +209,28 @@ final class StorefrontController extends Controller
             'final_amount' => $finalAmount,
             'selected_provider' => $selected,
             'candidates' => $ranked,
+            'promo' => [
+                'code' => (string) ($promoResult['code'] ?? ''),
+                'discount_amount' => $discountAmount,
+                'cashback_amount' => $cashbackAmount,
+                'base_final_amount' => $baseFinalAmount,
+                'campaign_id' => $promoResult['campaign']?->id,
+                'campaign_type' => $promoResult['campaign']?->campaign_type,
+            ],
         ]);
 
         /** @var Order $order */
         $order = $orderResult['order'];
+
+        if ($promoResult['campaign'] !== null) {
+            $this->promoEngine->recordRedemption(
+                $promoResult['campaign'],
+                $order,
+                auth()->id() !== null ? (int) auth()->id() : null,
+                $discountAmount,
+                $cashbackAmount,
+            );
+        }
 
         $payment = $this->paymentService->initiate(
             $order,
@@ -206,6 +244,9 @@ final class StorefrontController extends Controller
             ->route('storefront.track', ['orderCode' => $order->order_code])
             ->with('checkout_summary', [
                 'final_amount' => $finalAmount,
+                'promo_code' => (string) ($promoResult['code'] ?? ''),
+                'discount_amount' => $discountAmount,
+                'cashback_amount' => $cashbackAmount,
                 'gateway_reference' => $payment->gateway_reference,
             ]);
     }
