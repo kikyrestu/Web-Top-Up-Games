@@ -49,10 +49,12 @@ final class StorefrontController extends Controller
             ->map(static fn ($price): float => (float) $price)
             ->all();
 
+        $defaultGateway = $this->resolveGateway();
+
         return view('storefront.index', [
             'productsByCategory' => $productsByCategory,
             'startingPrices' => $startingPrices,
-            'gateways' => ['MIDTRANS', 'TRIPAY', 'XENDIT'],
+            'defaultGateway' => $defaultGateway,
         ]);
     }
 
@@ -62,10 +64,12 @@ final class StorefrontController extends Controller
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:10'],
             'customer_target' => ['nullable', 'string', 'max:120'],
-            'gateway' => ['required', 'string', 'max:40'],
             'method' => ['nullable', 'string', 'max:50'],
             'security_challenge_answer' => ['nullable', 'string', 'max:20'],
         ]);
+
+        $gateway = $this->resolveGateway($request->input('gateway'));
+        $validated['gateway'] = $gateway;
 
         $risk = $this->tamperRiskService->evaluateCheckout($request, $validated);
         $riskScore = (int) ($risk['score'] ?? 0);
@@ -191,7 +195,7 @@ final class StorefrontController extends Controller
 
         $payment = $this->paymentService->initiate(
             $order,
-            (string) $validated['gateway'],
+            $gateway,
             $validated['method'] ?? null
         );
 
@@ -305,5 +309,25 @@ final class StorefrontController extends Controller
             'context' => $context,
             'occurred_at' => now(),
         ]);
+    }
+
+    private function resolveGateway(mixed $preferredGateway = null): string
+    {
+        $configuredGateways = collect(array_keys((array) config('services.payment_gateways', [])))
+            ->map(static fn ($code): string => strtoupper((string) $code))
+            ->filter(static fn (string $code): bool => $code !== '')
+            ->values();
+
+        $preferred = strtoupper(trim((string) $preferredGateway));
+        if ($preferred !== '' && $configuredGateways->contains($preferred)) {
+            return $preferred;
+        }
+
+        $default = strtoupper((string) config('services.payment_default_gateway', 'MIDTRANS'));
+        if ($default !== '' && $configuredGateways->contains($default)) {
+            return $default;
+        }
+
+        return (string) ($configuredGateways->first() ?? 'MIDTRANS');
     }
 }

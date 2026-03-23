@@ -84,6 +84,8 @@ return [
         ],
     ],
 
+    'payment_default_gateway' => env('PAYMENT_DEFAULT_GATEWAY', 'MIDTRANS'),
+
     'payment_webhook' => [
         'allowed_drift_seconds' => env('PAYMENT_WEBHOOK_ALLOWED_DRIFT_SECONDS', 300),
     ],

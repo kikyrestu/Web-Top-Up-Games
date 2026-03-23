@@ -712,7 +712,7 @@
                 </details>
                 <details>
                     <summary>Tidak bisa menemukan metode bayar?</summary>
-                    <p>Pilih gateway default dulu lalu isi preferensi metode pada form checkout.</p>
+                    <p>Gateway pembayaran dipilih otomatis oleh sistem, kamu cukup pilih metode jika diperlukan.</p>
                 </details>
                 <details>
                     <summary>Saldo terpotong tapi status belum selesai?</summary>
@@ -728,6 +728,7 @@
                 <div class="section-head"><h3>Checkout Cepat</h3></div>
                 <form method="post" action="{{ route('storefront.checkout') }}">
                     @csrf
+                    <input id="gateway_auto" type="hidden" name="gateway" value="{{ $defaultGateway }}">
                     <div class="checkout-grid">
                         <div style="grid-column:1/-1;">
                             <label for="product_id">Produk</label>
@@ -755,16 +756,7 @@
                             <input id="quantity" name="quantity" type="number" min="1" max="10" value="{{ old('quantity', 1) }}">
                         </div>
 
-                        <div>
-                            <label for="gateway">Gateway</label>
-                            <select id="gateway" name="gateway" required>
-                                @foreach ($gateways as $gateway)
-                                    <option value="{{ $gateway }}" @selected(old('gateway') === $gateway)>{{ $gateway }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
+                        <div style="grid-column:1/-1;">
                             <label for="method">Metode (opsional)</label>
                             <input id="method" name="method" type="text" value="{{ old('method') }}" placeholder="VA / QRIS / E-Wallet">
                         </div>
@@ -779,7 +771,7 @@
                         <div class="estimate" style="grid-column:1/-1;">
                             <div class="estimate-row"><span>Produk</span><strong id="estimate-product">-</strong></div>
                             <div class="estimate-row"><span>Quantity</span><strong id="estimate-qty">1</strong></div>
-                            <div class="estimate-row"><span>Gateway</span><strong id="estimate-gateway">MIDTRANS</strong></div>
+                            <div class="estimate-row"><span>Gateway</span><strong id="estimate-gateway">{{ $defaultGateway }}</strong></div>
                             <div class="estimate-row total"><span>Estimasi Total</span><strong id="estimate-total">Dihitung otomatis</strong></div>
                         </div>
                     </div>
@@ -863,7 +855,7 @@
             const heroDots = document.querySelectorAll('[data-slide]');
             const productSelect = document.getElementById('product_id');
             const quantityInput = document.getElementById('quantity');
-            const gatewaySelect = document.getElementById('gateway');
+            const gatewayInput = document.getElementById('gateway_auto');
             const estimateProduct = document.getElementById('estimate-product');
             const estimateQty = document.getElementById('estimate-qty');
             const estimateGateway = document.getElementById('estimate-gateway');
@@ -886,7 +878,7 @@
                 const option = productSelect.options[productSelect.selectedIndex] || null;
                 const productLabel = option ? String(option.text || '-').trim() : '-';
                 const qty = Math.max(1, parseInt(String(quantityInput?.value || '1'), 10) || 1);
-                const gateway = String(gatewaySelect?.value || '-');
+                const gateway = String(gatewayInput?.value || '-');
                 const unitPrice = option ? parseFloat(String(option.getAttribute('data-price') || '0')) : 0;
 
                 estimateProduct.textContent = productLabel;
@@ -912,10 +904,6 @@
 
             if (quantityInput) {
                 quantityInput.addEventListener('input', updateEstimate);
-            }
-
-            if (gatewaySelect) {
-                gatewaySelect.addEventListener('change', updateEstimate);
             }
 
             cards.forEach(function (card) {
