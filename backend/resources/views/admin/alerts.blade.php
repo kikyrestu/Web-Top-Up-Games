@@ -3,6 +3,7 @@
         $alertsContainer = is_array($alerts['alerts'] ?? null) ? $alerts['alerts'] : [];
         $providerAlerts = is_iterable($alertsContainer['providers'] ?? null) ? collect($alertsContainer['providers']) : collect();
         $paymentAlerts = is_iterable($alertsContainer['payments'] ?? null) ? collect($alertsContainer['payments']) : collect();
+        $uploadAlerts = is_iterable($alertsContainer['uploads'] ?? null) ? collect($alertsContainer['uploads']) : collect();
         $providerMetrics = is_iterable($metrics['providers'] ?? null) ? collect($metrics['providers']) : collect();
         $paymentMetrics = is_iterable($metrics['payments'] ?? null) ? collect($metrics['payments']) : collect();
     @endphp
@@ -99,6 +100,33 @@
                     </tr>
                 @empty
                     <tr><td colspan="5" class="muted">Tidak ada payment alert.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>Upload Alerts</h2>
+            <table>
+                <thead>
+                <tr><th>IP</th><th>Total</th><th>Rejected</th><th>Quarantined</th><th>Blocked Rate</th><th>Threshold</th><th>Severity</th></tr>
+                </thead>
+                <tbody>
+                @forelse ($uploadAlerts as $alert)
+                    <tr>
+                        <td>{{ $alert['ip'] ?? '-' }}</td>
+                        <td>{{ (int) ($alert['total'] ?? 0) }}</td>
+                        <td>{{ (int) ($alert['rejected_count'] ?? 0) }}</td>
+                        <td>{{ (int) ($alert['quarantined_count'] ?? 0) }}</td>
+                        <td>{{ (float) ($alert['blocked_rate_pct'] ?? 0) }}%</td>
+                        <td>{{ (float) ($alert['threshold_pct'] ?? 0) }}%</td>
+                        <td>
+                            @php $uploadSeverity = strtoupper((string) ($alert['severity'] ?? '-')); @endphp
+                            <span class="tag {{ $uploadSeverity === 'HIGH' ? 'tag-fail' : 'tag-warn' }}">{{ $uploadSeverity }}</span>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="7" class="muted">Tidak ada upload alert.</td></tr>
                 @endforelse
                 </tbody>
             </table>

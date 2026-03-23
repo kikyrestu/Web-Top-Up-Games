@@ -8,6 +8,7 @@ use App\Domain\Audit\Services\AuditLogService;
 use App\Domain\Catalog\Services\ProductSyncService;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\FileUploadLog;
 use App\Models\IdempotencyRequest;
 use App\Models\Order;
 use App\Models\OrderProviderAttempt;
@@ -549,6 +550,73 @@ final class SystemOpsController extends Controller
             ->values()
             ->all();
 
+        $uploadAlertMinTotal = $this->normalizedAlertMinAttempts(
+            config('services.dashboard.upload_alert_min_total', 5)
+        );
+        $uploadAlertBlockedRateThreshold = $this->normalizedAlertThreshold(
+            config('services.dashboard.upload_blocked_rate_alert_threshold', 30)
+        );
+
+        $uploadLogs = FileUploadLog::query()
+            ->where('created_at', '>=', $from)
+            ->get(['verdict', 'upload_ip', 'reason', 'mime_type']);
+
+        $uploadsByVerdict = $uploadLogs
+            ->groupBy(static fn (FileUploadLog $row): string => strtoupper((string) $row->verdict))
+            ->map(static fn (Collection $rows): int => $rows->count())
+            ->all();
+
+        $uploadTotal = $uploadLogs->count();
+        $uploadRejected = (int) ($uploadsByVerdict['REJECTED'] ?? 0);
+        $uploadQuarantined = (int) ($uploadsByVerdict['QUARANTINED'] ?? 0);
+        $uploadBlocked = $uploadRejected + $uploadQuarantined;
+
+        $uploadRows = [
+            [
+                'total' => $uploadTotal,
+                'accepted_count' => (int) ($uploadsByVerdict['ACCEPTED'] ?? 0),
+                'rejected_count' => $uploadRejected,
+                'quarantined_count' => $uploadQuarantined,
+                'blocked_rate_pct' => $this->percentage($uploadBlocked, max($uploadTotal, 1)),
+            ],
+        ];
+
+        $uploadAlerts = $uploadLogs
+            ->groupBy(static fn (FileUploadLog $row): string => (string) ($row->upload_ip ?? 'unknown'))
+            ->map(function (Collection $rows, string $ip) use ($uploadAlertBlockedRateThreshold): array {
+                $total = $rows->count();
+                $rejected = $rows->filter(static fn (FileUploadLog $row): bool => strtoupper((string) $row->verdict) === 'REJECTED')->count();
+                $quarantined = $rows->filter(static fn (FileUploadLog $row): bool => strtoupper((string) $row->verdict) === 'QUARANTINED')->count();
+                $blocked = $rejected + $quarantined;
+                $blockedRate = $this->percentage($blocked, max($total, 1));
+
+                $topReasons = $rows
+                    ->filter(static fn (FileUploadLog $row): bool => in_array(strtoupper((string) $row->verdict), ['REJECTED', 'QUARANTINED'], true))
+                    ->map(static fn (FileUploadLog $row): string => (string) ($row->reason ?? 'UNKNOWN'))
+                    ->countBy()
+                    ->sortDesc()
+                    ->take(3)
+                    ->map(static fn (int $count, string $reason): array => ['reason' => $reason, 'count' => $count])
+                    ->values()
+                    ->all();
+
+                return [
+                    'ip' => $ip,
+                    'total' => $total,
+                    'rejected_count' => $rejected,
+                    'quarantined_count' => $quarantined,
+                    'blocked_rate_pct' => $blockedRate,
+                    'threshold_pct' => $uploadAlertBlockedRateThreshold,
+                    'severity' => $blockedRate >= ($uploadAlertBlockedRateThreshold * 1.5) ? 'HIGH' : 'MEDIUM',
+                    'top_reasons' => $topReasons,
+                ];
+            })
+            ->filter(static fn (array $row): bool => (int) $row['total'] >= $uploadAlertMinTotal)
+            ->filter(static fn (array $row): bool => (float) $row['blocked_rate_pct'] >= $uploadAlertBlockedRateThreshold)
+            ->sortByDesc('blocked_rate_pct')
+            ->values()
+            ->all();
+
         $purgeLogs = AuditLog::query()
             ->where('event_type', 'IDEMPOTENCY_PURGE_COMPLETED')
             ->where('occurred_at', '>=', $from)
@@ -580,17 +648,22 @@ final class SystemOpsController extends Controller
                     'provider_alert_min_attempts' => $alertMinAttempts,
                     'payment_paid_rate_threshold_pct' => $paymentAlertThreshold,
                     'payment_alert_min_total' => $paymentAlertMinTotal,
+                    'upload_blocked_rate_threshold_pct' => $uploadAlertBlockedRateThreshold,
+                    'upload_alert_min_total' => $uploadAlertMinTotal,
                 ],
                 'summary' => [
                     'provider_alert_count' => count($providerAlerts),
                     'payment_alert_count' => count($paymentAlerts),
-                    'has_alerts' => count($providerAlerts) > 0 || count($paymentAlerts) > 0,
+                    'upload_alert_count' => count($uploadAlerts),
+                    'has_alerts' => count($providerAlerts) > 0 || count($paymentAlerts) > 0 || count($uploadAlerts) > 0,
                 ],
                 'providers' => $providerAlerts,
                 'payments' => $paymentAlerts,
+                'uploads' => $uploadAlerts,
             ],
             'providers' => $providerRows,
             'payments' => $paymentRows,
+            'uploads' => $uploadRows,
         ];
     }
 
@@ -601,9 +674,11 @@ final class SystemOpsController extends Controller
     {
         $providers = is_array($metrics['providers'] ?? null) ? $metrics['providers'] : [];
         $payments = is_array($metrics['payments'] ?? null) ? $metrics['payments'] : [];
+        $uploads = is_array($metrics['uploads'] ?? null) ? $metrics['uploads'] : [];
         $alertContainer = is_array($metrics['alerts'] ?? null) ? $metrics['alerts'] : [];
         $providerAlerts = is_array($alertContainer['providers'] ?? null) ? $alertContainer['providers'] : [];
         $paymentAlerts = is_array($alertContainer['payments'] ?? null) ? $alertContainer['payments'] : [];
+        $uploadAlerts = is_array($alertContainer['uploads'] ?? null) ? $alertContainer['uploads'] : [];
 
         $providerRows = array_map(static function (array $row): array {
             $failReasons = collect(is_array($row['top_fail_reasons'] ?? null) ? $row['top_fail_reasons'] : [])
@@ -632,6 +707,14 @@ final class SystemOpsController extends Controller
             (string) ($row['paid_rate_pct'] ?? 0),
         ], $payments);
 
+        $uploadRows = array_map(static fn (array $row): array => [
+            (string) ($row['total'] ?? 0),
+            (string) ($row['accepted_count'] ?? 0),
+            (string) ($row['rejected_count'] ?? 0),
+            (string) ($row['quarantined_count'] ?? 0),
+            (string) ($row['blocked_rate_pct'] ?? 0),
+        ], $uploads);
+
         $providerAlertRows = array_map(static fn (array $row): array => [
             (string) ($row['provider_code'] ?? ''),
             (string) ($row['provider_name'] ?? ''),
@@ -648,6 +731,23 @@ final class SystemOpsController extends Controller
             (string) ($row['threshold_pct'] ?? 0),
             (string) ($row['severity'] ?? ''),
         ], $paymentAlerts);
+
+        $uploadAlertRows = array_map(static function (array $row): array {
+            $reasons = collect(is_array($row['top_reasons'] ?? null) ? $row['top_reasons'] : [])
+                ->map(static fn (array $reason): string => ((string) ($reason['reason'] ?? 'UNKNOWN')).' ('.((int) ($reason['count'] ?? 0)).')')
+                ->implode('; ');
+
+            return [
+                (string) ($row['ip'] ?? 'unknown'),
+                (string) ($row['total'] ?? 0),
+                (string) ($row['rejected_count'] ?? 0),
+                (string) ($row['quarantined_count'] ?? 0),
+                (string) ($row['blocked_rate_pct'] ?? 0),
+                (string) ($row['threshold_pct'] ?? 0),
+                (string) ($row['severity'] ?? ''),
+                $reasons,
+            ];
+        }, $uploadAlerts);
 
         $sheetMetaRows = [
             ['window_hours', (string) ($metrics['window_hours'] ?? 24)],
@@ -674,12 +774,18 @@ final class SystemOpsController extends Controller
         $xml .= $this->buildWorksheetXml('Payment Metrics', [
             'gateway', 'total', 'paid_count', 'failed_count', 'unpaid_count', 'paid_rate_pct',
         ], $paymentRows);
+        $xml .= $this->buildWorksheetXml('Upload Metrics', [
+            'total', 'accepted_count', 'rejected_count', 'quarantined_count', 'blocked_rate_pct',
+        ], $uploadRows);
         $xml .= $this->buildWorksheetXml('Provider Alerts', [
             'provider_code', 'provider_name', 'attempts', 'success_rate_pct', 'threshold_pct', 'severity',
         ], $providerAlertRows);
         $xml .= $this->buildWorksheetXml('Payment Alerts', [
             'gateway', 'total', 'paid_rate_pct', 'threshold_pct', 'severity',
         ], $paymentAlertRows);
+        $xml .= $this->buildWorksheetXml('Upload Alerts', [
+            'ip', 'total', 'rejected_count', 'quarantined_count', 'blocked_rate_pct', 'threshold_pct', 'severity', 'top_reasons',
+        ], $uploadAlertRows);
         $xml .= '</Workbook>';
 
         return $xml;

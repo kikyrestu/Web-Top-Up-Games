@@ -89,8 +89,14 @@ final class AdminDashboardController extends Controller
                 ->values()
                 ->all();
 
+            $uploadAlerts = collect(is_iterable($alertsData['alerts']['uploads'] ?? null) ? $alertsData['alerts']['uploads'] : [])
+                ->filter(static fn (array $row): bool => strtoupper((string) ($row['severity'] ?? '')) === $severity)
+                ->values()
+                ->all();
+
             $alertsData['alerts']['providers'] = $providerAlerts;
             $alertsData['alerts']['payments'] = $paymentAlerts;
+            $alertsData['alerts']['uploads'] = $uploadAlerts;
         }
 
         return view('admin.alerts', [

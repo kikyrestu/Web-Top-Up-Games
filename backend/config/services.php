@@ -93,6 +93,8 @@ return [
         'provider_alert_min_attempts' => env('DASHBOARD_PROVIDER_ALERT_MIN_ATTEMPTS', 5),
         'payment_paid_rate_alert_threshold' => env('DASHBOARD_PAYMENT_PAID_RATE_ALERT_THRESHOLD', 75),
         'payment_alert_min_total' => env('DASHBOARD_PAYMENT_ALERT_MIN_TOTAL', 5),
+        'upload_blocked_rate_alert_threshold' => env('DASHBOARD_UPLOAD_BLOCKED_RATE_ALERT_THRESHOLD', 30),
+        'upload_alert_min_total' => env('DASHBOARD_UPLOAD_ALERT_MIN_TOTAL', 5),
     ],
 
     'otp' => [
