@@ -12,8 +12,8 @@ return new class extends Migration
         DB::statement('CREATE INDEX IF NOT EXISTS payment_webhooks_gateway_event_key_idx ON payment_webhooks (gateway, event_key)');
 
         if (DB::getDriverName() === 'pgsql') {
-            DB::statement('CREATE INDEX IF NOT EXISTS orders_meta_gin_idx ON orders USING GIN (meta)');
-            DB::statement('CREATE INDEX IF NOT EXISTS audit_logs_payload_gin_idx ON audit_logs USING GIN (payload)');
+            DB::statement('CREATE INDEX IF NOT EXISTS orders_meta_gin_idx ON orders USING GIN ((meta::jsonb))');
+            DB::statement('CREATE INDEX IF NOT EXISTS audit_logs_payload_gin_idx ON audit_logs USING GIN ((payload::jsonb))');
             DB::statement("CREATE INDEX IF NOT EXISTS orders_meta_idempotency_idx ON orders ((meta->>'idempotency_key'))");
         }
     }
