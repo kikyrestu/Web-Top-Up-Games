@@ -205,6 +205,41 @@ final class SystemOpsController extends Controller
         ]);
     }
 
+    public function dashboardHousekeepingHistory(Request $request): JsonResponse
+    {
+        $hours = $this->normalizedHours($request->integer('hours', 24));
+        $limit = max(1, min($request->integer('limit', 20), 100));
+        $from = now()->subHours($hours);
+
+        $runs = AuditLog::query()
+            ->where('event_type', 'IDEMPOTENCY_PURGE_COMPLETED')
+            ->where('occurred_at', '>=', $from)
+            ->orderByDesc('occurred_at')
+            ->limit($limit)
+            ->get(['payload', 'occurred_at'])
+            ->map(static function (AuditLog $log): array {
+                $payload = is_array($log->payload) ? $log->payload : [];
+
+                return [
+                    'run_at' => $log->occurred_at?->toISOString(),
+                    'deleted_records' => (int) ($payload['deleted_records'] ?? 0),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'code' => 'ADMIN_DASHBOARD_HOUSEKEEPING_HISTORY',
+            'message' => 'Housekeeping history loaded',
+            'data' => [
+                'window_hours' => $hours,
+                'limit' => $limit,
+                'count' => $runs->count(),
+                'runs' => $runs,
+            ],
+        ]);
+    }
+
     public function dashboardMetricsExcel(Request $request): StreamedResponse
     {
         $hours = $this->normalizedHours($request->integer('hours', 24));

@@ -44,6 +44,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/providers/sync-products', [SystemOpsController::class, 'syncProviders'])->middleware('idempotency');
         Route::get('/dashboard/overview', [SystemOpsController::class, 'dashboardOverview']);
         Route::get('/dashboard/housekeeping', [SystemOpsController::class, 'dashboardHousekeeping']);
+        Route::get('/dashboard/housekeeping/history', [SystemOpsController::class, 'dashboardHousekeepingHistory']);
         Route::get('/dashboard/metrics', [SystemOpsController::class, 'dashboardMetrics']);
         Route::get('/dashboard/alerts', [SystemOpsController::class, 'dashboardAlerts']);
         Route::get('/dashboard/metrics/excel', [SystemOpsController::class, 'dashboardMetricsExcel']);

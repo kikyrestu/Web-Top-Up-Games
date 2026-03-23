@@ -180,6 +180,27 @@ class AdminDashboardMetricsTest extends TestCase
             ->assertJsonPath('data.idempotency.purge_total_deleted', 12)
             ->assertJsonPath('data.idempotency.purge_last_deleted', 12);
 
+        AuditLog::query()->create([
+            'event_type' => 'IDEMPOTENCY_PURGE_COMPLETED',
+            'actor_type' => 'SYSTEM',
+            'actor_id' => null,
+            'entity_type' => 'IDEMPOTENCY',
+            'entity_id' => null,
+            'payload' => [
+                'deleted_records' => 7,
+            ],
+            'occurred_at' => now()->subMinutes(1),
+        ]);
+
+        $historyResponse = $this->getJson('/api/v1/admin/dashboard/housekeeping/history?hours=24&limit=1');
+
+        $historyResponse
+            ->assertOk()
+            ->assertJsonPath('code', 'ADMIN_DASHBOARD_HOUSEKEEPING_HISTORY')
+            ->assertJsonPath('data.limit', 1)
+            ->assertJsonPath('data.count', 1)
+            ->assertJsonPath('data.runs.0.deleted_records', 7);
+
         $excelResponse = $this->get('/api/v1/admin/dashboard/metrics/excel?hours=24&alert_min_attempts=1&alert_success_rate_threshold=85');
 
         $excelResponse->assertOk();
@@ -201,6 +222,10 @@ class AdminDashboardMetricsTest extends TestCase
             ->assertJsonPath('code', 'FORBIDDEN');
 
         $this->getJson('/api/v1/admin/dashboard/housekeeping')
+            ->assertStatus(403)
+            ->assertJsonPath('code', 'FORBIDDEN');
+
+        $this->getJson('/api/v1/admin/dashboard/housekeeping/history')
             ->assertStatus(403)
             ->assertJsonPath('code', 'FORBIDDEN');
 
