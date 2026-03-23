@@ -95,4 +95,8 @@ return [
         'payment_alert_min_total' => env('DASHBOARD_PAYMENT_ALERT_MIN_TOTAL', 5),
     ],
 
+    'idempotency' => [
+        'ttl_hours' => env('IDEMPOTENCY_TTL_HOURS', 24),
+    ],
+
 ];

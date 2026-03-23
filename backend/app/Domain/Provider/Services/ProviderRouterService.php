@@ -29,6 +29,10 @@ final class ProviderRouterService
     {
         $attemptNo = 1;
         $maxRetriesPerProvider = max(0, (int) config('services.provider_router.max_retries_per_provider', 1));
+        $lastFailure = [
+            'is_retryable' => false,
+            'raw' => ['error' => 'provider_dispatch_failed'],
+        ];
 
         foreach ($rankedProviders as $candidate) {
             $providerCode = strtoupper((string) ($candidate['provider_code'] ?? ''));
@@ -93,6 +97,15 @@ final class ProviderRouterService
                 $status = strtoupper((string) ($response['status'] ?? 'PENDING'));
                 $isRetryable = (bool) ($response['is_retryable'] ?? false);
 
+                if (in_array($status, ['FAILED', 'ERROR'], true)) {
+                    $lastFailure = [
+                        'is_retryable' => $isRetryable,
+                        'raw' => is_array($response['raw'] ?? null)
+                            ? $response['raw']
+                            : ['error' => 'provider_dispatch_failed'],
+                    ];
+                }
+
                 OrderProviderAttempt::query()->create([
                     'order_id' => (int) ($payload['order_id'] ?? 0),
                     'provider_id' => $providerId,
@@ -125,7 +138,10 @@ final class ProviderRouterService
 
         return [
             'status' => 'FAILED',
-            'is_retryable' => false,
+            'is_retryable' => (bool) ($lastFailure['is_retryable'] ?? false),
+            'raw' => is_array($lastFailure['raw'] ?? null)
+                ? $lastFailure['raw']
+                : ['error' => 'provider_dispatch_failed'],
         ];
     }
 

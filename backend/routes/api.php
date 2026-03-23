@@ -28,9 +28,9 @@ Route::prefix('v1')->group(function (): void {
     Route::post('/auth/token/login', [AuthTokenController::class, 'login'])
         ->middleware('throttle:auth-token-login');
     Route::post('/orders/quote', [QuoteController::class, 'store']);
-    Route::post('/orders', [OrderController::class, 'store']);
+    Route::post('/orders', [OrderController::class, 'store'])->middleware('idempotency');
     Route::get('/orders/{orderCode}', [OrderController::class, 'show']);
-    Route::post('/payments/initiate', [PaymentController::class, 'initiate']);
+    Route::post('/payments/initiate', [PaymentController::class, 'initiate'])->middleware('idempotency');
     Route::get('/payments/{gatewayReference}/status', [PaymentController::class, 'status']);
     Route::post('/payments/webhook/{gateway}', [PaymentWebhookController::class, 'handle']);
 
@@ -41,12 +41,12 @@ Route::prefix('v1')->group(function (): void {
     });
 
     Route::prefix('admin')->middleware(['auth:sanctum', 'admin.role'])->group(function (): void {
-        Route::post('/providers/sync-products', [SystemOpsController::class, 'syncProviders']);
+        Route::post('/providers/sync-products', [SystemOpsController::class, 'syncProviders'])->middleware('idempotency');
         Route::get('/dashboard/overview', [SystemOpsController::class, 'dashboardOverview']);
         Route::get('/dashboard/metrics', [SystemOpsController::class, 'dashboardMetrics']);
         Route::get('/dashboard/alerts', [SystemOpsController::class, 'dashboardAlerts']);
         Route::get('/dashboard/metrics/excel', [SystemOpsController::class, 'dashboardMetricsExcel']);
         Route::get('/orders/{orderCode}/provider-attempts', [OrderProviderAttemptController::class, 'index']);
-        Route::post('/orders/{orderCode}/reprocess', [OrderReprocessController::class, 'store']);
+        Route::post('/orders/{orderCode}/reprocess', [OrderReprocessController::class, 'store'])->middleware('idempotency');
     });
 });

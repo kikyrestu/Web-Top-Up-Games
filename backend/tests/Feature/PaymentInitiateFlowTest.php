@@ -35,6 +35,56 @@ class PaymentInitiateFlowTest extends TestCase
         $this->assertNotNull($response->json('data.expired_at'));
     }
 
+    public function test_it_returns_same_response_for_replayed_idempotency_key(): void
+    {
+        $order = $this->createOrder();
+
+        $payload = [
+            'order_code' => $order->order_code,
+            'gateway' => 'midtrans',
+            'method' => 'qris',
+        ];
+
+        $first = $this
+            ->withHeader('x-idempotency-key', 'idem-payment-001')
+            ->postJson('/api/v1/payments/initiate', $payload)
+            ->assertOk();
+
+        $second = $this
+            ->withHeader('x-idempotency-key', 'idem-payment-001')
+            ->postJson('/api/v1/payments/initiate', $payload)
+            ->assertOk();
+
+        $this->assertSame(
+            $first->json('data.gateway_reference'),
+            $second->json('data.gateway_reference')
+        );
+    }
+
+    public function test_it_rejects_reused_idempotency_key_for_different_payload(): void
+    {
+        $order = $this->createOrder();
+
+        $this
+            ->withHeader('x-idempotency-key', 'idem-payment-002')
+            ->postJson('/api/v1/payments/initiate', [
+                'order_code' => $order->order_code,
+                'gateway' => 'midtrans',
+                'method' => 'qris',
+            ])
+            ->assertOk();
+
+        $this
+            ->withHeader('x-idempotency-key', 'idem-payment-002')
+            ->postJson('/api/v1/payments/initiate', [
+                'order_code' => $order->order_code,
+                'gateway' => 'duitku',
+                'method' => 'va',
+            ])
+            ->assertStatus(409)
+            ->assertJsonPath('code', 'IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_PAYLOAD');
+    }
+
     private function createOrder(): Order
     {
         $category = Category::query()->create([

@@ -99,7 +99,10 @@ final class DigiflazzAdapter implements ProviderAdapterInterface
                 'status' => 'FAILED',
                 'is_retryable' => ProviderStatusNormalizer::isRetryableHttpStatus($response->status()),
                 'provider_ref' => null,
-                'raw' => ['http_status' => $response->status()],
+                'raw' => [
+                    'error' => 'http_status_'.$response->status(),
+                    'http_status' => $response->status(),
+                ],
             ];
         }
 
