@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\AdminAuthController;
+use App\Http\Controllers\Web\AdminCmsController;
 use App\Http\Controllers\Web\AdminAuditLogController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminOrderController;
@@ -53,6 +54,21 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/alerts', [AdminDashboardController::class, 'alerts'])->name('dashboard.alerts');
         Route::get('/dashboard/metrics/excel', [AdminDashboardController::class, 'metricsExcel'])->name('dashboard.metrics.excel');
+
+        Route::get('/cms/pages', [AdminCmsController::class, 'pagesIndex'])->name('cms.pages.index');
+        Route::get('/cms/pages/create', [AdminCmsController::class, 'pagesCreate'])->name('cms.pages.create');
+        Route::post('/cms/pages', [AdminCmsController::class, 'pagesStore'])->name('cms.pages.store');
+        Route::get('/cms/pages/{page}/edit', [AdminCmsController::class, 'pagesEdit'])->name('cms.pages.edit');
+        Route::put('/cms/pages/{page}', [AdminCmsController::class, 'pagesUpdate'])->name('cms.pages.update');
+        Route::delete('/cms/pages/{page}', [AdminCmsController::class, 'pagesDestroy'])->name('cms.pages.destroy');
+
+        Route::get('/cms/banners', [AdminCmsController::class, 'bannersIndex'])->name('cms.banners.index');
+        Route::get('/cms/banners/create', [AdminCmsController::class, 'bannersCreate'])->name('cms.banners.create');
+        Route::post('/cms/banners', [AdminCmsController::class, 'bannersStore'])->name('cms.banners.store');
+        Route::get('/cms/banners/{banner}/edit', [AdminCmsController::class, 'bannersEdit'])->name('cms.banners.edit');
+        Route::put('/cms/banners/{banner}', [AdminCmsController::class, 'bannersUpdate'])->name('cms.banners.update');
+        Route::delete('/cms/banners/{banner}', [AdminCmsController::class, 'bannersDestroy'])->name('cms.banners.destroy');
+
         Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('/audit-logs/export/csv', [AdminAuditLogController::class, 'exportCsv'])->name('audit-logs.export.csv');
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');

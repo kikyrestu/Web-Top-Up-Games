@@ -221,6 +221,8 @@
             @endauth
             <a class="pill" href="{{ route('admin.dashboard') }}">Admin</a>
             <a class="pill" href="{{ route('admin.dashboard.alerts') }}">Admin Alerts</a>
+            <a class="pill" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
+            <a class="pill" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
             <a class="pill" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
             <a class="pill" href="{{ route('admin.orders.index') }}">Admin Orders</a>
             @auth
