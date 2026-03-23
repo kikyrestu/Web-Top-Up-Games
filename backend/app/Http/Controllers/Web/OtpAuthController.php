@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Otp\Services\OtpDeliveryService;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OtpRequest;
+use App\Models\SecurityEvent;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +19,10 @@ use Illuminate\Support\Str;
 
 final class OtpAuthController extends Controller
 {
+    public function __construct(private readonly OtpDeliveryService $otpDeliveryService)
+    {
+    }
+
     public function showLogin(Request $request): View
     {
         if ($request->user() !== null) {
@@ -54,6 +60,11 @@ final class OtpAuthController extends Controller
             ->count();
 
         if ($recentCount >= 3) {
+            $this->logSecurityEvent('OTP_REQUEST_THROTTLED', 'MEDIUM', $request, [
+                'channel' => $channel,
+                'destination' => $destination,
+            ], 45);
+
             return back()->withErrors(['destination' => 'Terlalu banyak request OTP. Coba lagi 10 menit lagi.'])->withInput();
         }
 
@@ -69,14 +80,34 @@ final class OtpAuthController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
+        $deliveryResult = $this->otpDeliveryService->deliver($channel, $destination, $otp);
+
+        if (($deliveryResult['delivered'] ?? false) !== true) {
+            $this->logSecurityEvent('OTP_DELIVERY_FAILED', 'MEDIUM', $request, [
+                'channel' => $channel,
+                'destination' => $destination,
+                'driver' => (string) ($deliveryResult['driver'] ?? 'unknown'),
+                'message' => (string) ($deliveryResult['message'] ?? 'unknown'),
+            ], 35);
+
+            return back()->withErrors([
+                'destination' => 'Gagal mengirim OTP. Coba beberapa saat lagi.',
+            ])->withInput();
+        }
+
         $request->session()->put('otp_pending', [
             'channel' => $channel,
             'destination' => $destination,
         ]);
 
+        $driver = strtolower((string) config('services.otp.driver', 'demo'));
+        $notice = $driver === 'demo'
+            ? 'OTP berhasil dibuat. Demo code: '.$otp
+            : 'OTP berhasil dikirim. Cek kanal '.$channel.' kamu.';
+
         return redirect()
             ->route('account.verify-otp')
-            ->with('notice', 'OTP berhasil dibuat. Demo code: '.$otp);
+            ->with('notice', $notice);
     }
 
     public function showVerify(Request $request): View
@@ -115,16 +146,33 @@ final class OtpAuthController extends Controller
             ->first();
 
         if ($otpRequest === null || $otpRequest->expires_at === null || $otpRequest->expires_at->isPast()) {
+            $this->logSecurityEvent('OTP_VERIFY_INVALID_OR_EXPIRED', 'LOW', $request, [
+                'channel' => $channel,
+                'destination' => $destination,
+            ], 20);
+
             return back()->withErrors(['code' => 'OTP tidak ditemukan atau sudah expired.']);
         }
 
         if ((int) $otpRequest->attempt_count >= 5) {
+            $this->logSecurityEvent('OTP_VERIFY_BLOCKED_MAX_ATTEMPTS', 'MEDIUM', $request, [
+                'channel' => $channel,
+                'destination' => $destination,
+                'attempt_count' => (int) $otpRequest->attempt_count,
+            ], 50);
+
             return back()->withErrors(['code' => 'OTP diblokir karena terlalu banyak percobaan.']);
         }
 
         $otpRequest->increment('attempt_count');
 
         if (!Hash::check((string) $validated['code'], (string) $otpRequest->code_hash)) {
+            $this->logSecurityEvent('OTP_VERIFY_CODE_MISMATCH', 'LOW', $request, [
+                'channel' => $channel,
+                'destination' => $destination,
+                'attempt_count' => (int) $otpRequest->attempt_count,
+            ], 25);
+
             return back()->withErrors(['code' => 'Kode OTP salah.']);
         }
 
@@ -138,6 +186,12 @@ final class OtpAuthController extends Controller
         $request->session()->regenerate();
         $this->syncRecentOrdersToUser($request, (int) $user->id);
         $request->session()->forget('otp_pending');
+
+        $this->logSecurityEvent('OTP_VERIFY_SUCCESS', 'LOW', $request, [
+            'channel' => $channel,
+            'destination' => $destination,
+            'user_id' => (int) $user->id,
+        ], 5, (int) $user->id);
 
         return redirect()->route('account.dashboard')->with('notice', 'Login OTP berhasil.');
     }
@@ -219,5 +273,23 @@ final class OtpAuthController extends Controller
             ->orderByDesc('created_at')
             ->limit(8)
             ->get();
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function logSecurityEvent(string $eventCode, string $severity, Request $request, array $context, int $riskScore, ?int $userId = null): void
+    {
+        SecurityEvent::query()->create([
+            'event_code' => $eventCode,
+            'severity' => $severity,
+            'user_id' => $userId,
+            'device_id' => null,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'risk_score' => $riskScore,
+            'context' => $context,
+            'occurred_at' => now(),
+        ]);
     }
 }

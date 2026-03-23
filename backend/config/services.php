@@ -95,6 +95,11 @@ return [
         'payment_alert_min_total' => env('DASHBOARD_PAYMENT_ALERT_MIN_TOTAL', 5),
     ],
 
+    'otp' => [
+        'driver' => env('OTP_DELIVERY_DRIVER', 'demo'),
+        'subject' => env('OTP_EMAIL_SUBJECT', 'Kode OTP Login'),
+    ],
+
     'idempotency' => [
         'ttl_hours' => env('IDEMPOTENCY_TTL_HOURS', 24),
     ],

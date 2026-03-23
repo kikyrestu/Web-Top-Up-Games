@@ -14,6 +14,10 @@ final class AdminImageUploadService
     {
         $storedPath = $file->store($folder, 'public');
         $publicPath = '/storage/'.ltrim($storedPath, '/');
+        $realPath = $file->getRealPath();
+        $checksum = is_string($realPath) && $realPath !== '' && is_file($realPath)
+            ? hash_file('sha256', $realPath)
+            : null;
 
         FileUploadLog::query()->create([
             'actor_type' => 'USER',
@@ -22,7 +26,7 @@ final class AdminImageUploadService
             'storage_path' => $publicPath,
             'mime_type' => (string) $file->getClientMimeType(),
             'file_size' => (int) $file->getSize(),
-            'sha256_checksum' => hash_file('sha256', $file->getRealPath() ?: ''),
+            'sha256_checksum' => $checksum,
             'upload_ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'verdict' => 'ACCEPTED',
