@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\Admin\OrderProviderAttemptController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\QuoteController;
@@ -24,4 +25,8 @@ Route::prefix('v1')->group(function (): void {
     Route::post('/payments/initiate', [PaymentController::class, 'initiate']);
     Route::get('/payments/{gatewayReference}/status', [PaymentController::class, 'status']);
     Route::post('/payments/webhook/{gateway}', [PaymentWebhookController::class, 'handle']);
+
+    Route::prefix('admin')->group(function (): void {
+        Route::get('/orders/{orderCode}/provider-attempts', [OrderProviderAttemptController::class, 'index']);
+    });
 });

@@ -10,8 +10,11 @@ use Illuminate\Support\Str;
 
 final class ProviderRouterService
 {
-    public function __construct(private readonly DigiflazzAdapter $digiflazzAdapter)
-    {
+    public function __construct(
+        private readonly DigiflazzAdapter $digiflazzAdapter,
+        private readonly RajabillerAdapter $rajabillerAdapter,
+        private readonly OrderkuotaAdapter $orderkuotaAdapter,
+    ) {
     }
 
     /**
@@ -95,6 +98,8 @@ final class ProviderRouterService
     {
         return match ($providerCode) {
             'DIGIFLAZZ' => $this->digiflazzAdapter->createOrder($payload),
+            'RAJABILLER' => $this->rajabillerAdapter->createOrder($payload),
+            'ORDERKUOTA' => $this->orderkuotaAdapter->createOrder($payload),
             default => [
                 'status' => 'FAILED',
                 'provider_ref' => null,
