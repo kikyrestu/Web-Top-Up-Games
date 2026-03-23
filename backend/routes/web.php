@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\AdminCmsController;
 use App\Http\Controllers\Web\AdminAuditLogController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminOrderController;
+use App\Http\Controllers\Web\AdminReviewModerationController;
 use App\Http\Controllers\Web\AccountController;
 use App\Http\Controllers\Web\OtpAuthController;
 use App\Http\Controllers\Web\PublicPageController;
@@ -74,5 +75,9 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{orderCode}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{orderCode}/reprocess', [AdminOrderController::class, 'reprocess'])->name('orders.reprocess');
+
+        Route::get('/reviews', [AdminReviewModerationController::class, 'index'])->name('reviews.index');
+        Route::post('/reviews/{review}/approve', [AdminReviewModerationController::class, 'approve'])->name('reviews.approve');
+        Route::post('/reviews/{review}/reject', [AdminReviewModerationController::class, 'reject'])->name('reviews.reject');
     });
 });

@@ -225,6 +225,7 @@
             <a class="pill" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
             <a class="pill" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
             <a class="pill" href="{{ route('admin.orders.index') }}">Admin Orders</a>
+            <a class="pill" href="{{ route('admin.reviews.index') }}">Review Mod</a>
             @auth
                 <form method="post" action="{{ route('account.logout') }}">
                     @csrf
