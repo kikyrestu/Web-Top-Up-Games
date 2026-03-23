@@ -26,6 +26,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/dashboard/alerts', [AdminDashboardController::class, 'alerts'])->name('dashboard.alerts');
         Route::get('/dashboard/metrics/excel', [AdminDashboardController::class, 'metricsExcel'])->name('dashboard.metrics.excel');
         Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
+        Route::get('/audit-logs/export/csv', [AdminAuditLogController::class, 'exportCsv'])->name('audit-logs.export.csv');
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{orderCode}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{orderCode}/reprocess', [AdminOrderController::class, 'reprocess'])->name('orders.reprocess');

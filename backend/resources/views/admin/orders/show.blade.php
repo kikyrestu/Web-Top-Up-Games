@@ -3,6 +3,9 @@
         <div class="panel">
             <h1>Order Detail</h1>
             <p class="muted">Kode: <strong>{{ $order->order_code }}</strong></p>
+            <div style="margin-top:10px; margin-bottom:4px;">
+                <a class="pill" href="{{ route('admin.audit-logs.index', ['entity_type' => 'ORDER', 'q' => $order->order_code]) }}">Lihat Audit Log Terkait</a>
+            </div>
 
             <div class="cards" style="margin-top:12px;">
                 <div class="card"><div class="k">Order Status</div><div class="v">{{ $order->status }}</div></div>

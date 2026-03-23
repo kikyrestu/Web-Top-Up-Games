@@ -67,7 +67,10 @@
                         <td>{{ (int) ($alert['attempts'] ?? 0) }}</td>
                         <td>{{ (float) ($alert['success_rate_pct'] ?? 0) }}%</td>
                         <td>{{ (float) ($alert['threshold_pct'] ?? 0) }}%</td>
-                        <td>{{ $alert['severity'] ?? '-' }}</td>
+                        <td>
+                            @php $providerSeverity = strtoupper((string) ($alert['severity'] ?? '-')); @endphp
+                            <span class="tag {{ $providerSeverity === 'HIGH' ? 'tag-fail' : 'tag-warn' }}">{{ $providerSeverity }}</span>
+                        </td>
                     </tr>
                 @empty
                     <tr><td colspan="5" class="muted">Tidak ada provider alert.</td></tr>
@@ -89,7 +92,10 @@
                         <td>{{ (int) ($alert['total'] ?? 0) }}</td>
                         <td>{{ (float) ($alert['paid_rate_pct'] ?? 0) }}%</td>
                         <td>{{ (float) ($alert['threshold_pct'] ?? 0) }}%</td>
-                        <td>{{ $alert['severity'] ?? '-' }}</td>
+                        <td>
+                            @php $paymentSeverity = strtoupper((string) ($alert['severity'] ?? '-')); @endphp
+                            <span class="tag {{ $paymentSeverity === 'HIGH' ? 'tag-fail' : 'tag-warn' }}">{{ $paymentSeverity }}</span>
+                        </td>
                     </tr>
                 @empty
                     <tr><td colspan="5" class="muted">Tidak ada payment alert.</td></tr>

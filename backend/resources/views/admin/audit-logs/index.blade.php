@@ -45,6 +45,7 @@
                     <input id="q" name="q" type="text" value="{{ $filters['q'] }}" placeholder="event, request id, ip, payload">
                 </div>
                 <div style="grid-column:1/-1; display:flex; justify-content:flex-end; gap:10px;">
+                    <a class="pill" href="{{ route('admin.audit-logs.export.csv', request()->query()) }}">Download CSV</a>
                     <a class="pill" href="{{ route('admin.audit-logs.index') }}">Reset</a>
                     <button class="btn" type="submit">Apply Filter</button>
                 </div>
