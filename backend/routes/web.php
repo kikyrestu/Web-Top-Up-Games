@@ -81,6 +81,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::post('/orders/{orderCode}/reprocess', [AdminOrderController::class, 'reprocess'])->name('orders.reprocess');
 
         Route::get('/reviews', [AdminReviewModerationController::class, 'index'])->name('reviews.index');
+        Route::get('/reviews/{review}', [AdminReviewModerationController::class, 'show'])->name('reviews.show');
         Route::post('/reviews/{review}/approve', [AdminReviewModerationController::class, 'approve'])->name('reviews.approve');
         Route::post('/reviews/{review}/reject', [AdminReviewModerationController::class, 'reject'])->name('reviews.reject');
 

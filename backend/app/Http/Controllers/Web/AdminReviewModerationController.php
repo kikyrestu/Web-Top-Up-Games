@@ -51,6 +51,26 @@ final class AdminReviewModerationController extends Controller
         ]);
     }
 
+    public function show(Review $review): View
+    {
+        $review->load([
+            'product:id,name,slug',
+            'user:id,name,email',
+            'order:id,order_code,status,completed_at',
+            'moderations:id,review_id,admin_user_id,action,reason,moderated_at,created_at',
+            'moderations.adminUser:id,name,email',
+        ]);
+
+        $moderationHistory = $review->moderations
+            ->sortByDesc(static fn ($row) => $row->moderated_at ?? $row->created_at)
+            ->values();
+
+        return view('admin.reviews.show', [
+            'review' => $review,
+            'moderationHistory' => $moderationHistory,
+        ]);
+    }
+
     public function approve(Request $request, Review $review): RedirectResponse
     {
         if ($review->status === 'APPROVED') {

@@ -57,6 +57,7 @@
                         </td>
                         <td>
                             <div class="grid" style="grid-template-columns:1fr; gap:8px; min-width:230px;">
+                                <a class="pill" href="{{ route('admin.reviews.show', ['review' => $review->id]) }}">Detail & History</a>
                                 <form method="post" action="{{ route('admin.reviews.approve', ['review' => $review->id]) }}" class="grid" style="gap:6px;">
                                     @csrf
                                     <input type="text" name="reason" placeholder="Catatan approve (opsional)">
