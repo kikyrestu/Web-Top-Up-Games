@@ -274,6 +274,65 @@
             background: #102543;
         }
 
+        .admin-shell {
+            display: grid;
+            grid-template-columns: 240px minmax(0, 1fr);
+            gap: 14px;
+            align-items: start;
+        }
+
+        .admin-sidebar {
+            position: sticky;
+            top: 14px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #102543;
+            padding: 12px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .admin-sidebar-title {
+            margin: 0;
+            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            letter-spacing: -0.01em;
+        }
+
+        .admin-sidebar-sub {
+            margin: -2px 0 8px;
+            color: #8ea8cf;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .admin-nav-link {
+            border: 1px solid #2f4a74;
+            border-radius: 10px;
+            padding: 9px 11px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            color: #cfe0ff;
+            background: #0f213f;
+        }
+
+        .admin-nav-link:hover {
+            border-color: #4f73ab;
+            background: #17325a;
+        }
+
+        .admin-nav-link.is-active {
+            border-color: #5f86d6;
+            background: linear-gradient(120deg, #25457f, #1b3764);
+            color: #ffffff;
+        }
+
+        .admin-main {
+            min-width: 0;
+        }
+
         .logout-btn {
             border: 1px solid #2f4a74;
             border-radius: 999px;
@@ -431,6 +490,12 @@
 
         @media (max-width: 900px) {
             .cards { grid-template-columns: 1fr 1fr; }
+            .admin-shell {
+                grid-template-columns: 1fr;
+            }
+            .admin-sidebar {
+                position: static;
+            }
         }
 
         @media (max-width: 640px) {
@@ -515,20 +580,9 @@
                 <a class="market-link" href="{{ route('public.reviews.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.9 5.9L21 9.8l-4.5 4.4 1.1 6.2L12 17.7 6.4 20.4l1.1-6.2L3 9.8l6.1-.9z"></path></svg></span> Ulasan</a>
             </div>
 
-            @if ($isAdminUser)
+            @if ($isAdminUser && !$isAdminRoute)
                 <div class="admin-strip">
                     <a class="admin-link" href="{{ route('admin.dashboard') }}">Admin</a>
-
-                    @if ($isAdminRoute)
-                        <a class="admin-link" href="{{ route('admin.dashboard.alerts') }}">Alerts</a>
-                        <a class="admin-link" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
-                        <a class="admin-link" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
-                        <a class="admin-link" href="{{ route('admin.seo.index') }}">SEO</a>
-                        <a class="admin-link" href="{{ route('admin.audit-logs.index') }}">Audit</a>
-                        <a class="admin-link" href="{{ route('admin.security-events.index') }}">Security</a>
-                        <a class="admin-link" href="{{ route('admin.orders.index') }}">Orders</a>
-                        <a class="admin-link" href="{{ route('admin.reviews.index') }}">Reviews</a>
-                    @endif
                 </div>
             @endif
         </div>
@@ -553,7 +607,29 @@
             </div>
         @endif
 
-        {{ $slot }}
+        @if ($isAdminUser && $isAdminRoute)
+            <div class="admin-shell">
+                <aside class="admin-sidebar" aria-label="Menu Admin">
+                    <h2 class="admin-sidebar-title">Admin Panel</h2>
+                    <p class="admin-sidebar-sub">Navigasi cepat operasional</p>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.dashboard.alerts') ? 'is-active' : '' }}" href="{{ route('admin.dashboard.alerts') }}">Alerts</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.orders.*') ? 'is-active' : '' }}" href="{{ route('admin.orders.index') }}">Orders</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.reviews.*') ? 'is-active' : '' }}" href="{{ route('admin.reviews.index') }}">Reviews</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.audit-logs.*') ? 'is-active' : '' }}" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.security-events.*') ? 'is-active' : '' }}" href="{{ route('admin.security-events.index') }}">Security Events</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.cms.pages.*') ? 'is-active' : '' }}" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.cms.banners.*') ? 'is-active' : '' }}" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.seo.*') ? 'is-active' : '' }}" href="{{ route('admin.seo.index') }}">SEO</a>
+                </aside>
+
+                <main class="admin-main">
+                    {{ $slot }}
+                </main>
+            </div>
+        @else
+            {{ $slot }}
+        @endif
     </div>
 </div>
 </body>
