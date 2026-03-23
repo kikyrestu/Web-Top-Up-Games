@@ -55,19 +55,23 @@
         }
 
         .shell {
-            max-width: 1220px;
-            margin: 0 auto;
-            padding: 10px 16px 48px;
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 0 0 48px;
         }
 
         .topbar {
             display: grid;
             gap: 8px;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             background: #0a1731;
-            border: 1px solid #1f365a;
-            border-radius: 10px;
-            padding: 10px 12px;
+            border-top: 1px solid #1f365a;
+            border-bottom: 1px solid #1f365a;
+            border-left: 0;
+            border-right: 0;
+            border-radius: 0;
+            padding: 10px 16px;
         }
 
         .top-utility {
@@ -383,7 +387,7 @@
 
         @media (max-width: 640px) {
             .cards { grid-template-columns: 1fr; }
-            .shell { padding: 16px 12px 36px; }
+            .shell { padding: 0 0 36px; }
             .top-utility {
                 flex-direction: column;
                 align-items: flex-start;
@@ -398,7 +402,7 @@
                 margin: 0;
             }
             .quick-actions { justify-content: flex-start; }
-            .topbar { padding: 10px; }
+            .topbar { padding: 10px 12px; }
         }
     </style>
 </head>
