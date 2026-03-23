@@ -336,6 +336,13 @@
             background: #f3fbf6;
             color: #1f6f42;
             margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .product-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .popular-badge {
@@ -357,6 +364,12 @@
             text-transform: uppercase;
             letter-spacing: 0.04em;
             opacity: 0.9;
+        }
+
+        .product-price {
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 800;
         }
 
         .step-grid {
@@ -509,6 +522,7 @@
             .checkout-panel {
                 position: static;
             }
+        }
 
 
         @media (max-width: 640px) {
@@ -692,16 +706,31 @@
                         $thumbRaw = is_array($product->meta ?? null)
                             ? ((string) (($product->meta['thumbnail'] ?? $product->meta['icon'] ?? '') ?: ''))
                             : '';
+                        $thumbIsImage = $thumbRaw !== '' && (str_starts_with($thumbRaw, 'http://') || str_starts_with($thumbRaw, 'https://') || str_starts_with($thumbRaw, '/'));
                         $thumb = $thumbRaw !== '' ? $thumbRaw : strtoupper(substr((string) $product->name, 0, 1));
                         $categoryName = (string) ($product->category?->name ?? 'Lainnya');
+                        $startingPrice = (float) ($startingPrices[$product->id] ?? 0);
                     @endphp
                     <button class="product-card" type="button" data-product-id="{{ (int) $product->id }}" data-category="{{ $categoryName }}">
                         @if ($loop->iteration <= 6)
                             <span class="popular-badge">Popular</span>
                         @endif
-                        <span class="product-thumb">{{ $thumb }}</span>
+                        <span class="product-thumb">
+                            @if ($thumbIsImage)
+                                <img src="{{ $thumb }}" alt="{{ $product->name }}">
+                            @else
+                                {{ $thumb }}
+                            @endif
+                        </span>
                         <div class="product-name">{{ $product->name }}</div>
                         <div class="product-type">{{ $product->type }}</div>
+                        <div class="product-price">
+                            @if ($startingPrice > 0)
+                                Mulai {{ number_format($startingPrice, 0, ',', '.') }}
+                            @else
+                                Harga dinamis
+                            @endif
+                        </div>
                     </button>
                 @endforeach
             </div>
@@ -734,19 +763,7 @@
                         @foreach ($productsByCategory as $category => $products)
                             <optgroup label="{{ $category }}">
                                 @foreach ($products as $product)
-                                    @php
-                                        $metaPrice = 0.0;
-                                        if (is_array($product->meta ?? null)) {
-                                            foreach (['display_price', 'price', 'nominal'] as $priceKey) {
-                                                $raw = $product->meta[$priceKey] ?? null;
-                                                if (is_numeric($raw)) {
-                                                    $metaPrice = (float) $raw;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    @endphp
-                                    <option value="{{ $product->id }}" data-price="{{ $metaPrice }}" @selected((string) old('product_id') === (string) $product->id)>
+                                    <option value="{{ $product->id }}" data-price="{{ (float) ($startingPrices[$product->id] ?? 0) }}" @selected((string) old('product_id') === (string) $product->id)>
                                         {{ $product->name }} ({{ $product->type }})
                                     </option>
                                 @endforeach

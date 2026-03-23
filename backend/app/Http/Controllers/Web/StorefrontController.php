@@ -40,8 +40,18 @@ final class StorefrontController extends Controller
             ->get()
             ->groupBy(static fn (Product $product): string => (string) ($product->category?->name ?? 'Lainnya'));
 
+        $startingPrices = ProviderPrice::query()
+            ->where('is_active', true)
+            ->whereHas('provider', static fn ($query) => $query->where('is_active', true))
+            ->selectRaw('product_id, MIN(base_price + admin_fee) as starting_price')
+            ->groupBy('product_id')
+            ->pluck('starting_price', 'product_id')
+            ->map(static fn ($price): float => (float) $price)
+            ->all();
+
         return view('storefront.index', [
             'productsByCategory' => $productsByCategory,
+            'startingPrices' => $startingPrices,
             'gateways' => ['MIDTRANS', 'TRIPAY', 'XENDIT'],
         ]);
     }
