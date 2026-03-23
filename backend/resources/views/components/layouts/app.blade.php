@@ -214,12 +214,17 @@
             <a class="pill" href="{{ route('public.reviews.index') }}">Ulasan</a>
             <a class="pill" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
             <a class="pill" href="{{ route('storefront.history') }}">History</a>
+            @auth
+                <a class="pill" href="{{ route('account.dashboard') }}">Akun Saya</a>
+            @else
+                <a class="pill" href="{{ route('account.login-otp') }}">Login OTP</a>
+            @endauth
             <a class="pill" href="{{ route('admin.dashboard') }}">Admin</a>
             <a class="pill" href="{{ route('admin.dashboard.alerts') }}">Admin Alerts</a>
             <a class="pill" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
             <a class="pill" href="{{ route('admin.orders.index') }}">Admin Orders</a>
             @auth
-                <form method="post" action="{{ route('admin.logout') }}">
+                <form method="post" action="{{ route('account.logout') }}">
                     @csrf
                     <button class="pill" type="submit">Logout</button>
                 </form>
