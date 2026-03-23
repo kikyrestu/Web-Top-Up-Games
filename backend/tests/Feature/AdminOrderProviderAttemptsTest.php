@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderProviderAttempt;
 use App\Models\Product;
 use App\Models\Provider;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,6 +17,9 @@ class AdminOrderProviderAttemptsTest extends TestCase
 
     public function test_it_returns_provider_attempts_for_an_order(): void
     {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin);
+
         $provider = Provider::query()->create([
             'code' => 'DIGIFLAZZ',
             'name' => 'Digiflazz',
