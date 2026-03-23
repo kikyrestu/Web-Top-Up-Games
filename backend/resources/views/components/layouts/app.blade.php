@@ -67,6 +67,11 @@
             display: grid;
             gap: 10px;
             margin-bottom: 20px;
+            background: linear-gradient(135deg, #0f1a2b, #1a2e4a 62%, #173658);
+            border: 1px solid #2c4668;
+            border-radius: 18px;
+            padding: 12px;
+            box-shadow: 0 14px 28px rgba(12, 24, 42, 0.25);
         }
 
         .topbar-main {
@@ -74,16 +79,28 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 8px 0;
+            padding: 2px 2px 0;
+        }
+
+        .brand-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .brand {
             text-decoration: none;
-            color: var(--ink);
+            color: #f6fbff;
             font-family: 'Space Grotesk', sans-serif;
             font-size: 22px;
             font-weight: 700;
             letter-spacing: -0.02em;
+        }
+
+        .brand-sub {
+            color: #b8cce5;
+            font-size: 12px;
+            font-weight: 700;
         }
 
         .quick-actions {
@@ -95,49 +112,90 @@
         }
 
         .action-link {
-            border: 1px solid var(--line);
+            border: 1px solid #5f7898;
             border-radius: 999px;
             padding: 8px 12px;
             text-decoration: none;
-            color: var(--ink);
+            color: #e8f3ff;
             font-weight: 800;
             font-size: 12px;
-            background: #fff;
+            background: #234364;
         }
 
-        .action-link:hover { border-color: var(--accent); }
+        .action-link:hover {
+            border-color: #80a7d2;
+            background: #2a517a;
+        }
 
         .cta-link {
             border-color: transparent;
-            background: linear-gradient(120deg, var(--accent), #0ea26a);
+            background: linear-gradient(120deg, #f39f34, #e36f27);
             color: #fff;
+        }
+
+        .market-strip {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .market-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #4b6689;
+            border-radius: 12px;
+            padding: 7px 10px;
+            color: #d6e7fb;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            background: rgba(18, 39, 63, 0.75);
+        }
+
+        .market-link:hover {
+            border-color: #89acd3;
+            color: #ffffff;
+        }
+
+        .market-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #315a84;
+            color: #ffffff;
+            font-size: 10px;
+            letter-spacing: 0.03em;
         }
 
         .admin-strip {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            border-top: 1px dashed #bcd4c3;
+            border-top: 1px dashed #4f6889;
             padding-top: 10px;
         }
 
         .admin-link {
-            border: 1px solid #bcd4c3;
+            border: 1px solid #5e7ba0;
             border-radius: 999px;
             padding: 7px 11px;
             text-decoration: none;
             font-size: 11px;
             font-weight: 800;
-            color: #1f5e3c;
-            background: #f4fbf7;
+            color: #d6e7fb;
+            background: #234364;
         }
 
         .logout-btn {
-            border: 1px solid var(--line);
+            border: 1px solid #5f7898;
             border-radius: 999px;
             padding: 8px 12px;
-            background: #fff;
-            color: var(--ink);
+            background: #234364;
+            color: #e8f3ff;
             font-size: 12px;
             font-weight: 800;
             cursor: pointer;
@@ -271,6 +329,7 @@
                 flex-direction: column;
             }
             .quick-actions { justify-content: flex-start; }
+            .topbar { padding: 10px; }
         }
     </style>
 </head>
@@ -282,7 +341,10 @@
     @endphp
     <div class="topbar">
         <div class="topbar-main">
-            <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
+            <div class="brand-wrap">
+                <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
+                <span class="brand-sub">Top up game and PPOB platform</span>
+            </div>
             <div class="quick-actions">
                 <a class="action-link" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
                 <a class="action-link" href="{{ route('public.promo') }}">Promo</a>
@@ -300,6 +362,13 @@
                     </form>
                 @endauth
             </div>
+        </div>
+
+        <div class="market-strip">
+            <a class="market-link" href="{{ route('public.topup.index') }}"><span class="market-icon">GM</span> Game</a>
+            <a class="market-link" href="{{ route('public.ppob.index') }}"><span class="market-icon">PP</span> PPOB</a>
+            <a class="market-link" href="{{ route('public.articles.index') }}"><span class="market-icon">NW</span> Artikel</a>
+            <a class="market-link" href="{{ route('public.reviews.index') }}"><span class="market-icon">RV</span> Ulasan</a>
         </div>
 
         @if ($isAdminUser)
