@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Domain\Provider\Services;
 
 use App\Domain\Provider\Contracts\ProviderAdapterInterface;
+use App\Domain\Provider\Support\ProviderStatusNormalizer;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Throwable;
 
 final class RajabillerAdapter implements ProviderAdapterInterface
 {
@@ -69,6 +71,7 @@ final class RajabillerAdapter implements ProviderAdapterInterface
         if ($baseUrl === '' || $username === '' || $apiKey === '') {
             return [
                 'status' => 'FAILED',
+                'is_retryable' => false,
                 'provider_ref' => null,
                 'raw' => ['error' => 'missing_rajabiller_config'],
             ];
@@ -77,24 +80,38 @@ final class RajabillerAdapter implements ProviderAdapterInterface
         if ((string) ($payload['buyer_sku_code'] ?? '') === '' || (string) ($payload['customer_no'] ?? '') === '') {
             return [
                 'status' => 'FAILED',
+                'is_retryable' => false,
                 'provider_ref' => null,
                 'raw' => ['error' => 'invalid_payload'],
             ];
         }
 
-        $response = Http::timeout(20)
-            ->acceptJson()
-            ->post($baseUrl.'/transaction', [
-                'username' => $username,
-                'api_key' => $apiKey,
-                'product_code' => (string) $payload['buyer_sku_code'],
-                'customer_no' => (string) $payload['customer_no'],
-                'ref_id' => (string) ($payload['ref_id'] ?? ''),
-            ]);
+        try {
+            $response = Http::timeout(20)
+                ->acceptJson()
+                ->post($baseUrl.'/transaction', [
+                    'username' => $username,
+                    'api_key' => $apiKey,
+                    'product_code' => (string) $payload['buyer_sku_code'],
+                    'customer_no' => (string) $payload['customer_no'],
+                    'ref_id' => (string) ($payload['ref_id'] ?? ''),
+                ]);
+        } catch (Throwable $exception) {
+            return [
+                'status' => 'FAILED',
+                'is_retryable' => true,
+                'provider_ref' => null,
+                'raw' => [
+                    'error' => 'network_exception',
+                    'message' => $exception->getMessage(),
+                ],
+            ];
+        }
 
         if (!$response->successful()) {
             return [
                 'status' => 'FAILED',
+                'is_retryable' => ProviderStatusNormalizer::isRetryableHttpStatus($response->status()),
                 'provider_ref' => null,
                 'raw' => ['http_status' => $response->status()],
             ];
@@ -102,9 +119,11 @@ final class RajabillerAdapter implements ProviderAdapterInterface
 
         $json = $response->json();
         $data = is_array($json) ? Arr::get($json, 'data', []) : [];
+        $normalized = ProviderStatusNormalizer::normalize(Arr::get($data, 'status', 'PENDING'));
 
         return [
-            'status' => strtoupper((string) Arr::get($data, 'status', 'PENDING')),
+            'status' => $normalized['status'],
+            'is_retryable' => $normalized['is_retryable'],
             'provider_ref' => Arr::get($data, 'ref_id'),
             'raw' => is_array($json) ? $json : [],
         ];

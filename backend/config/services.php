@@ -53,6 +53,10 @@ return [
         'api_key' => env('ORDERKUOTA_API_KEY'),
     ],
 
+    'provider_router' => [
+        'max_retries_per_provider' => env('PROVIDER_MAX_RETRIES_PER_PROVIDER', 1),
+    ],
+
     'payment_gateways' => [
         'KLIKQRISS' => [
             'webhook_secret' => env('KLIKQRISS_WEBHOOK_SECRET'),

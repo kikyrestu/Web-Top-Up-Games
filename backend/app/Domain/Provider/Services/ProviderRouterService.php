@@ -27,6 +27,7 @@ final class ProviderRouterService
     public function dispatch(array $rankedProviders, array $payload): array
     {
         $attemptNo = 1;
+        $maxRetriesPerProvider = max(0, (int) config('services.provider_router.max_retries_per_provider', 1));
 
         foreach ($rankedProviders as $candidate) {
             $providerCode = strtoupper((string) ($candidate['provider_code'] ?? ''));
@@ -64,29 +65,42 @@ final class ProviderRouterService
                 continue;
             }
 
-            $response = $this->sendToProvider($providerCode, $requestPayload);
+            for ($retry = 0; $retry <= $maxRetriesPerProvider; $retry++) {
+                $response = $this->sendToProvider($providerCode, $requestPayload);
+                $status = strtoupper((string) ($response['status'] ?? 'PENDING'));
+                $isRetryable = (bool) ($response['is_retryable'] ?? false);
 
-            OrderProviderAttempt::query()->create([
-                'order_id' => (int) ($payload['order_id'] ?? 0),
-                'provider_id' => $providerId,
-                'attempt_no' => $attemptNo,
-                'status' => strtoupper((string) ($response['status'] ?? 'PENDING')),
-                'provider_ref' => $response['provider_ref'] ?? null,
-                'request_payload' => $requestPayload,
-                'response_payload' => $response,
-                'attempted_at' => now(),
-            ]);
+                OrderProviderAttempt::query()->create([
+                    'order_id' => (int) ($payload['order_id'] ?? 0),
+                    'provider_id' => $providerId,
+                    'attempt_no' => $attemptNo,
+                    'status' => $status,
+                    'provider_ref' => $response['provider_ref'] ?? null,
+                    'request_payload' => array_merge($requestPayload, [
+                        'retry_index' => $retry,
+                        'max_retries' => $maxRetriesPerProvider,
+                    ]),
+                    'response_payload' => $response,
+                    'attempted_at' => now(),
+                ]);
 
-            $status = strtoupper((string) ($response['status'] ?? 'PENDING'));
-            if (in_array($status, ['SUCCESS', 'PAID', 'PENDING'], true)) {
-                return $response;
+                if (in_array($status, ['SUCCESS', 'PAID', 'PENDING'], true)) {
+                    return $response;
+                }
+
+                $hasRetryLeft = $retry < $maxRetriesPerProvider;
+
+                $attemptNo++;
+
+                if (!$isRetryable || !$hasRetryLeft) {
+                    break;
+                }
             }
-
-            $attemptNo++;
         }
 
         return [
             'status' => 'FAILED',
+            'is_retryable' => false,
         ];
     }
 
