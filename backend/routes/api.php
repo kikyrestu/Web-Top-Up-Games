@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AdminBootstrapController;
 use App\Http\Controllers\Api\V1\AuthTokenController;
 use App\Http\Controllers\Api\V1\Admin\OrderProviderAttemptController;
 use App\Http\Controllers\Api\V1\Admin\OrderReprocessController;
+use App\Http\Controllers\Api\V1\Admin\AuditLogController;
 use App\Http\Controllers\Api\V1\Admin\SecurityEventController;
 use App\Http\Controllers\Api\V1\Admin\SystemOpsController;
 use App\Http\Controllers\Api\V1\PaymentController;
@@ -53,6 +54,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/dashboard/metrics', [SystemOpsController::class, 'dashboardMetrics']);
         Route::get('/dashboard/alerts', [SystemOpsController::class, 'dashboardAlerts']);
         Route::get('/dashboard/metrics/excel', [SystemOpsController::class, 'dashboardMetricsExcel']);
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
+        Route::get('/audit-logs/export/csv', [AuditLogController::class, 'exportCsv']);
         Route::get('/security-events', [SecurityEventController::class, 'index']);
         Route::get('/orders/{orderCode}/provider-attempts', [OrderProviderAttemptController::class, 'index']);
         Route::post('/orders/{orderCode}/reprocess', [OrderReprocessController::class, 'store'])->middleware('idempotency');
