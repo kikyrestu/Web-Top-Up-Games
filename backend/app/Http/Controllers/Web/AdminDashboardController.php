@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class AdminDashboardController extends Controller
 {
@@ -53,5 +54,33 @@ final class AdminDashboardController extends Controller
             'readiness' => is_array($readinessPayload['data'] ?? null) ? $readinessPayload['data'] : [],
             'recentOrders' => $recentOrders,
         ]);
+    }
+
+    public function alerts(Request $request): View
+    {
+        $alertsResponse = $this->systemOpsController->dashboardAlerts($request);
+        $metricsResponse = $this->systemOpsController->dashboardMetrics();
+
+        /** @var array<string, mixed> $alertsPayload */
+        $alertsPayload = $alertsResponse->getData(true);
+        /** @var array<string, mixed> $metricsPayload */
+        $metricsPayload = $metricsResponse->getData(true);
+
+        return view('admin.alerts', [
+            'alerts' => is_array($alertsPayload['data'] ?? null) ? $alertsPayload['data'] : [],
+            'metrics' => is_array($metricsPayload['data'] ?? null) ? $metricsPayload['data'] : [],
+            'filters' => [
+                'hours' => (int) $request->integer('hours', 24),
+                'alert_success_rate_threshold' => (float) $request->input('alert_success_rate_threshold', config('services.dashboard.provider_success_rate_alert_threshold', 85)),
+                'alert_min_attempts' => (int) $request->input('alert_min_attempts', config('services.dashboard.provider_alert_min_attempts', 5)),
+                'payment_alert_paid_rate_threshold' => (float) $request->input('payment_alert_paid_rate_threshold', config('services.dashboard.payment_paid_rate_alert_threshold', 75)),
+                'payment_alert_min_total' => (int) $request->input('payment_alert_min_total', config('services.dashboard.payment_alert_min_total', 5)),
+            ],
+        ]);
+    }
+
+    public function metricsExcel(Request $request): StreamedResponse
+    {
+        return $this->systemOpsController->dashboardMetricsExcel($request);
     }
 }

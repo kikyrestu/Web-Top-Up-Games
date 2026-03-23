@@ -51,7 +51,7 @@
             <h2>Provider Attempts</h2>
             <table>
                 <thead>
-                <tr><th>No</th><th>Provider</th><th>Status</th><th>Ref</th><th>At</th></tr>
+                <tr><th>No</th><th>Provider</th><th>Status</th><th>Ref</th><th>At</th><th>Payload</th></tr>
                 </thead>
                 <tbody>
                 @forelse ($order->providerAttempts->sortBy('attempt_no') as $attempt)
@@ -61,9 +61,19 @@
                         <td>{{ $attempt->status }}</td>
                         <td>{{ $attempt->provider_ref ?: '-' }}</td>
                         <td>{{ $attempt->attempted_at ?: '-' }}</td>
+                        <td>
+                            <details>
+                                <summary>Request</summary>
+                                <pre style="white-space: pre-wrap; word-break: break-word;">{{ json_encode($attempt->request_payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
+                            </details>
+                            <details style="margin-top:6px;">
+                                <summary>Response</summary>
+                                <pre style="white-space: pre-wrap; word-break: break-word;">{{ json_encode($attempt->response_payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
+                            </details>
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="muted">Belum ada provider attempts.</td></tr>
+                    <tr><td colspan="6" class="muted">Belum ada provider attempts.</td></tr>
                 @endforelse
                 </tbody>
             </table>

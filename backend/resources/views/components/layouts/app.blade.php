@@ -209,6 +209,7 @@
             <a class="pill" href="{{ route('storefront.index') }}">Storefront</a>
             <a class="pill" href="{{ route('storefront.history') }}">Order History</a>
             <a class="pill" href="{{ route('admin.dashboard') }}">Admin</a>
+            <a class="pill" href="{{ route('admin.dashboard.alerts') }}">Admin Alerts</a>
             <a class="pill" href="{{ route('admin.orders.index') }}">Admin Orders</a>
             @auth
                 <form method="post" action="{{ route('admin.logout') }}">

@@ -18,6 +18,10 @@
         <div class="panel">
             <h1>System Dashboard</h1>
             <p class="muted">Ringkasan operasional 24 jam terakhir.</p>
+            <div style="display:flex; gap:10px; margin-top:10px; margin-bottom:6px;">
+                <a class="pill" href="{{ route('admin.dashboard.alerts') }}">Buka Alert Center</a>
+                <a class="pill" href="{{ route('admin.dashboard.metrics.excel') }}">Download Metrics Excel</a>
+            </div>
 
             <div class="cards" style="margin-top:14px;">
                 <div class="card"><div class="k">Pending Orders</div><div class="v">{{ (int) ($ordersOverview['pending'] ?? 0) }}</div></div>

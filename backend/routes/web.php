@@ -22,6 +22,8 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
 
     Route::middleware(['web.admin'])->group(function (): void {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/alerts', [AdminDashboardController::class, 'alerts'])->name('dashboard.alerts');
+        Route::get('/dashboard/metrics/excel', [AdminDashboardController::class, 'metricsExcel'])->name('dashboard.metrics.excel');
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{orderCode}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{orderCode}/reprocess', [AdminOrderController::class, 'reprocess'])->name('orders.reprocess');
