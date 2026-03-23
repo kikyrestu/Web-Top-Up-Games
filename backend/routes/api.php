@@ -11,6 +11,10 @@ use App\Http\Controllers\Api\V1\Admin\SystemOpsController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\QuoteController;
+use App\Http\Controllers\Api\V1\CatalogController;
+use App\Http\Controllers\Api\V1\CmsController;
+use App\Http\Controllers\Api\V1\ReviewController;
+use App\Http\Controllers\Api\V1\AccountTransactionController;
 use App\Http\Controllers\Api\V1\UploadController;
 use App\Http\Controllers\Api\V1\ValidationController;
 use Illuminate\Support\Facades\Route;
@@ -36,12 +40,18 @@ Route::prefix('v1')->group(function (): void {
     Route::post('/payments/initiate', [PaymentController::class, 'initiate'])->middleware('idempotency');
     Route::get('/payments/{gatewayReference}/status', [PaymentController::class, 'status']);
     Route::post('/payments/webhook/{gateway}', [PaymentWebhookController::class, 'handle']);
+    Route::get('/catalog/categories', [CatalogController::class, 'categories']);
+    Route::get('/catalog/products', [CatalogController::class, 'products']);
+    Route::get('/cms/page/{slug}', [CmsController::class, 'page']);
+    Route::get('/reviews/product/{slug}', [ReviewController::class, 'productReviews']);
     Route::post('/uploads/scan', [UploadController::class, 'scan'])->middleware(['auth:sanctum']);
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/auth/me', [AuthTokenController::class, 'me']);
         Route::post('/auth/token/revoke-all', [AuthTokenController::class, 'revokeAll']);
         Route::post('/auth/token/logout', [AuthTokenController::class, 'logout']);
+        Route::post('/reviews', [ReviewController::class, 'store'])->middleware('throttle:60,1');
+        Route::get('/account/transactions', [AccountTransactionController::class, 'index']);
     });
 
     Route::prefix('admin')->middleware(['auth:sanctum', 'admin.role'])->group(function (): void {
