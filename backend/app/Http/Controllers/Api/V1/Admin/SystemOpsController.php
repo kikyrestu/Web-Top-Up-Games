@@ -17,7 +17,9 @@ use App\Models\ProviderHealthCheck;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 final class SystemOpsController extends Controller
 {
@@ -283,6 +285,104 @@ final class SystemOpsController extends Controller
                 'days' => $days,
                 'generated_at' => now()->toISOString(),
                 'trend' => $trend,
+            ],
+        ]);
+    }
+
+    public function systemReadiness(): JsonResponse
+    {
+        $checks = [];
+
+        try {
+            DB::select('select 1');
+            $checks[] = [
+                'code' => 'DB_CONNECTION',
+                'status' => 'PASS',
+                'message' => 'Database connection is healthy',
+                'meta' => [
+                    'connection' => (string) config('database.default'),
+                ],
+            ];
+        } catch (Throwable $exception) {
+            $checks[] = [
+                'code' => 'DB_CONNECTION',
+                'status' => 'FAIL',
+                'message' => 'Database connection failed',
+                'meta' => [
+                    'error' => $exception->getMessage(),
+                ],
+            ];
+        }
+
+        $queueConnection = (string) config('queue.default', 'sync');
+        $checks[] = [
+            'code' => 'QUEUE_CONNECTION',
+            'status' => $queueConnection === 'sync' ? 'WARN' : 'PASS',
+            'message' => $queueConnection === 'sync'
+                ? 'Queue driver is sync; use redis/database for production'
+                : 'Queue driver is non-sync',
+            'meta' => [
+                'driver' => $queueConnection,
+            ],
+        ];
+
+        $providerCoverage = $this->providerCredentialCoverage();
+        $checks[] = [
+            'code' => 'PROVIDER_CREDENTIALS',
+            'status' => $providerCoverage['ready_count'] > 0 ? 'PASS' : 'WARN',
+            'message' => $providerCoverage['ready_count'] > 0
+                ? 'At least one provider credential set is available'
+                : 'No provider credential set found',
+            'meta' => $providerCoverage,
+        ];
+
+        $paymentCoverage = $this->paymentGatewayCoverage();
+        $checks[] = [
+            'code' => 'PAYMENT_GATEWAY_WEBHOOK_SECRETS',
+            'status' => $paymentCoverage['ready_count'] > 0 ? 'PASS' : 'WARN',
+            'message' => $paymentCoverage['ready_count'] > 0
+                ? 'At least one payment gateway webhook secret is configured'
+                : 'No payment gateway webhook secret configured',
+            'meta' => $paymentCoverage,
+        ];
+
+        $recentPurge = AuditLog::query()
+            ->where('event_type', 'IDEMPOTENCY_PURGE_COMPLETED')
+            ->where('occurred_at', '>=', now()->subHours(2))
+            ->exists();
+
+        $checks[] = [
+            'code' => 'HOUSEKEEPING_RECENT_PERSISTENCE',
+            'status' => $recentPurge ? 'PASS' : 'WARN',
+            'message' => $recentPurge
+                ? 'Recent idempotency purge run detected'
+                : 'No purge run detected in last 2 hours',
+            'meta' => [
+                'window_hours' => 2,
+            ],
+        ];
+
+        $failedCount = collect($checks)->where('status', 'FAIL')->count();
+        $warnCount = collect($checks)->where('status', 'WARN')->count();
+        $passCount = collect($checks)->where('status', 'PASS')->count();
+
+        $ready = $failedCount === 0;
+        $score = round(($passCount / max(1, count($checks))) * 100, 2);
+
+        return response()->json([
+            'success' => true,
+            'code' => 'SYSTEM_READINESS_REPORT',
+            'message' => 'System readiness report generated',
+            'data' => [
+                'ready' => $ready,
+                'score' => $score,
+                'summary' => [
+                    'pass' => $passCount,
+                    'warn' => $warnCount,
+                    'fail' => $failedCount,
+                ],
+                'checks' => $checks,
+                'generated_at' => now()->toISOString(),
             ],
         ]);
     }
@@ -631,6 +731,66 @@ final class SystemOpsController extends Controller
     private function normalizedAlertMinAttempts(mixed $minAttempts): int
     {
         return (int) max(1, min((int) $minAttempts, 500));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function providerCredentialCoverage(): array
+    {
+        $providers = [
+            'DIGIFLAZZ' => [
+                (string) config('services.digiflazz.base_url'),
+                (string) config('services.digiflazz.username'),
+                (string) config('services.digiflazz.api_key'),
+            ],
+            'RAJABILLER' => [
+                (string) config('services.rajabiller.base_url'),
+                (string) config('services.rajabiller.username'),
+                (string) config('services.rajabiller.api_key'),
+            ],
+            'ORDERKUOTA' => [
+                (string) config('services.orderkuota.base_url'),
+                (string) config('services.orderkuota.username'),
+                (string) config('services.orderkuota.api_key'),
+            ],
+        ];
+
+        $readyProviders = [];
+        foreach ($providers as $code => $values) {
+            $allFilled = collect($values)->every(static fn (string $value): bool => trim($value) !== '');
+            if ($allFilled) {
+                $readyProviders[] = $code;
+            }
+        }
+
+        return [
+            'total' => count($providers),
+            'ready_count' => count($readyProviders),
+            'ready_providers' => $readyProviders,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function paymentGatewayCoverage(): array
+    {
+        $gateways = ['KLIKQRISS', 'MIDTRANS', 'DUITKU'];
+        $ready = [];
+
+        foreach ($gateways as $gateway) {
+            $secret = (string) config('services.payment_gateways.'.$gateway.'.webhook_secret', '');
+            if (trim($secret) !== '') {
+                $ready[] = $gateway;
+            }
+        }
+
+        return [
+            'total' => count($gateways),
+            'ready_count' => count($ready),
+            'ready_gateways' => $ready,
+        ];
     }
 
     private function percentage(int $success, int $total): float

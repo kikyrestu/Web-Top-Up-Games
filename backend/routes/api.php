@@ -42,6 +42,7 @@ Route::prefix('v1')->group(function (): void {
 
     Route::prefix('admin')->middleware(['auth:sanctum', 'admin.role'])->group(function (): void {
         Route::post('/providers/sync-products', [SystemOpsController::class, 'syncProviders'])->middleware('idempotency');
+        Route::get('/system/readiness', [SystemOpsController::class, 'systemReadiness']);
         Route::get('/dashboard/overview', [SystemOpsController::class, 'dashboardOverview']);
         Route::get('/dashboard/housekeeping', [SystemOpsController::class, 'dashboardHousekeeping']);
         Route::get('/dashboard/housekeeping/history', [SystemOpsController::class, 'dashboardHousekeepingHistory']);
