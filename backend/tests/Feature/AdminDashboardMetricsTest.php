@@ -107,10 +107,30 @@ class AdminDashboardMetricsTest extends TestCase
         $alertResponse
             ->assertOk()
             ->assertJsonPath('code', 'ADMIN_DASHBOARD_METRICS')
+            ->assertJsonPath('data.alerts.summary.has_alerts', true)
             ->assertJsonPath('data.alerts.providers.0.provider_code', 'DIGIFLAZZ')
             ->assertJsonPath('data.alerts.providers.0.success_rate_pct', 50)
             ->assertJsonPath('data.alerts.providers.0.threshold_pct', 85)
             ->assertJsonPath('data.alerts.providers.0.severity', 'HIGH');
+
+        $paymentAlertResponse = $this->getJson('/api/v1/admin/dashboard/metrics?hours=24&payment_alert_min_total=1&payment_alert_paid_rate_threshold=80');
+
+        $paymentAlertResponse
+            ->assertOk()
+            ->assertJsonPath('code', 'ADMIN_DASHBOARD_METRICS')
+            ->assertJsonPath('data.alerts.payments.0.gateway', 'MIDTRANS')
+            ->assertJsonPath('data.alerts.payments.0.paid_rate_pct', 50)
+            ->assertJsonPath('data.alerts.payments.0.threshold_pct', 80)
+            ->assertJsonPath('data.alerts.payments.0.severity', 'HIGH');
+
+        $alertsOnlyResponse = $this->getJson('/api/v1/admin/dashboard/alerts?hours=24&alert_min_attempts=1&alert_success_rate_threshold=85&payment_alert_min_total=1&payment_alert_paid_rate_threshold=80');
+
+        $alertsOnlyResponse
+            ->assertOk()
+            ->assertJsonPath('code', 'ADMIN_DASHBOARD_ALERTS')
+            ->assertJsonPath('data.alerts.summary.has_alerts', true)
+            ->assertJsonPath('data.alerts.providers.0.provider_code', 'DIGIFLAZZ')
+            ->assertJsonPath('data.alerts.payments.0.gateway', 'MIDTRANS');
 
         $excelResponse = $this->get('/api/v1/admin/dashboard/metrics/excel?hours=24&alert_min_attempts=1&alert_success_rate_threshold=85');
 
@@ -125,6 +145,10 @@ class AdminDashboardMetricsTest extends TestCase
         Sanctum::actingAs($user);
 
         $this->getJson('/api/v1/admin/dashboard/metrics')
+            ->assertStatus(403)
+            ->assertJsonPath('code', 'FORBIDDEN');
+
+        $this->getJson('/api/v1/admin/dashboard/alerts')
             ->assertStatus(403)
             ->assertJsonPath('code', 'FORBIDDEN');
 

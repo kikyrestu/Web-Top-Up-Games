@@ -97,14 +97,65 @@ final class SystemOpsController extends Controller
         $alertMinAttempts = $this->normalizedAlertMinAttempts(
             request()->input('alert_min_attempts', config('services.dashboard.provider_alert_min_attempts', 5))
         );
+        $paymentAlertThreshold = $this->normalizedAlertThreshold(
+            request()->input('payment_alert_paid_rate_threshold', config('services.dashboard.payment_paid_rate_alert_threshold', 75))
+        );
+        $paymentAlertMinTotal = $this->normalizedAlertMinAttempts(
+            request()->input('payment_alert_min_total', config('services.dashboard.payment_alert_min_total', 5))
+        );
 
-        $metrics = $this->buildDashboardMetrics($hours, $alertThreshold, $alertMinAttempts);
+        $metrics = $this->buildDashboardMetrics(
+            $hours,
+            $alertThreshold,
+            $alertMinAttempts,
+            $paymentAlertThreshold,
+            $paymentAlertMinTotal
+        );
 
         return response()->json([
             'success' => true,
             'code' => 'ADMIN_DASHBOARD_METRICS',
             'message' => 'Dashboard metrics loaded',
             'data' => $metrics,
+        ]);
+    }
+
+    public function dashboardAlerts(Request $request): JsonResponse
+    {
+        $hours = $this->normalizedHours($request->integer('hours', 24));
+        $providerAlertThreshold = $this->normalizedAlertThreshold(
+            $request->input('alert_success_rate_threshold', config('services.dashboard.provider_success_rate_alert_threshold', 85))
+        );
+        $providerAlertMinAttempts = $this->normalizedAlertMinAttempts(
+            $request->input('alert_min_attempts', config('services.dashboard.provider_alert_min_attempts', 5))
+        );
+        $paymentAlertThreshold = $this->normalizedAlertThreshold(
+            $request->input('payment_alert_paid_rate_threshold', config('services.dashboard.payment_paid_rate_alert_threshold', 75))
+        );
+        $paymentAlertMinTotal = $this->normalizedAlertMinAttempts(
+            $request->input('payment_alert_min_total', config('services.dashboard.payment_alert_min_total', 5))
+        );
+
+        $metrics = $this->buildDashboardMetrics(
+            $hours,
+            $providerAlertThreshold,
+            $providerAlertMinAttempts,
+            $paymentAlertThreshold,
+            $paymentAlertMinTotal
+        );
+
+        /** @var array<string, mixed> $alerts */
+        $alerts = is_array($metrics['alerts'] ?? null) ? $metrics['alerts'] : [];
+
+        return response()->json([
+            'success' => true,
+            'code' => 'ADMIN_DASHBOARD_ALERTS',
+            'message' => 'Dashboard alerts loaded',
+            'data' => [
+                'window_hours' => $hours,
+                'generated_at' => $metrics['generated_at'] ?? now()->toISOString(),
+                'alerts' => $alerts,
+            ],
         ]);
     }
 
@@ -117,8 +168,20 @@ final class SystemOpsController extends Controller
         $alertMinAttempts = $this->normalizedAlertMinAttempts(
             $request->input('alert_min_attempts', config('services.dashboard.provider_alert_min_attempts', 5))
         );
+        $paymentAlertThreshold = $this->normalizedAlertThreshold(
+            $request->input('payment_alert_paid_rate_threshold', config('services.dashboard.payment_paid_rate_alert_threshold', 75))
+        );
+        $paymentAlertMinTotal = $this->normalizedAlertMinAttempts(
+            $request->input('payment_alert_min_total', config('services.dashboard.payment_alert_min_total', 5))
+        );
 
-        $metrics = $this->buildDashboardMetrics($hours, $alertThreshold, $alertMinAttempts);
+        $metrics = $this->buildDashboardMetrics(
+            $hours,
+            $alertThreshold,
+            $alertMinAttempts,
+            $paymentAlertThreshold,
+            $paymentAlertMinTotal
+        );
         $xml = $this->buildSpreadsheetXml($metrics);
         $fileName = 'dashboard-metrics-'.now()->format('Ymd-His').'.xls';
 
@@ -137,7 +200,13 @@ final class SystemOpsController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function buildDashboardMetrics(int $hours, float $alertThreshold, int $alertMinAttempts): array
+    private function buildDashboardMetrics(
+        int $hours,
+        float $alertThreshold,
+        int $alertMinAttempts,
+        float $paymentAlertThreshold,
+        int $paymentAlertMinTotal
+    ): array
     {
         $from = now()->subHours($hours);
 
@@ -239,6 +308,19 @@ final class SystemOpsController extends Controller
             ->values()
             ->all();
 
+        $paymentAlerts = collect($paymentRows)
+            ->filter(static fn (array $row): bool => (int) $row['total'] >= $paymentAlertMinTotal)
+            ->filter(static fn (array $row): bool => (float) $row['paid_rate_pct'] < $paymentAlertThreshold)
+            ->map(static fn (array $row): array => [
+                'gateway' => (string) $row['gateway'],
+                'total' => (int) $row['total'],
+                'paid_rate_pct' => (float) $row['paid_rate_pct'],
+                'threshold_pct' => $paymentAlertThreshold,
+                'severity' => ((float) $row['paid_rate_pct'] < $paymentAlertThreshold * 0.75) ? 'HIGH' : 'MEDIUM',
+            ])
+            ->values()
+            ->all();
+
         return [
             'window_hours' => $hours,
             'generated_at' => now()->toISOString(),
@@ -246,8 +328,16 @@ final class SystemOpsController extends Controller
                 'config' => [
                     'provider_success_rate_threshold_pct' => $alertThreshold,
                     'provider_alert_min_attempts' => $alertMinAttempts,
+                    'payment_paid_rate_threshold_pct' => $paymentAlertThreshold,
+                    'payment_alert_min_total' => $paymentAlertMinTotal,
+                ],
+                'summary' => [
+                    'provider_alert_count' => count($providerAlerts),
+                    'payment_alert_count' => count($paymentAlerts),
+                    'has_alerts' => count($providerAlerts) > 0 || count($paymentAlerts) > 0,
                 ],
                 'providers' => $providerAlerts,
+                'payments' => $paymentAlerts,
             ],
             'providers' => $providerRows,
             'payments' => $paymentRows,
@@ -262,7 +352,8 @@ final class SystemOpsController extends Controller
         $providers = is_array($metrics['providers'] ?? null) ? $metrics['providers'] : [];
         $payments = is_array($metrics['payments'] ?? null) ? $metrics['payments'] : [];
         $alertContainer = is_array($metrics['alerts'] ?? null) ? $metrics['alerts'] : [];
-        $alerts = is_array($alertContainer['providers'] ?? null) ? $alertContainer['providers'] : [];
+        $providerAlerts = is_array($alertContainer['providers'] ?? null) ? $alertContainer['providers'] : [];
+        $paymentAlerts = is_array($alertContainer['payments'] ?? null) ? $alertContainer['payments'] : [];
 
         $providerRows = array_map(static function (array $row): array {
             $failReasons = collect(is_array($row['top_fail_reasons'] ?? null) ? $row['top_fail_reasons'] : [])
@@ -291,14 +382,22 @@ final class SystemOpsController extends Controller
             (string) ($row['paid_rate_pct'] ?? 0),
         ], $payments);
 
-        $alertRows = array_map(static fn (array $row): array => [
+        $providerAlertRows = array_map(static fn (array $row): array => [
             (string) ($row['provider_code'] ?? ''),
             (string) ($row['provider_name'] ?? ''),
             (string) ($row['attempts'] ?? 0),
             (string) ($row['success_rate_pct'] ?? 0),
             (string) ($row['threshold_pct'] ?? 0),
             (string) ($row['severity'] ?? ''),
-        ], $alerts);
+        ], $providerAlerts);
+
+        $paymentAlertRows = array_map(static fn (array $row): array => [
+            (string) ($row['gateway'] ?? ''),
+            (string) ($row['total'] ?? 0),
+            (string) ($row['paid_rate_pct'] ?? 0),
+            (string) ($row['threshold_pct'] ?? 0),
+            (string) ($row['severity'] ?? ''),
+        ], $paymentAlerts);
 
         $sheetMetaRows = [
             ['window_hours', (string) ($metrics['window_hours'] ?? 24)],
@@ -316,7 +415,10 @@ final class SystemOpsController extends Controller
         ], $paymentRows);
         $xml .= $this->buildWorksheetXml('Provider Alerts', [
             'provider_code', 'provider_name', 'attempts', 'success_rate_pct', 'threshold_pct', 'severity',
-        ], $alertRows);
+        ], $providerAlertRows);
+        $xml .= $this->buildWorksheetXml('Payment Alerts', [
+            'gateway', 'total', 'paid_rate_pct', 'threshold_pct', 'severity',
+        ], $paymentAlertRows);
         $xml .= '</Workbook>';
 
         return $xml;

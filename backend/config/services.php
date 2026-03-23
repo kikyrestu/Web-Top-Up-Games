@@ -91,6 +91,8 @@ return [
     'dashboard' => [
         'provider_success_rate_alert_threshold' => env('DASHBOARD_PROVIDER_SUCCESS_RATE_ALERT_THRESHOLD', 85),
         'provider_alert_min_attempts' => env('DASHBOARD_PROVIDER_ALERT_MIN_ATTEMPTS', 5),
+        'payment_paid_rate_alert_threshold' => env('DASHBOARD_PAYMENT_PAID_RATE_ALERT_THRESHOLD', 75),
+        'payment_alert_min_total' => env('DASHBOARD_PAYMENT_ALERT_MIN_TOTAL', 5),
     ],
 
 ];
