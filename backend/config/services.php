@@ -88,4 +88,9 @@ return [
         'allowed_drift_seconds' => env('PAYMENT_WEBHOOK_ALLOWED_DRIFT_SECONDS', 300),
     ],
 
+    'dashboard' => [
+        'provider_success_rate_alert_threshold' => env('DASHBOARD_PROVIDER_SUCCESS_RATE_ALERT_THRESHOLD', 85),
+        'provider_alert_min_attempts' => env('DASHBOARD_PROVIDER_ALERT_MIN_ATTEMPTS', 5),
+    ],
+
 ];

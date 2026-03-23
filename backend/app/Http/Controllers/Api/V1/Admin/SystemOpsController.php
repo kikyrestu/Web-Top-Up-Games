@@ -13,7 +13,9 @@ use App\Models\Payment;
 use App\Models\Provider;
 use App\Models\ProviderHealthCheck;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class SystemOpsController extends Controller
 {
@@ -88,9 +90,55 @@ final class SystemOpsController extends Controller
 
     public function dashboardMetrics(): JsonResponse
     {
-        $hours = (int) request()->integer('hours', 24);
-        $hours = max(1, min($hours, 168));
+        $hours = $this->normalizedHours(request()->integer('hours', 24));
+        $alertThreshold = $this->normalizedAlertThreshold(
+            request()->input('alert_success_rate_threshold', config('services.dashboard.provider_success_rate_alert_threshold', 85))
+        );
+        $alertMinAttempts = $this->normalizedAlertMinAttempts(
+            request()->input('alert_min_attempts', config('services.dashboard.provider_alert_min_attempts', 5))
+        );
 
+        $metrics = $this->buildDashboardMetrics($hours, $alertThreshold, $alertMinAttempts);
+
+        return response()->json([
+            'success' => true,
+            'code' => 'ADMIN_DASHBOARD_METRICS',
+            'message' => 'Dashboard metrics loaded',
+            'data' => $metrics,
+        ]);
+    }
+
+    public function dashboardMetricsExcel(Request $request): StreamedResponse
+    {
+        $hours = $this->normalizedHours($request->integer('hours', 24));
+        $alertThreshold = $this->normalizedAlertThreshold(
+            $request->input('alert_success_rate_threshold', config('services.dashboard.provider_success_rate_alert_threshold', 85))
+        );
+        $alertMinAttempts = $this->normalizedAlertMinAttempts(
+            $request->input('alert_min_attempts', config('services.dashboard.provider_alert_min_attempts', 5))
+        );
+
+        $metrics = $this->buildDashboardMetrics($hours, $alertThreshold, $alertMinAttempts);
+        $xml = $this->buildSpreadsheetXml($metrics);
+        $fileName = 'dashboard-metrics-'.now()->format('Ymd-His').'.xls';
+
+        return response()->streamDownload(
+            static function () use ($xml): void {
+                echo $xml;
+            },
+            $fileName,
+            [
+                'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            ]
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildDashboardMetrics(int $hours, float $alertThreshold, int $alertMinAttempts): array
+    {
         $from = now()->subHours($hours);
 
         $providerAttempts = OrderProviderAttempt::query()
@@ -148,7 +196,8 @@ final class SystemOpsController extends Controller
                 ];
             })
             ->sortByDesc('attempts')
-            ->values();
+            ->values()
+            ->all();
 
         $payments = Payment::query()
             ->where('created_at', '>=', $from)
@@ -172,19 +221,153 @@ final class SystemOpsController extends Controller
                 ];
             })
             ->sortByDesc('total')
-            ->values();
+            ->values()
+            ->all();
 
-        return response()->json([
-            'success' => true,
-            'code' => 'ADMIN_DASHBOARD_METRICS',
-            'message' => 'Dashboard metrics loaded',
-            'data' => [
-                'window_hours' => $hours,
-                'generated_at' => now()->toISOString(),
-                'providers' => $providerRows,
-                'payments' => $paymentRows,
+        $providerAlerts = collect($providerRows)
+            ->filter(static fn (array $row): bool => (int) $row['attempts'] >= $alertMinAttempts)
+            ->filter(static fn (array $row): bool => (float) $row['success_rate_pct'] < $alertThreshold)
+            ->map(static fn (array $row): array => [
+                'provider_id' => (int) $row['provider_id'],
+                'provider_code' => (string) $row['provider_code'],
+                'provider_name' => (string) $row['provider_name'],
+                'attempts' => (int) $row['attempts'],
+                'success_rate_pct' => (float) $row['success_rate_pct'],
+                'threshold_pct' => $alertThreshold,
+                'severity' => ((float) $row['success_rate_pct'] < $alertThreshold * 0.75) ? 'HIGH' : 'MEDIUM',
+            ])
+            ->values()
+            ->all();
+
+        return [
+            'window_hours' => $hours,
+            'generated_at' => now()->toISOString(),
+            'alerts' => [
+                'config' => [
+                    'provider_success_rate_threshold_pct' => $alertThreshold,
+                    'provider_alert_min_attempts' => $alertMinAttempts,
+                ],
+                'providers' => $providerAlerts,
             ],
-        ]);
+            'providers' => $providerRows,
+            'payments' => $paymentRows,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $metrics
+     */
+    private function buildSpreadsheetXml(array $metrics): string
+    {
+        $providers = is_array($metrics['providers'] ?? null) ? $metrics['providers'] : [];
+        $payments = is_array($metrics['payments'] ?? null) ? $metrics['payments'] : [];
+        $alertContainer = is_array($metrics['alerts'] ?? null) ? $metrics['alerts'] : [];
+        $alerts = is_array($alertContainer['providers'] ?? null) ? $alertContainer['providers'] : [];
+
+        $providerRows = array_map(static function (array $row): array {
+            $failReasons = collect(is_array($row['top_fail_reasons'] ?? null) ? $row['top_fail_reasons'] : [])
+                ->map(static fn (array $reason): string => ((string) ($reason['reason'] ?? 'unknown')).' ('.((int) ($reason['count'] ?? 0)).')')
+                ->implode('; ');
+
+            return [
+                (string) ($row['provider_code'] ?? ''),
+                (string) ($row['provider_name'] ?? ''),
+                (string) ($row['attempts'] ?? 0),
+                (string) ($row['success_count'] ?? 0),
+                (string) ($row['failed_count'] ?? 0),
+                (string) ($row['skipped_count'] ?? 0),
+                (string) ($row['success_rate_pct'] ?? 0),
+                (string) ($row['p95_latency_ms'] ?? ''),
+                $failReasons,
+            ];
+        }, $providers);
+
+        $paymentRows = array_map(static fn (array $row): array => [
+            (string) ($row['gateway'] ?? ''),
+            (string) ($row['total'] ?? 0),
+            (string) ($row['paid_count'] ?? 0),
+            (string) ($row['failed_count'] ?? 0),
+            (string) ($row['unpaid_count'] ?? 0),
+            (string) ($row['paid_rate_pct'] ?? 0),
+        ], $payments);
+
+        $alertRows = array_map(static fn (array $row): array => [
+            (string) ($row['provider_code'] ?? ''),
+            (string) ($row['provider_name'] ?? ''),
+            (string) ($row['attempts'] ?? 0),
+            (string) ($row['success_rate_pct'] ?? 0),
+            (string) ($row['threshold_pct'] ?? 0),
+            (string) ($row['severity'] ?? ''),
+        ], $alerts);
+
+        $sheetMetaRows = [
+            ['window_hours', (string) ($metrics['window_hours'] ?? 24)],
+            ['generated_at', (string) ($metrics['generated_at'] ?? now()->toISOString())],
+        ];
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>';
+        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
+        $xml .= $this->buildWorksheetXml('Summary', ['key', 'value'], $sheetMetaRows);
+        $xml .= $this->buildWorksheetXml('Provider Metrics', [
+            'provider_code', 'provider_name', 'attempts', 'success_count', 'failed_count', 'skipped_count', 'success_rate_pct', 'p95_latency_ms', 'top_fail_reasons',
+        ], $providerRows);
+        $xml .= $this->buildWorksheetXml('Payment Metrics', [
+            'gateway', 'total', 'paid_count', 'failed_count', 'unpaid_count', 'paid_rate_pct',
+        ], $paymentRows);
+        $xml .= $this->buildWorksheetXml('Provider Alerts', [
+            'provider_code', 'provider_name', 'attempts', 'success_rate_pct', 'threshold_pct', 'severity',
+        ], $alertRows);
+        $xml .= '</Workbook>';
+
+        return $xml;
+    }
+
+    /**
+     * @param array<int, string> $headers
+     * @param array<int, array<int, string>> $rows
+     */
+    private function buildWorksheetXml(string $sheetName, array $headers, array $rows): string
+    {
+        $xml = '<Worksheet ss:Name="'.$this->xmlValue($sheetName).'">';
+        $xml .= '<Table>';
+        $xml .= '<Row>';
+        foreach ($headers as $header) {
+            $xml .= '<Cell><Data ss:Type="String">'.$this->xmlValue($header).'</Data></Cell>';
+        }
+        $xml .= '</Row>';
+
+        foreach ($rows as $row) {
+            $xml .= '<Row>';
+            foreach ($row as $cell) {
+                $xml .= '<Cell><Data ss:Type="String">'.$this->xmlValue($cell).'</Data></Cell>';
+            }
+            $xml .= '</Row>';
+        }
+
+        $xml .= '</Table>';
+        $xml .= '</Worksheet>';
+
+        return $xml;
+    }
+
+    private function xmlValue(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES | ENT_XML1, 'UTF-8');
+    }
+
+    private function normalizedHours(int $hours): int
+    {
+        return max(1, min($hours, 168));
+    }
+
+    private function normalizedAlertThreshold(mixed $threshold): float
+    {
+        return (float) max(1, min((float) $threshold, 100));
+    }
+
+    private function normalizedAlertMinAttempts(mixed $minAttempts): int
+    {
+        return (int) max(1, min((int) $minAttempts, 500));
     }
 
     private function percentage(int $success, int $total): float

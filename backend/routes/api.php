@@ -44,6 +44,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/providers/sync-products', [SystemOpsController::class, 'syncProviders']);
         Route::get('/dashboard/overview', [SystemOpsController::class, 'dashboardOverview']);
         Route::get('/dashboard/metrics', [SystemOpsController::class, 'dashboardMetrics']);
+        Route::get('/dashboard/metrics/excel', [SystemOpsController::class, 'dashboardMetricsExcel']);
         Route::get('/orders/{orderCode}/provider-attempts', [OrderProviderAttemptController::class, 'index']);
         Route::post('/orders/{orderCode}/reprocess', [OrderReprocessController::class, 'store']);
     });
