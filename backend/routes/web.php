@@ -14,7 +14,9 @@ use App\Http\Controllers\Web\AdminPromoCampaignController;
 use App\Http\Controllers\Web\AdminReviewModerationController;
 use App\Http\Controllers\Web\AdminSecurityEventController;
 use App\Http\Controllers\Web\AdminSeoController;
+use App\Http\Controllers\Web\AdminSupportTicketController;
 use App\Http\Controllers\Web\AccountController;
+use App\Http\Controllers\Web\AccountSupportTicketController;
 use App\Http\Controllers\Web\OtpAuthController;
 use App\Http\Controllers\Web\PublicPageController;
 use App\Http\Controllers\Web\StorefrontController;
@@ -57,6 +59,11 @@ Route::prefix('akun')->name('account.')->middleware('web.auth')->group(function 
     Route::post('/ulasan', [AccountController::class, 'storeReview'])
         ->middleware('global.rate:review-submit')
         ->name('reviews.store');
+
+    Route::get('/tickets', [AccountSupportTicketController::class, 'index'])->name('tickets.index');
+    Route::post('/tickets', [AccountSupportTicketController::class, 'store'])->name('tickets.store');
+    Route::get('/tickets/{ticket}', [AccountSupportTicketController::class, 'show'])->name('tickets.show');
+    Route::post('/tickets/{ticket}/reply', [AccountSupportTicketController::class, 'reply'])->name('tickets.reply');
 });
 
 Route::prefix('admin')->name('admin.')->group(function (): void {
@@ -158,6 +165,11 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/customers', [AdminCustomerController::class, 'index'])->name('customers.index');
         Route::get('/customers/{user}', [AdminCustomerController::class, 'show'])->name('customers.show');
         Route::put('/customers/{user}', [AdminCustomerController::class, 'update'])->name('customers.update');
+
+        Route::get('/support/tickets', [AdminSupportTicketController::class, 'index'])->name('support.tickets.index');
+        Route::get('/support/tickets/{ticket}', [AdminSupportTicketController::class, 'show'])->name('support.tickets.show');
+        Route::put('/support/tickets/{ticket}', [AdminSupportTicketController::class, 'update'])->name('support.tickets.update');
+        Route::post('/support/tickets/{ticket}/reply', [AdminSupportTicketController::class, 'reply'])->name('support.tickets.reply');
 
         Route::get('/reviews', [AdminReviewModerationController::class, 'index'])->name('reviews.index');
         Route::post('/reviews/bulk-moderate', [AdminReviewModerationController::class, 'bulkModerate'])->name('reviews.bulk-moderate');

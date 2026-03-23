@@ -103,8 +103,8 @@ Status:
 11. Moderation: DONE
     - Moderasi review single/bulk dan history sudah tersedia.
 
-12. Customer support tools: TODO
-    - Ticketing/complaint/SLA admin belum tersedia.
+12. Customer support tools: DONE
+   - Ticketing/complaint/SLA status tersedia untuk customer dan admin.
 
 13. Security/risk operations: DONE
     - Security events, audit logs, dan alerts dashboard sudah tersedia.
@@ -134,7 +134,7 @@ Aturan eksekusi:
 - [x] Promo campaign engine (voucher/cashback/rule period).
 - [x] Order operation extension (refund/void/dispute/manual action log).
 - [x] User/customer admin panel (search, segment, status, profile ops).
-- [ ] Customer support tools (ticket, complaint, SLA status).
+- [x] Customer support tools (ticket, complaint, SLA status).
 
 ### Phase 3 - Governance and Optimization
 
@@ -203,3 +203,10 @@ Update terbaru:
 - Scope: list customer dengan search/filter segment + profile ops (status, kontak, reset password, revoke session) + detail transaksi/review
 - Bukti: route admin.customers.* + AdminCustomerController + migration account_status + view admin/customers/* + guard login suspended
 - Catatan: status SUSPENDED akan memblok login customer dan dapat otomatis revoke session
+
+- Item: Customer support tools
+- Phase: 2
+- Status: DONE
+- Scope: ticketing/complaint customer + admin console support + SLA due tracking + threaded replies
+- Bukti: route account.tickets.* + route admin.support.tickets.* + migration support_tickets/support_ticket_messages + controller AccountSupportTicketController/AdminSupportTicketController + view account/admin support
+- Catatan: admin bisa kirim internal note (tidak terlihat customer) dan update status ticket lifecycle

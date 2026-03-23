@@ -645,6 +645,7 @@
                     <a class="admin-nav-link {{ request()->routeIs('admin.promo.campaigns.*') ? 'is-active' : '' }}" href="{{ route('admin.promo.campaigns.index') }}">Promo Campaigns</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.orders.*') ? 'is-active' : '' }}" href="{{ route('admin.orders.index') }}">Orders</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.customers.*') ? 'is-active' : '' }}" href="{{ route('admin.customers.index') }}">Customers</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.support.tickets.*') ? 'is-active' : '' }}" href="{{ route('admin.support.tickets.index') }}">Support Tickets</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.reviews.*') ? 'is-active' : '' }}" href="{{ route('admin.reviews.index') }}">Reviews</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.audit-logs.*') ? 'is-active' : '' }}" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.security-events.*') ? 'is-active' : '' }}" href="{{ route('admin.security-events.index') }}">Security Events</a>

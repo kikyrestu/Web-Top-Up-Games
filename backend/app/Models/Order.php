@@ -70,4 +70,9 @@ final class Order extends Model
     {
         return $this->hasMany(OrderOperationLog::class);
     }
+
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
 }

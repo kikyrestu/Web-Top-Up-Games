@@ -7,6 +7,7 @@
                 <a class="pill" href="{{ route('account.transactions') }}">Riwayat Transaksi</a>
                 <a class="pill" href="{{ route('account.profile') }}">Profil</a>
                 <a class="pill" href="{{ route('account.reviews') }}">Ulasan Saya</a>
+                <a class="pill" href="{{ route('account.tickets.index') }}">Support Tickets</a>
                 <form method="post" action="{{ route('account.logout') }}">@csrf<button type="submit" class="pill">Logout</button></form>
             </div>
 
