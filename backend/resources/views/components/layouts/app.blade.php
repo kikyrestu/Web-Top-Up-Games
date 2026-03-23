@@ -227,6 +227,10 @@
 </head>
 <body>
 <div class="shell">
+    @php
+        $isAdminUser = auth()->check() && strtolower((string) (auth()->user()->role ?? '')) === 'admin';
+        $isAdminRoute = request()->routeIs('admin.*');
+    @endphp
     <div class="topbar">
         <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
         <div class="nav">
@@ -243,15 +247,21 @@
             @else
                 <a class="pill" href="{{ route('account.login-otp') }}">Login OTP</a>
             @endauth
-            <a class="pill" href="{{ route('admin.dashboard') }}">Admin</a>
-            <a class="pill" href="{{ route('admin.dashboard.alerts') }}">Admin Alerts</a>
-            <a class="pill" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
-            <a class="pill" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
-            <a class="pill" href="{{ route('admin.seo.index') }}">SEO Manager</a>
-            <a class="pill" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
-            <a class="pill" href="{{ route('admin.security-events.index') }}">Security Events</a>
-            <a class="pill" href="{{ route('admin.orders.index') }}">Admin Orders</a>
-            <a class="pill" href="{{ route('admin.reviews.index') }}">Review Mod</a>
+            @if ($isAdminUser)
+                <a class="pill" href="{{ route('admin.dashboard') }}">Admin</a>
+            @endif
+
+            @if ($isAdminUser && $isAdminRoute)
+                <a class="pill" href="{{ route('admin.dashboard.alerts') }}">Admin Alerts</a>
+                <a class="pill" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
+                <a class="pill" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
+                <a class="pill" href="{{ route('admin.seo.index') }}">SEO Manager</a>
+                <a class="pill" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
+                <a class="pill" href="{{ route('admin.security-events.index') }}">Security Events</a>
+                <a class="pill" href="{{ route('admin.orders.index') }}">Admin Orders</a>
+                <a class="pill" href="{{ route('admin.reviews.index') }}">Review Mod</a>
+            @endif
+
             @auth
                 <form method="post" action="{{ route('account.logout') }}">
                     @csrf
