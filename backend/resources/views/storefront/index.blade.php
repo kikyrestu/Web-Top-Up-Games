@@ -1,793 +1,577 @@
-<x-layouts.app :title="'TopUp Atlas - Checkout'">
+<x-layouts.app :title="'TopUp Atlas - Instant Top Up'">
     @php
-        $categoryCount = $productsByCategory->count();
-        $allProducts = $productsByCategory->flatten(1);
-        $productCount = $allProducts->count();
-        $quickCategories = $productsByCategory->keys()->take(6);
-        $quickProducts = $allProducts->take(8);
-        $featuredProducts = $allProducts->take(12);
-        $allCategoryNames = $productsByCategory->keys()->values();
+        $allProducts = $productsByCategory->flatten(1)->values();
+        $popularProducts = $allProducts->take(12);
+        $categorySections = $productsByCategory->take(5);
+        $faqItems = [
+            ['q' => 'Voucher UniPin di Indonesia berlaku untuk apa?', 'a' => 'Voucher dapat dipakai untuk pembelian game item, top up, dan produk digital pada katalog aktif.'],
+            ['q' => 'Tidak bisa menemukan metode bayar favorit?', 'a' => 'Pilih gateway lain terlebih dulu, kemudian isi metode pada form checkout cepat untuk preferensi pembayaranmu.'],
+            ['q' => 'Saran jika saldo e-wallet terpotong tapi status belum selesai?', 'a' => 'Gunakan menu Cek Transaksi, lalu kirim order code ke dukungan pelanggan agar ditindaklanjuti cepat.'],
+            ['q' => 'Bagaimana proses refund?', 'a' => 'Refund mengikuti status transaksi dari provider dan gateway. Tim dukungan akan konfirmasi setelah verifikasi.'],
+        ];
     @endphp
 
     <style>
-        .hero-wrap {
-            display: grid;
-            grid-template-columns: 1.05fr 1fr;
-            gap: 16px;
+        .dark-page {
+            color: #e8eefb;
         }
 
-        .hero-panel {
-            background:
-                radial-gradient(circle at 8% 12%, rgba(15, 123, 82, 0.16), transparent 40%),
-                radial-gradient(circle at 88% 10%, rgba(255, 209, 102, 0.28), transparent 35%),
-                #fff;
+        .dark-page .panel {
+            background: #152440;
+            border: 1px solid #2a3d62;
+            box-shadow: none;
         }
 
-        .hero-title {
-            font-size: 42px;
-            line-height: 1.04;
-            margin-bottom: 12px;
+        .section-title {
+            margin: 0 0 12px;
+            color: #f2f6ff;
+            font-size: 25px;
         }
 
-        .hero-sub {
-            color: var(--ink-soft);
-            font-size: 15px;
-            max-width: 60ch;
-            margin-bottom: 16px;
-        }
-
-        .hero-cta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 4px 0 14px;
-        }
-
-        .hero-cta .btn-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            padding: 10px 14px;
-            font-size: 13px;
-            font-weight: 800;
-            text-decoration: none;
-            border: 1px solid var(--line);
-        }
-
-        .hero-cta .btn-main {
-            color: #fff;
-            background: linear-gradient(120deg, var(--accent), #0ea26a);
-            border-color: transparent;
-        }
-
-        .hero-cta .btn-sub {
-            color: var(--ink);
-            background: #fff;
-        }
-
-        .kpi-row {
-            display: grid;
-            gap: 10px;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            margin: 12px 0 16px;
-        }
-
-        .kpi {
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            background: #f8fbf7;
-            padding: 12px;
-        }
-
-        .kpi .n {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 2px;
-        }
-
-        .kpi .l {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--ink-soft);
-        }
-
-        .tag-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 10px 0;
-        }
-
-        .quick-pill {
-            border: 1px solid var(--line);
-            border-radius: 999px;
-            padding: 8px 12px;
-            background: #fff;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--ink);
-            cursor: pointer;
-        }
-
-        .quick-pill:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .quick-pill.is-active {
-            border-color: transparent;
-            background: linear-gradient(120deg, var(--accent), #0ea26a);
-            color: #fff;
-        }
-
-        .checkout-panel {
-            background: #ffffff;
-            border: 1px solid var(--line);
+        .hero-slider {
+            margin-top: 8px;
             border-radius: 16px;
-            padding: 16px;
-        }
-
-        .promo-rail {
-            margin-top: 16px;
-            position: relative;
             overflow: hidden;
-            border-radius: 16px;
+            border: 1px solid #2f4870;
+            position: relative;
         }
 
-        .promo-track {
+        .hero-track {
             display: flex;
-            transition: transform 0.45s ease;
-            will-change: transform;
+            transition: transform .5s ease;
         }
 
-        .promo-card {
+        .hero-slide {
             min-width: 100%;
-            border-radius: 16px;
-            padding: 14px;
-            color: #fff;
-            border: 1px solid transparent;
-            min-height: 132px;
+            padding: 24px;
+            min-height: 220px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-end;
+            gap: 10px;
         }
 
-        .promo-dots {
+        .hero-slide h1 {
+            margin: 0;
+            font-size: 32px;
+            line-height: 1.05;
+            color: #fff;
+        }
+
+        .hero-slide p {
+            margin: 0;
+            font-size: 14px;
+            color: #dce8ff;
+            max-width: 56ch;
+        }
+
+        .hero-slide a {
+            display: inline-flex;
+            width: fit-content;
+            text-decoration: none;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #fff;
+            background: #f09c2b;
+        }
+
+        .hero-a { background: linear-gradient(130deg, #0e1d38, #0f2857 55%, #304bb9); }
+        .hero-b { background: linear-gradient(130deg, #102e2e, #16634a 55%, #33a16f); }
+        .hero-c { background: linear-gradient(130deg, #301f10, #8b4a1e 55%, #d07b28); }
+
+        .hero-dots {
             position: absolute;
-            right: 10px;
-            bottom: 10px;
+            right: 12px;
+            bottom: 12px;
             display: flex;
-            gap: 6px;
-            z-index: 2;
+            gap: 7px;
         }
 
-        .promo-dot {
+        .hero-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            border: 1px solid #ffffff88;
-            background: #ffffff55;
+            border: 1px solid #ffffff8a;
+            background: #ffffff4f;
             cursor: pointer;
         }
 
-        .promo-dot.is-active {
-            background: #fff;
-            border-color: #fff;
+        .hero-dot.is-active {
+            background: #f09c2b;
+            border-color: #f09c2b;
         }
 
-        .promo-card h3 {
-            margin: 0;
-            font-size: 20px;
-            line-height: 1.1;
-        }
-
-        .promo-card p {
-            margin: 6px 0 10px;
-            font-size: 13px;
-            opacity: 0.96;
-        }
-
-        .promo-card a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: 0.02em;
-        }
-
-        .promo-a {
-            background: linear-gradient(135deg, #253c93, #5b3bcf);
-            border-color: #6d7ef0;
-        }
-
-        .promo-b {
-            background: linear-gradient(135deg, #146a46, #1c9a66);
-            border-color: #4bc997;
-        }
-
-        .promo-c {
-            background: linear-gradient(135deg, #9a4e12, #d5772a);
-            border-color: #f3b274;
-        }
-
-        .market-wrap {
+        .product-rail {
             display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 16px;
-            margin-top: 16px;
-            align-items: start;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 10px;
         }
 
-        .catalog-panel {
-            background: #fff;
-        }
-
-        .category-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 10px 0 12px;
-        }
-
-        .category-tab {
-            border: 1px solid var(--line);
-            border-radius: 999px;
-            background: #fff;
-            color: var(--ink);
-            padding: 7px 12px;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        .category-tab.is-active {
-            border-color: transparent;
-            background: linear-gradient(120deg, var(--accent), #0ea26a);
-            color: #fff;
-        }
-
-        .step-shell {
-            display: grid;
-            gap: 12px;
-        }
-
-        .step-card {
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            padding: 12px;
-            background: #fbfcfb;
-        }
-
-        .step-head {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .step-num {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 800;
-            background: var(--accent);
-            color: #fff;
-        }
-
-        .step-label {
-            font-size: 14px;
-            font-weight: 800;
-            letter-spacing: 0.01em;
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .product-card {
-            border: 1px solid var(--line);
+        .item-card {
             border-radius: 12px;
-            background: #fff;
-            padding: 10px;
-            text-align: left;
+            border: 1px solid #35517d;
+            background: #0f1f39;
+            padding: 8px;
+            display: grid;
+            gap: 8px;
             cursor: pointer;
-            transition: border-color 0.15s ease, transform 0.15s ease;
-            position: relative;
+            text-align: left;
+            color: #f4f7ff;
         }
 
-        .product-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-1px);
+        .item-card:hover {
+            border-color: #6a8fcb;
         }
 
-        .product-card.is-active {
-            border-color: transparent;
-            background: linear-gradient(120deg, var(--accent), #0ea26a);
-            color: #fff;
-        }
-
-        .product-name {
-            font-size: 13px;
-            font-weight: 800;
-            line-height: 1.3;
-            margin-bottom: 4px;
-        }
-
-        .product-thumb {
-            width: 36px;
-            height: 36px;
+        .item-thumb {
+            width: 100%;
+            aspect-ratio: 4 / 5;
             border-radius: 10px;
-            border: 1px solid #d3e5d9;
-            display: inline-flex;
+            overflow: hidden;
+            border: 1px solid #2e466f;
+            background: linear-gradient(130deg, #253f69, #365d97);
+            display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+            font-size: 20px;
             font-weight: 800;
-            background: #f3fbf6;
-            color: #1f6f42;
-            margin-bottom: 8px;
-            overflow: hidden;
         }
 
-        .product-thumb img {
+        .item-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .popular-badge {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            border-radius: 999px;
-            padding: 3px 7px;
-            font-size: 10px;
-            font-weight: 800;
-            background: #fff2cd;
-            color: #7a5600;
-            border: 1px solid #f1d487;
-        }
-
-        .product-type {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            opacity: 0.9;
-        }
-
-        .product-price {
-            margin-top: 6px;
+        .item-name {
             font-size: 12px;
             font-weight: 800;
+            line-height: 1.3;
+            min-height: 30px;
         }
 
-        .step-grid {
+        .item-meta {
+            font-size: 11px;
+            color: #9bb3d7;
+        }
+
+        .item-price {
+            font-size: 12px;
+            font-weight: 800;
+            color: #ffd38f;
+        }
+
+        .benefit-strip {
+            margin-top: 12px;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 10px;
         }
 
-        .gateway-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .gateway-chip {
-            border: 1px solid #cde1d5;
-            border-radius: 999px;
-            padding: 6px 10px;
-            background: #f7fbf8;
-            font-size: 11px;
-            font-weight: 800;
-            color: #2f4f3f;
-        }
-
-        .selected-product {
-            border: 1px solid #cde1d5;
+        .benefit-card {
+            border: 1px solid #2a3f62;
             border-radius: 12px;
-            background: #f7fbf8;
-            padding: 10px 12px;
+            background: #182947;
+            padding: 12px;
+            display: grid;
+            gap: 4px;
+        }
+
+        .benefit-card .title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .benefit-card .desc {
+            font-size: 12px;
+            color: #a7bbdb;
+        }
+
+        .section-block {
+            margin-top: 14px;
+            border-radius: 14px;
+            border: 1px solid #2a3f62;
+            background: #152440;
+            padding: 12px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 10px;
         }
 
-        .selected-product .cap {
+        .section-head h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .section-head a {
             font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: var(--ink-soft);
-            font-weight: 800;
-        }
-
-        .selected-product .name {
-            font-size: 14px;
-            font-weight: 800;
-            margin-top: 4px;
-        }
-
-        .estimate-box {
-            border: 1px solid #cde1d5;
-            border-radius: 12px;
-            background: #f1fbf5;
-            padding: 10px;
-            display: grid;
-            gap: 6px;
-            margin-top: 10px;
-        }
-
-        .estimate-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            font-size: 12px;
-        }
-
-        .estimate-total {
-            border-top: 1px dashed #bddbc8;
-            padding-top: 7px;
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .mini-steps {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 10px 0 14px;
-        }
-
-        .mini-steps span {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border: 1px dashed #b9dbc9;
-            background: #f3fbf6;
-            color: #196d3a;
+            text-decoration: none;
+            border: 1px solid #446695;
+            color: #d6e7ff;
             border-radius: 999px;
-            padding: 6px 11px;
-            font-size: 12px;
-            font-weight: 700;
+            padding: 6px 10px;
+            font-weight: 800;
         }
 
-        .checkout-panel h2 {
-            font-size: 24px;
-            margin-bottom: 4px;
+        .quick-checkout {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 12px;
+        }
+
+        .checkout-box {
+            border: 1px solid #2d446b;
+            border-radius: 14px;
+            background: #13213a;
+            padding: 12px;
+        }
+
+        .checkout-box h3 {
+            margin: 0 0 8px;
+            color: #fff;
         }
 
         .checkout-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 10px;
         }
 
-        .trust-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .trust-chip {
-            border: 1px solid #b9dbc9;
-            background: #edf9f1;
-            color: #196d3a;
-            border-radius: 999px;
-            padding: 7px 12px;
+        .checkout-grid label {
+            display: block;
             font-size: 12px;
+            color: #bdd0ed;
+            margin-bottom: 4px;
             font-weight: 700;
         }
 
-        .action-row {
-            grid-column: 1/-1;
+        .checkout-grid input,
+        .checkout-grid select {
+            width: 100%;
+            border: 1px solid #385278;
+            border-radius: 10px;
+            background: #0f1c32;
+            color: #ebf3ff;
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        .estimate {
+            border: 1px solid #385278;
+            border-radius: 10px;
+            background: #0f1d34;
+            padding: 10px;
+            display: grid;
+            gap: 6px;
+        }
+
+        .estimate-row {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            margin-top: 2px;
-        }
-
-        .action-hint {
+            gap: 8px;
             font-size: 12px;
-            color: var(--ink-soft);
+            color: #c9daf3;
         }
 
-        .mobile-jumpbar {
-            display: none;
+        .estimate-total {
+            border-top: 1px dashed #385278;
+            margin-top: 4px;
+            padding-top: 7px;
+            font-weight: 800;
+            color: #ffd38f;
         }
 
-        @media (max-width: 920px) {
-            .hero-wrap {
+        .checkout-submit {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .checkout-submit button {
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(120deg, #f39f34, #e36f27);
+            color: #fff;
+            font-weight: 800;
+            padding: 10px 14px;
+            cursor: pointer;
+        }
+
+        .promo-grid {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .promo-tile {
+            border-radius: 12px;
+            border: 1px solid #36537d;
+            padding: 10px;
+            color: #fff;
+            text-decoration: none;
+            min-height: 120px;
+            display: grid;
+            gap: 6px;
+            align-content: end;
+        }
+
+        .promo-tile small {
+            color: #d8e8ff;
+            opacity: .95;
+        }
+
+        .p1 { background: linear-gradient(130deg, #202f7a, #464fd1); }
+        .p2 { background: linear-gradient(130deg, #1e5f3f, #2d9e6a); }
+        .p3 { background: linear-gradient(130deg, #8a3c14, #ce7b30); }
+        .p4 { background: linear-gradient(130deg, #5a1d6f, #a03bc3); }
+
+        .faq-wrap,
+        .support-wrap {
+            margin-top: 14px;
+            border: 1px solid #2a3f62;
+            border-radius: 14px;
+            background: #152440;
+            padding: 12px;
+        }
+
+        .faq-wrap details {
+            border-top: 1px solid #2b4369;
+            padding: 9px 0;
+        }
+
+        .faq-wrap details:first-of-type {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .faq-wrap summary {
+            cursor: pointer;
+            color: #f4f7ff;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .faq-wrap p {
+            margin: 8px 0 0;
+            color: #b5c9e8;
+            font-size: 12px;
+        }
+
+        .support-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .support-item {
+            border: 1px solid #36537d;
+            border-radius: 10px;
+            background: #10203a;
+            padding: 9px;
+            text-align: center;
+            font-size: 12px;
+            color: #d6e6ff;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1024px) {
+            .product-rail {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .promo-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .hero-slide {
+                min-height: 190px;
+                padding: 16px;
+            }
+
+            .hero-slide h1 {
+                font-size: 25px;
+            }
+
+            .product-rail {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .benefit-strip {
                 grid-template-columns: 1fr;
             }
 
-            .market-wrap {
+            .quick-checkout {
                 grid-template-columns: 1fr;
             }
 
-            .hero-title {
-                font-size: 34px;
-            }
-
-            .checkout-panel {
-                position: static;
-            }
-        }
-
-
-        @media (max-width: 640px) {
-            .checkout-grid,
-            .kpi-row,
-            .step-grid,
-            .product-grid {
+            .checkout-grid {
                 grid-template-columns: 1fr;
             }
 
-            .hero-title {
-                font-size: 29px;
-            }
-
-            .checkout-panel {
-                padding-bottom: 12px;
-            }
-
-            .action-row {
-                position: sticky;
-                bottom: 8px;
-                background: #ffffff;
-                border: 1px solid var(--line);
-                border-radius: 12px;
-                padding: 10px;
-                box-shadow: 0 10px 24px rgba(19, 34, 26, 0.1);
-                margin-top: 8px;
-            }
-
-            .action-row .btn {
-                width: 100%;
-            }
-
-            .action-hint {
-                display: none;
-            }
-
-            .mobile-jumpbar {
-                display: flex;
-                position: fixed;
-                left: 10px;
-                right: 10px;
-                bottom: 10px;
-                z-index: 60;
-                gap: 8px;
-                background: #ffffff;
-                border: 1px solid var(--line);
-                border-radius: 14px;
-                padding: 8px;
-                box-shadow: 0 12px 24px rgba(19, 34, 26, 0.14);
-            }
-
-            .mobile-jumpbar a {
-                flex: 1;
-                text-align: center;
-                border-radius: 10px;
-                padding: 9px 8px;
-                text-decoration: none;
-                font-size: 12px;
-                font-weight: 800;
-            }
-
-            .mobile-jumpbar .m-primary {
-                background: linear-gradient(120deg, var(--accent), #0ea26a);
-                color: #fff;
-            }
-
-            .mobile-jumpbar .m-ghost {
-                border: 1px solid var(--line);
-                color: var(--ink);
-                background: #fff;
+            .support-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
     </style>
 
-    <div class="hero-wrap">
-        <div class="panel hero-panel">
-            <h1 class="hero-title">Top Up & PPOB cepat, rapi, dan aman.</h1>
-            <p class="hero-sub">Pilih produk game atau PPOB, checkout dalam satu alur, lalu bayar pakai gateway favoritmu. Cocok untuk transaksi cepat tanpa ribet.</p>
-
-            <div class="hero-cta">
-                <a class="btn-link btn-main" href="#checkout-form">Mulai Checkout Sekarang</a>
-                <a class="btn-link btn-sub" href="{{ route('public.promo') }}">Lihat Promo Hari Ini</a>
+    <div class="dark-page">
+        <section class="hero-slider">
+            <div class="hero-track" id="hero-track">
+                <article class="hero-slide hero-a">
+                    <h1>Ramadan Taktis: Top Up Lebih Cepat & Aman</h1>
+                    <p>Pilih produk favoritmu, lanjut checkout, dan pantau transaksi real-time langsung dari satu halaman.</p>
+                    <a href="#quick-checkout">Baca Selengkapnya</a>
+                </article>
+                <article class="hero-slide hero-b">
+                    <h1>Game Populer & PPOB Dalam Satu Platform</h1>
+                    <p>Top up game, bayar tagihan, dan beli voucher digital dalam pengalaman marketplace dark-style yang ringkas.</p>
+                    <a href="#catalog-area">Lihat Katalog</a>
+                </article>
+                <article class="hero-slide hero-c">
+                    <h1>Diskon Harian Untuk Produk Favoritmu</h1>
+                    <p>Manfaatkan promo event mingguan dengan metode pembayaran yang paling nyaman untukmu.</p>
+                    <a href="{{ route('public.promo') }}">Lihat Promo</a>
+                </article>
             </div>
-
-            <div class="kpi-row">
-                <div class="kpi">
-                    <div class="n">{{ $productCount }}</div>
-                    <div class="l">Produk Aktif</div>
-                </div>
-                <div class="kpi">
-                    <div class="n">{{ $categoryCount }}</div>
-                    <div class="l">Kategori</div>
-                </div>
-                <div class="kpi">
-                    <div class="n">24/7</div>
-                    <div class="l">Order Online</div>
-                </div>
+            <div class="hero-dots">
+                <button class="hero-dot is-active" type="button" data-hero-slide="0" aria-label="Slide 1"></button>
+                <button class="hero-dot" type="button" data-hero-slide="1" aria-label="Slide 2"></button>
+                <button class="hero-dot" type="button" data-hero-slide="2" aria-label="Slide 3"></button>
             </div>
+        </section>
 
-            <div class="trust-row">
-                <span class="trust-chip">Harga Kompetitif</span>
-                <span class="trust-chip">Verifikasi Keamanan</span>
-                <span class="trust-chip">Tracking Order Real-time</span>
+        <section class="section-block" id="catalog-area">
+            <div class="section-head">
+                <h3>Game Populer</h3>
+                <a href="#quick-checkout">Top Up Sekarang</a>
             </div>
-
-            <h3 style="margin-top:16px;">Kategori Populer</h3>
-            <div class="tag-row">
-                @foreach ($quickCategories as $categoryName)
-                    <span class="quick-pill">{{ $categoryName }}</span>
-                @endforeach
-            </div>
-
-            <h3 style="margin-top:14px;">Produk Cepat Pilih</h3>
-            <div class="tag-row">
-                @foreach ($quickProducts as $product)
-                    <button class="quick-pill" type="button" data-product-id="{{ (int) $product->id }}">{{ $product->name }}</button>
-                @endforeach
-            </div>
-        </div>
-
-        <div class="panel" style="background:linear-gradient(135deg, #113424, #1f6f42); color:#fff; border-color:transparent;">
-            <h2 style="font-size:26px; margin-bottom:10px;">Format Checkout ala Marketplace Top-Up</h2>
-            <p style="margin:0 0 10px; opacity:0.95;">Pilih produk di kiri, data akun di kanan, lanjut bayar. Alurnya sengaja dibuat ringkas seperti platform top-up populer.</p>
-            <div class="trust-row">
-                <span class="trust-chip" style="background:#ffffff1a; border-color:#ffffff33; color:#fff;">Live Stock Monitoring</span>
-                <span class="trust-chip" style="background:#ffffff1a; border-color:#ffffff33; color:#fff;">Secure Checkout</span>
-                <span class="trust-chip" style="background:#ffffff1a; border-color:#ffffff33; color:#fff;">Fast Payment Routing</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="promo-rail">
-        <div class="promo-track" id="promo-track">
-            <article class="promo-card promo-a">
-                <div>
-                    <h3>Flash Deal MLBB</h3>
-                    <p>Top up favorit dengan jalur pembayaran tercepat.</p>
-                </div>
-                <a href="#checkout-form">Pilih Produk Sekarang</a>
-            </article>
-            <article class="promo-card promo-b">
-                <div>
-                    <h3>Voucher & PPOB</h3>
-                    <p>Dari pulsa, token listrik, sampai paket data dalam satu alur checkout.</p>
-                </div>
-                <a href="{{ route('public.ppob.index') }}">Lihat Layanan PPOB</a>
-            </article>
-            <article class="promo-card promo-c">
-                <div>
-                    <h3>Promo Harian</h3>
-                    <p>Voucher diskon harian untuk produk game dan digital favorit.</p>
-                </div>
-                <a href="{{ route('public.promo') }}">Buka Halaman Promo</a>
-            </article>
-        </div>
-        <div class="promo-dots">
-            <button class="promo-dot is-active" type="button" data-slide="0" aria-label="Promo 1"></button>
-            <button class="promo-dot" type="button" data-slide="1" aria-label="Promo 2"></button>
-            <button class="promo-dot" type="button" data-slide="2" aria-label="Promo 3"></button>
-        </div>
-    </div>
-
-    <div class="market-wrap" id="checkout-form">
-        <div class="panel catalog-panel">
-            <div class="step-head">
-                <span class="step-num">1</span>
-                <span class="step-label">Pilih Nominal / Produk</span>
-            </div>
-
-            <div class="category-tabs">
-                <button type="button" class="category-tab is-active" data-filter-cat="all">Semua</button>
-                @foreach ($allCategoryNames as $categoryName)
-                    <button type="button" class="category-tab" data-filter-cat="{{ $categoryName }}">{{ $categoryName }}</button>
-                @endforeach
-            </div>
-
-            <div class="product-grid">
-                @foreach ($featuredProducts as $product)
+            <div class="product-rail">
+                @foreach ($popularProducts as $product)
                     @php
-                        $thumbRaw = is_array($product->meta ?? null)
-                            ? ((string) (($product->meta['thumbnail'] ?? $product->meta['icon'] ?? '') ?: ''))
-                            : '';
+                        $thumbRaw = is_array($product->meta ?? null) ? ((string) (($product->meta['thumbnail'] ?? $product->meta['icon'] ?? '') ?: '')) : '';
                         $thumbIsImage = $thumbRaw !== '' && (str_starts_with($thumbRaw, 'http://') || str_starts_with($thumbRaw, 'https://') || str_starts_with($thumbRaw, '/'));
                         $thumb = $thumbRaw !== '' ? $thumbRaw : strtoupper(substr((string) $product->name, 0, 1));
-                        $categoryName = (string) ($product->category?->name ?? 'Lainnya');
-                        $startingPrice = (float) ($startingPrices[$product->id] ?? 0);
+                        $startPrice = (float) ($startingPrices[$product->id] ?? 0);
                     @endphp
-                    <button class="product-card" type="button" data-product-id="{{ (int) $product->id }}" data-category="{{ $categoryName }}">
-                        @if ($loop->iteration <= 6)
-                            <span class="popular-badge">Popular</span>
-                        @endif
-                        <span class="product-thumb">
+                    <button class="item-card" type="button" data-product-id="{{ (int) $product->id }}">
+                        <span class="item-thumb">
                             @if ($thumbIsImage)
                                 <img src="{{ $thumb }}" alt="{{ $product->name }}">
                             @else
                                 {{ $thumb }}
                             @endif
                         </span>
-                        <div class="product-name">{{ $product->name }}</div>
-                        <div class="product-type">{{ $product->type }}</div>
-                        <div class="product-price">
-                            @if ($startingPrice > 0)
-                                Mulai {{ number_format($startingPrice, 0, ',', '.') }}
-                            @else
-                                Harga dinamis
-                            @endif
-                        </div>
+                        <span class="item-name">{{ $product->name }}</span>
+                        <span class="item-meta">{{ $product->type }}</span>
+                        <span class="item-price">{{ $startPrice > 0 ? 'Mulai Rp '.number_format($startPrice, 0, ',', '.') : 'Harga dinamis' }}</span>
                     </button>
                 @endforeach
             </div>
+        </section>
 
-            <p class="muted" style="margin:6px 0 0; font-size:12px;">Tip: klik kartu produk untuk langsung isi pilihan di form checkout.</p>
-        </div>
+        <section class="benefit-strip">
+            <article class="benefit-card">
+                <span class="title">Isi ulang instan</span>
+                <span class="desc">Order diproses otomatis dan cepat setelah pembayaran terkonfirmasi.</span>
+            </article>
+            <article class="benefit-card">
+                <span class="title">Hadiah besar</span>
+                <span class="desc">Promo acak harian untuk transaksi pada kategori game terpilih.</span>
+            </article>
+            <article class="benefit-card">
+                <span class="title">Terpercaya</span>
+                <span class="desc">Jalur pembayaran aman dengan pemantauan event keamanan checkout.</span>
+            </article>
+        </section>
 
-        <div class="checkout-panel" style="position:sticky; top:16px;">
-            <h2>Checkout Instan</h2>
-            <p class="muted" style="margin-bottom:12px;">Isi data minimum, sistem akan proses order dan buat payment reference otomatis.</p>
+        @foreach ($categorySections as $categoryName => $products)
+            <section class="section-block">
+                <div class="section-head">
+                    <h3>{{ $categoryName }}</h3>
+                    <a href="#quick-checkout">Lainnya</a>
+                </div>
+                <div class="product-rail">
+                    @foreach ($products->take(6) as $product)
+                        @php
+                            $thumbRaw = is_array($product->meta ?? null) ? ((string) (($product->meta['thumbnail'] ?? $product->meta['icon'] ?? '') ?: '')) : '';
+                            $thumbIsImage = $thumbRaw !== '' && (str_starts_with($thumbRaw, 'http://') || str_starts_with($thumbRaw, 'https://') || str_starts_with($thumbRaw, '/'));
+                            $thumb = $thumbRaw !== '' ? $thumbRaw : strtoupper(substr((string) $product->name, 0, 1));
+                            $startPrice = (float) ($startingPrices[$product->id] ?? 0);
+                        @endphp
+                        <button class="item-card" type="button" data-product-id="{{ (int) $product->id }}">
+                            <span class="item-thumb">
+                                @if ($thumbIsImage)
+                                    <img src="{{ $thumb }}" alt="{{ $product->name }}">
+                                @else
+                                    {{ $thumb }}
+                                @endif
+                            </span>
+                            <span class="item-name">{{ $product->name }}</span>
+                            <span class="item-meta">{{ $product->type }}</span>
+                            <span class="item-price">{{ $startPrice > 0 ? 'Rp '.number_format($startPrice, 0, ',', '.') : 'Harga dinamis' }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            </section>
+        @endforeach
 
-            <div class="mini-steps">
-                <span>1. Pilih Produk</span>
-                <span>2. Isi Target</span>
-                <span>3. Bayar & Selesai</span>
+        <section class="promo-grid">
+            <a class="promo-tile p1" href="{{ route('public.promo') }}"><strong>Cashback 10%</strong><small>Promo Mingguan Game</small></a>
+            <a class="promo-tile p2" href="{{ route('public.promo') }}"><strong>Bundle Hemat</strong><small>Top Up + Voucher</small></a>
+            <a class="promo-tile p3" href="{{ route('public.promo') }}"><strong>Diskon PPOB</strong><small>Pulsa, Token, Paket Data</small></a>
+            <a class="promo-tile p4" href="{{ route('public.promo') }}"><strong>Event Acara</strong><small>Hadiah untuk transaksi rutin</small></a>
+        </section>
+
+        <section class="quick-checkout" id="quick-checkout">
+            <div class="checkout-box">
+                <h3>Panduan FAQ Lengkap</h3>
+                <div class="faq-wrap" style="margin-top:0;">
+                    @foreach ($faqItems as $faq)
+                        <details>
+                            <summary>{{ $faq['q'] }}</summary>
+                            <p>{{ $faq['a'] }}</p>
+                        </details>
+                    @endforeach
+                </div>
             </div>
 
-            <form method="post" action="{{ route('storefront.checkout') }}" class="step-shell">
-                @csrf
-
-                <section class="step-card">
-                    <div class="selected-product">
-                        <div class="cap">Produk Dipilih</div>
-                        <div class="name" id="selected-product-name">Belum dipilih</div>
-                    </div>
-
-                    <label for="product_id">Daftar produk lengkap</label>
-                    <select id="product_id" name="product_id" required>
-                        <option value="">Pilih produk</option>
-                        @foreach ($productsByCategory as $category => $products)
-                            <optgroup label="{{ $category }}">
-                                @foreach ($products as $product)
-                                    <option value="{{ $product->id }}" data-price="{{ (float) ($startingPrices[$product->id] ?? 0) }}" @selected((string) old('product_id') === (string) $product->id)>
-                                        {{ $product->name }} ({{ $product->type }})
-                                    </option>
+            <div class="checkout-box">
+                <h3>Checkout Cepat</h3>
+                <form method="post" action="{{ route('storefront.checkout') }}">
+                    @csrf
+                    <div class="checkout-grid">
+                        <div style="grid-column:1/-1;">
+                            <label for="product_id">Pilih Produk</label>
+                            <select id="product_id" name="product_id" required>
+                                <option value="">Pilih produk</option>
+                                @foreach ($productsByCategory as $category => $products)
+                                    <optgroup label="{{ $category }}">
+                                        @foreach ($products as $product)
+                                            <option value="{{ $product->id }}" data-price="{{ (float) ($startingPrices[$product->id] ?? 0) }}" @selected((string) old('product_id') === (string) $product->id)>
+                                                {{ $product->name }} ({{ $product->type }})
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
                                 @endforeach
-                            </optgroup>
-                        @endforeach
-                    </select>
+                            </select>
+                        </div>
 
-                    <div class="estimate-box" id="estimate-box">
-                        <div class="estimate-row"><span>Produk</span><strong id="estimate-product">-</strong></div>
-                        <div class="estimate-row"><span>Quantity</span><strong id="estimate-qty">1</strong></div>
-                        <div class="estimate-row"><span>Gateway</span><strong id="estimate-gateway">MIDTRANS</strong></div>
-                        <div class="estimate-row estimate-total"><span>Estimasi Total</span><strong id="estimate-total">Dihitung otomatis</strong></div>
-                    </div>
-                </section>
-
-                <section class="step-card">
-                    <div class="step-head">
-                        <span class="step-num">2</span>
-                        <span class="step-label">Masukkan Data Akun</span>
-                    </div>
-
-                    <div class="step-grid">
                         <div>
-                            <label for="customer_target">Target Customer</label>
+                            <label for="customer_target">User ID / Target</label>
                             <input id="customer_target" name="customer_target" type="text" value="{{ old('customer_target') }}" placeholder="User ID / Phone / Meter Number">
                         </div>
 
@@ -795,18 +579,9 @@
                             <label for="quantity">Quantity</label>
                             <input id="quantity" name="quantity" type="number" min="1" max="10" value="{{ old('quantity', 1) }}">
                         </div>
-                    </div>
-                </section>
 
-                <section class="step-card">
-                    <div class="step-head">
-                        <span class="step-num">3</span>
-                        <span class="step-label">Pilih Pembayaran & Konfirmasi</span>
-                    </div>
-
-                    <div class="step-grid">
                         <div>
-                            <label for="gateway">Payment Gateway</label>
+                            <label for="gateway">Gateway</label>
                             <select id="gateway" name="gateway" required>
                                 @foreach ($gateways as $gateway)
                                     <option value="{{ $gateway }}" @selected(old('gateway') === $gateway)>{{ $gateway }}</option>
@@ -815,53 +590,56 @@
                         </div>
 
                         <div>
-                            <label for="method">Metode Payment (opsional)</label>
+                            <label for="method">Metode (opsional)</label>
                             <input id="method" name="method" type="text" value="{{ old('method') }}" placeholder="VA / QRIS / E-Wallet">
+                        </div>
+
+                        @if (session('checkout_challenge_question'))
+                            <div style="grid-column:1/-1;">
+                                <label for="security_challenge_answer">Verifikasi Keamanan</label>
+                                <input id="security_challenge_answer" name="security_challenge_answer" type="text" value="{{ old('security_challenge_answer') }}" placeholder="{{ session('checkout_challenge_question') }}">
+                            </div>
+                        @endif
+
+                        <div class="estimate" style="grid-column:1/-1;">
+                            <div class="estimate-row"><span>Produk</span><strong id="estimate-product">-</strong></div>
+                            <div class="estimate-row"><span>Quantity</span><strong id="estimate-qty">1</strong></div>
+                            <div class="estimate-row"><span>Gateway</span><strong id="estimate-gateway">MIDTRANS</strong></div>
+                            <div class="estimate-row estimate-total"><span>Estimasi Total</span><strong id="estimate-total">Dihitung otomatis</strong></div>
                         </div>
                     </div>
 
-                    <div class="gateway-row">
-                        @foreach ($gateways as $gateway)
-                            <span class="gateway-chip">{{ $gateway }}</span>
-                        @endforeach
+                    <div class="checkout-submit">
+                        <button type="submit">Buat Order + Payment</button>
                     </div>
-                </section>
+                </form>
+            </div>
+        </section>
 
-                @if (session('checkout_challenge_question'))
-                    <div style="grid-column:1/-1; border:1px solid var(--line); border-radius:12px; padding:12px; background:#fff9e6;">
-                        <label for="security_challenge_answer">Verifikasi Keamanan</label>
-                        <p class="muted" style="margin:6px 0 10px;">{{ session('checkout_challenge_question') }}</p>
-                        <input id="security_challenge_answer" name="security_challenge_answer" type="text" value="{{ old('security_challenge_answer') }}" placeholder="Masukkan jawaban challenge">
-                    </div>
-                @endif
-
-                <div class="action-row">
-                    <span class="action-hint">Order diproses otomatis setelah payment reference terbentuk.</span>
-                    <button class="btn" type="submit">Buat Order + Payment</button>
-                </div>
-            </form>
-        </div>
+        <section class="support-wrap">
+            <h3 style="margin:0 0 10px; color:#fff;">Dukungan Pelanggan</h3>
+            <div class="support-grid">
+                <div class="support-item">Messenger</div>
+                <div class="support-item">WhatsApp</div>
+                <div class="support-item">Email</div>
+                <div class="support-item">FAQ</div>
+                <div class="support-item">Laporan Balik</div>
+            </div>
+        </section>
     </div>
-
-    <nav class="mobile-jumpbar" aria-label="Mobile quick action">
-        <a class="m-ghost" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
-        <a class="m-primary" href="#checkout-form">Checkout</a>
-    </nav>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const heroTrack = document.getElementById('hero-track');
+            const heroDots = document.querySelectorAll('[data-hero-slide]');
             const productSelect = document.getElementById('product_id');
-            const quickButtons = document.querySelectorAll('[data-product-id]');
-            const categoryTabs = document.querySelectorAll('[data-filter-cat]');
-            const selectedProductName = document.getElementById('selected-product-name');
             const quantityInput = document.getElementById('quantity');
             const gatewaySelect = document.getElementById('gateway');
             const estimateProduct = document.getElementById('estimate-product');
             const estimateQty = document.getElementById('estimate-qty');
             const estimateGateway = document.getElementById('estimate-gateway');
             const estimateTotal = document.getElementById('estimate-total');
-            const promoTrack = document.getElementById('promo-track');
-            const promoDots = document.querySelectorAll('.promo-dot');
+            const productButtons = document.querySelectorAll('[data-product-id]');
 
             function formatRupiah(value) {
                 return new Intl.NumberFormat('id-ID', {
@@ -877,84 +655,41 @@
                 }
 
                 const option = productSelect.options[productSelect.selectedIndex] || null;
-                const productLabel = option ? String(option.text || '-').trim() : '-';
+                const label = option ? String(option.text || '-').trim() : '-';
                 const qty = Math.max(1, parseInt(String(quantityInput?.value || '1'), 10) || 1);
                 const gateway = String(gatewaySelect?.value || '-');
                 const unitPrice = option ? parseFloat(String(option.getAttribute('data-price') || '0')) : 0;
 
-                estimateProduct.textContent = productLabel === '' ? '-' : productLabel;
+                estimateProduct.textContent = label;
                 estimateQty.textContent = String(qty);
                 estimateGateway.textContent = gateway;
-
-                if (unitPrice > 0) {
-                    estimateTotal.textContent = formatRupiah(unitPrice * qty);
-                } else {
-                    estimateTotal.textContent = 'Dihitung otomatis';
-                }
+                estimateTotal.textContent = unitPrice > 0 ? formatRupiah(unitPrice * qty) : 'Dihitung otomatis';
             }
 
-            function showPromo(index) {
-                if (!promoTrack) {
+            function showHero(index) {
+                if (!heroTrack) {
                     return;
                 }
 
-                promoTrack.style.transform = 'translateX(-' + (index * 100) + '%)';
-                promoDots.forEach(function (dot, dotIndex) {
-                    dot.classList.toggle('is-active', dotIndex === index);
+                heroTrack.style.transform = 'translateX(-' + (index * 100) + '%)';
+                heroDots.forEach(function (dot, i) {
+                    dot.classList.toggle('is-active', i === index);
                 });
-            }
-
-            function setActiveProduct(productId) {
-                quickButtons.forEach(function (node) {
-                    const nodeId = String(node.getAttribute('data-product-id') || '');
-                    node.classList.toggle('is-active', nodeId === productId && productId !== '');
-                });
-
-                if (selectedProductName && productSelect) {
-                    const selectedText = productSelect.options[productSelect.selectedIndex]?.text || 'Belum dipilih';
-                    selectedProductName.textContent = selectedText;
-                }
-
-                updateEstimate();
             }
 
             if (productSelect) {
-                setActiveProduct(String(productSelect.value || ''));
-                productSelect.addEventListener('change', function () {
-                    setActiveProduct(String(productSelect.value || ''));
-                });
+                productSelect.addEventListener('change', updateEstimate);
             }
 
             if (quantityInput) {
                 quantityInput.addEventListener('input', updateEstimate);
-                quantityInput.addEventListener('change', updateEstimate);
             }
 
             if (gatewaySelect) {
                 gatewaySelect.addEventListener('change', updateEstimate);
             }
 
-            categoryTabs.forEach(function (tab) {
-                tab.addEventListener('click', function () {
-                    const targetCategory = String(tab.getAttribute('data-filter-cat') || 'all');
-
-                    categoryTabs.forEach(function (node) {
-                        node.classList.toggle('is-active', node === tab);
-                    });
-
-                    quickButtons.forEach(function (btn) {
-                        if (!btn.classList.contains('product-card')) {
-                            return;
-                        }
-
-                        const cardCategory = String(btn.getAttribute('data-category') || '');
-                        const visible = targetCategory === 'all' || cardCategory === targetCategory;
-                        btn.style.display = visible ? '' : 'none';
-                    });
-                });
-            });
-
-            quickButtons.forEach(function (button) {
+            productButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     if (!productSelect) {
                         return;
@@ -962,27 +697,26 @@
 
                     productSelect.value = String(button.getAttribute('data-product-id') || '');
                     productSelect.dispatchEvent(new Event('change'));
-                    productSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.getElementById('quick-checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
             });
 
-            let currentPromo = 0;
-            const promoCount = promoDots.length;
-            promoDots.forEach(function (dot) {
+            let heroIndex = 0;
+            heroDots.forEach(function (dot) {
                 dot.addEventListener('click', function () {
-                    currentPromo = parseInt(String(dot.getAttribute('data-slide') || '0'), 10) || 0;
-                    showPromo(currentPromo);
+                    heroIndex = parseInt(String(dot.getAttribute('data-hero-slide') || '0'), 10) || 0;
+                    showHero(heroIndex);
                 });
             });
 
-            if (promoCount > 1) {
+            if (heroDots.length > 1) {
                 setInterval(function () {
-                    currentPromo = (currentPromo + 1) % promoCount;
-                    showPromo(currentPromo);
-                }, 4500);
+                    heroIndex = (heroIndex + 1) % heroDots.length;
+                    showHero(heroIndex);
+                }, 5000);
             }
 
-            showPromo(0);
+            showHero(0);
             updateEstimate();
         });
     </script>

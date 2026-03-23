@@ -74,6 +74,28 @@
             box-shadow: 0 14px 28px rgba(12, 24, 42, 0.25);
         }
 
+        .top-utility {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid #2e4c73;
+            padding-bottom: 8px;
+            color: #b8cce5;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .top-utility .left,
+        .top-utility .right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         .topbar-main {
             display: flex;
             align-items: center;
@@ -101,6 +123,26 @@
             color: #b8cce5;
             font-size: 12px;
             font-weight: 700;
+        }
+
+        .topbar-center {
+            flex: 1;
+            max-width: 420px;
+            margin: 0 10px;
+        }
+
+        .top-search {
+            width: 100%;
+            border: 1px solid #4f6888;
+            border-radius: 10px;
+            background: #12263f;
+            color: #e8f3ff;
+            padding: 9px 11px;
+            font-size: 12px;
+        }
+
+        .top-search::placeholder {
+            color: #9fb5cd;
         }
 
         .quick-actions {
@@ -131,6 +173,17 @@
             border-color: transparent;
             background: linear-gradient(120deg, #f39f34, #e36f27);
             color: #fff;
+        }
+
+        .locale-pill {
+            border: 1px solid #587295;
+            border-radius: 999px;
+            padding: 6px 10px;
+            color: #d6e7fb;
+            font-size: 11px;
+            font-weight: 800;
+            background: rgba(21, 43, 69, 0.9);
+            text-decoration: none;
         }
 
         .market-strip {
@@ -332,9 +385,18 @@
         @media (max-width: 640px) {
             .cards { grid-template-columns: 1fr; }
             .shell { padding: 16px 12px 36px; }
+            .top-utility {
+                flex-direction: column;
+                align-items: flex-start;
+            }
             .topbar-main {
                 align-items: flex-start;
                 flex-direction: column;
+            }
+            .topbar-center {
+                width: 100%;
+                max-width: none;
+                margin: 0;
             }
             .quick-actions { justify-content: flex-start; }
             .topbar { padding: 10px; }
@@ -348,11 +410,30 @@
         $isAdminRoute = request()->routeIs('admin.*');
     @endphp
     <div class="topbar">
+        <div class="top-utility">
+            <div class="left">
+                <span>Instant Top Up</span>
+                <span>|</span>
+                <span>Pembayaran Aman</span>
+                <span>|</span>
+                <span>Layanan 24 Jam</span>
+            </div>
+            <div class="right">
+                <a class="locale-pill" href="#">Indonesia</a>
+                <a class="locale-pill" href="#">IDR</a>
+            </div>
+        </div>
+
         <div class="topbar-main">
             <div class="brand-wrap">
                 <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
                 <span class="brand-sub">Top up game and PPOB platform</span>
             </div>
+
+            <div class="topbar-center">
+                <input class="top-search" type="text" placeholder="Cari game, voucher, atau layanan...">
+            </div>
+
             <div class="quick-actions">
                 <a class="action-link" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
                 <a class="action-link" href="{{ route('public.promo') }}">Promo</a>
