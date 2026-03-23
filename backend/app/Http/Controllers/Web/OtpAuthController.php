@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
-use App\Domain\Otp\Services\OtpDeliveryService;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\OtpRequest;
 use App\Models\SecurityEvent;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -15,14 +13,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 final class OtpAuthController extends Controller
 {
-    public function __construct(private readonly OtpDeliveryService $otpDeliveryService)
-    {
-    }
-
     public function showLogin(Request $request): View
     {
         if ($request->user() !== null) {
@@ -38,162 +31,105 @@ final class OtpAuthController extends Controller
     public function requestOtp(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'channel' => ['required', 'in:EMAIL,WA'],
-            'destination' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:120'],
+            'phone_number' => ['required', 'string', 'max:25', 'regex:/^[0-9]{10,16}$/'],
+            'username' => ['required', 'string', 'min:3', 'max:40', 'regex:/^[A-Za-z0-9_.-]+$/'],
+            'password' => ['required', 'string', 'min:8', 'max:120'],
         ]);
 
-        $channel = strtoupper((string) $validated['channel']);
-        $destination = trim((string) $validated['destination']);
+        $email = strtolower(trim((string) $validated['email']));
+        $phoneNumber = preg_replace('/[^0-9]/', '', (string) $validated['phone_number']) ?: '';
+        $username = strtolower(trim((string) $validated['username']));
+        $password = (string) $validated['password'];
 
-        if ($channel === 'EMAIL' && !filter_var($destination, FILTER_VALIDATE_EMAIL)) {
-            return back()->withErrors(['destination' => 'Format email tidak valid.'])->withInput();
+        if ($phoneNumber === '') {
+            return back()->withErrors(['phone_number' => 'Nomor telepon wajib angka 10-16 digit.'])->withInput();
         }
 
-        if ($channel === 'WA' && !preg_match('/^[0-9]{10,16}$/', $destination)) {
-            return back()->withErrors(['destination' => 'Format nomor WA harus angka 10-16 digit.'])->withInput();
+        $userByEmail = User::query()->where('email', $email)->first();
+        $userByUsername = User::query()->where('username', $username)->first();
+
+        if ($userByEmail !== null || $userByUsername !== null) {
+            /** @var User $existingUser */
+            $existingUser = $userByEmail ?? $userByUsername;
+
+            if (strtolower((string) $existingUser->email) !== $email || strtolower((string) ($existingUser->username ?? '')) !== $username) {
+                return back()->withErrors([
+                    'email' => 'Email dan username tidak cocok dengan akun terdaftar.',
+                ])->withInput();
+            }
+
+            if (!Hash::check($password, (string) $existingUser->password)) {
+                $this->logSecurityEvent('ACCOUNT_LOGIN_PASSWORD_MISMATCH', 'LOW', $request, [
+                    'email' => $email,
+                    'username' => $username,
+                ], 20, (int) $existingUser->id);
+
+                return back()->withErrors([
+                    'password' => 'Password salah.',
+                ])->withInput();
+            }
+
+            if ((string) ($existingUser->phone_number ?? '') !== $phoneNumber) {
+                $existingUser->update([
+                    'phone_number' => $phoneNumber,
+                ]);
+            }
+
+            Auth::login($existingUser);
+            $request->session()->regenerate();
+            $this->syncRecentOrdersToUser($request, (int) $existingUser->id);
+
+            $this->logSecurityEvent('ACCOUNT_LOGIN_SUCCESS', 'LOW', $request, [
+                'email' => $email,
+                'username' => $username,
+                'mode' => 'login',
+            ], 5, (int) $existingUser->id);
+
+            return redirect()->route('account.dashboard')->with('notice', 'Login berhasil.');
         }
 
-        $recentCount = OtpRequest::query()
-            ->where('channel', $channel)
-            ->where('destination', $destination)
-            ->where('created_at', '>=', now()->subMinutes(10))
-            ->count();
-
-        if ($recentCount >= 3) {
-            $this->logSecurityEvent('OTP_REQUEST_THROTTLED', 'MEDIUM', $request, [
-                'channel' => $channel,
-                'destination' => $destination,
-            ], 45);
-
-            return back()->withErrors(['destination' => 'Terlalu banyak request OTP. Coba lagi 10 menit lagi.'])->withInput();
-        }
-
-        $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        OtpRequest::query()->create([
-            'channel' => $channel,
-            'destination' => $destination,
-            'code_hash' => Hash::make($otp),
-            'attempt_count' => 0,
-            'expires_at' => now()->addMinutes(5),
-            'request_ip' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        $deliveryResult = $this->otpDeliveryService->deliver($channel, $destination, $otp);
-
-        if (($deliveryResult['delivered'] ?? false) !== true) {
-            $this->logSecurityEvent('OTP_DELIVERY_FAILED', 'MEDIUM', $request, [
-                'channel' => $channel,
-                'destination' => $destination,
-                'driver' => (string) ($deliveryResult['driver'] ?? 'unknown'),
-                'message' => (string) ($deliveryResult['message'] ?? 'unknown'),
-            ], 35);
-
+        $phoneExists = User::query()->where('phone_number', $phoneNumber)->exists();
+        if ($phoneExists) {
             return back()->withErrors([
-                'destination' => 'Gagal mengirim OTP. Coba beberapa saat lagi.',
+                'phone_number' => 'Nomor telepon sudah dipakai akun lain.',
             ])->withInput();
         }
 
-        $request->session()->put('otp_pending', [
-            'channel' => $channel,
-            'destination' => $destination,
+        $newUser = User::query()->create([
+            'name' => $username,
+            'email' => $email,
+            'username' => $username,
+            'phone_number' => $phoneNumber,
+            'password' => $password,
+            'role' => 'user',
         ]);
 
-        $driver = strtolower((string) config('services.otp.driver', 'demo'));
-        $notice = $driver === 'demo'
-            ? 'OTP berhasil dibuat. Demo code: '.$otp
-            : 'OTP berhasil dikirim. Cek kanal '.$channel.' kamu.';
+        Auth::login($newUser);
+        $request->session()->regenerate();
+        $this->syncRecentOrdersToUser($request, (int) $newUser->id);
 
-        return redirect()
-            ->route('account.verify-otp')
-            ->with('notice', $notice);
+        $this->logSecurityEvent('ACCOUNT_REGISTER_SUCCESS', 'LOW', $request, [
+            'email' => $email,
+            'username' => $username,
+            'mode' => 'register',
+        ], 5, (int) $newUser->id);
+
+        return redirect()->route('account.dashboard')->with('notice', 'Akun berhasil dibuat dan login.');
     }
 
-    public function showVerify(Request $request): View
+    public function showVerify(Request $request): RedirectResponse
     {
-        $pending = $request->session()->get('otp_pending');
-
-        if (!is_array($pending)) {
-            return redirect()->route('account.login-otp');
-        }
-
-        return view('auth.verify-otp', [
-            'pending' => $pending,
-        ]);
+        return redirect()
+            ->route('account.login-otp')
+            ->withErrors(['auth' => 'Verifikasi OTP sudah tidak digunakan. Silakan login dengan data akun customer.']);
     }
 
     public function verifyOtp(Request $request): RedirectResponse
     {
-        $pending = $request->session()->get('otp_pending');
-
-        if (!is_array($pending)) {
-            return redirect()->route('account.login-otp');
-        }
-
-        $validated = $request->validate([
-            'code' => ['required', 'digits:6'],
-        ]);
-
-        $channel = strtoupper((string) ($pending['channel'] ?? ''));
-        $destination = (string) ($pending['destination'] ?? '');
-
-        $otpRequest = OtpRequest::query()
-            ->where('channel', $channel)
-            ->where('destination', $destination)
-            ->whereNull('verified_at')
-            ->latest('id')
-            ->first();
-
-        if ($otpRequest === null || $otpRequest->expires_at === null || $otpRequest->expires_at->isPast()) {
-            $this->logSecurityEvent('OTP_VERIFY_INVALID_OR_EXPIRED', 'LOW', $request, [
-                'channel' => $channel,
-                'destination' => $destination,
-            ], 20);
-
-            return back()->withErrors(['code' => 'OTP tidak ditemukan atau sudah expired.']);
-        }
-
-        if ((int) $otpRequest->attempt_count >= 5) {
-            $this->logSecurityEvent('OTP_VERIFY_BLOCKED_MAX_ATTEMPTS', 'MEDIUM', $request, [
-                'channel' => $channel,
-                'destination' => $destination,
-                'attempt_count' => (int) $otpRequest->attempt_count,
-            ], 50);
-
-            return back()->withErrors(['code' => 'OTP diblokir karena terlalu banyak percobaan.']);
-        }
-
-        $otpRequest->increment('attempt_count');
-
-        if (!Hash::check((string) $validated['code'], (string) $otpRequest->code_hash)) {
-            $this->logSecurityEvent('OTP_VERIFY_CODE_MISMATCH', 'LOW', $request, [
-                'channel' => $channel,
-                'destination' => $destination,
-                'attempt_count' => (int) $otpRequest->attempt_count,
-            ], 25);
-
-            return back()->withErrors(['code' => 'Kode OTP salah.']);
-        }
-
-        $otpRequest->update([
-            'verified_at' => now(),
-        ]);
-
-        $user = $this->resolveUser($channel, $destination);
-
-        Auth::login($user);
-        $request->session()->regenerate();
-        $this->syncRecentOrdersToUser($request, (int) $user->id);
-        $request->session()->forget('otp_pending');
-
-        $this->logSecurityEvent('OTP_VERIFY_SUCCESS', 'LOW', $request, [
-            'channel' => $channel,
-            'destination' => $destination,
-            'user_id' => (int) $user->id,
-        ], 5, (int) $user->id);
-
-        return redirect()->route('account.dashboard')->with('notice', 'Login OTP berhasil.');
+        return redirect()
+            ->route('account.login-otp')
+            ->withErrors(['auth' => 'Verifikasi OTP sudah tidak digunakan. Silakan login dengan data akun customer.']);
     }
 
     public function logout(Request $request): RedirectResponse
@@ -203,38 +139,6 @@ final class OtpAuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('account.login-otp');
-    }
-
-    private function resolveUser(string $channel, string $destination): User
-    {
-        if ($channel === 'EMAIL') {
-            $user = User::query()->where('email', $destination)->first();
-            if ($user !== null) {
-                return $user;
-            }
-
-            return User::query()->create([
-                'name' => Str::headline((string) Str::before($destination, '@')),
-                'email' => $destination,
-                'password' => Str::random(40),
-                'role' => 'user',
-            ]);
-        }
-
-        $normalized = preg_replace('/[^0-9]/', '', $destination) ?: $destination;
-        $email = 'wa_'.$normalized.'@guest.local';
-
-        $user = User::query()->where('email', $email)->first();
-        if ($user !== null) {
-            return $user;
-        }
-
-        return User::query()->create([
-            'name' => 'WA User '.substr($normalized, -4),
-            'email' => $email,
-            'password' => Str::random(40),
-            'role' => 'user',
-        ]);
     }
 
     private function syncRecentOrdersToUser(Request $request, int $userId): void
