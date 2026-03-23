@@ -10,6 +10,7 @@ use App\Models\ReviewModeration;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 final class AdminReviewModerationController extends Controller
 {
@@ -172,5 +173,64 @@ final class AdminReviewModerationController extends Controller
         ]);
 
         return back()->with('notice', 'Review berhasil di-reject.');
+    }
+
+    public function bulkModerate(Request $request): RedirectResponse
+    {
+        $payload = $request->validate([
+            'review_ids' => ['required', 'array', 'min:1'],
+            'review_ids.*' => ['integer', 'distinct', 'exists:reviews,id'],
+            'action' => ['required', 'in:APPROVE,REJECT'],
+            'reason' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $reviewIds = collect($payload['review_ids'])->map(static fn ($id): int => (int) $id)->values();
+        $action = (string) $payload['action'];
+        $newStatus = $action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+        $reason = trim((string) ($payload['reason'] ?? ''));
+        $adminId = $request->user()?->id;
+
+        $affected = 0;
+        $skipped = 0;
+
+        DB::transaction(function () use ($reviewIds, $newStatus, $reason, $action, $adminId, &$affected, &$skipped): void {
+            $reviews = Review::query()
+                ->whereIn('id', $reviewIds->all())
+                ->lockForUpdate()
+                ->get(['id', 'status']);
+
+            $now = now();
+            foreach ($reviews as $review) {
+                if ($review->status === $newStatus) {
+                    $skipped++;
+                    continue;
+                }
+
+                $review->update([
+                    'status' => $newStatus,
+                    'approved_at' => $newStatus === 'APPROVED' ? $now : null,
+                ]);
+
+                ReviewModeration::query()->create([
+                    'review_id' => $review->id,
+                    'admin_user_id' => $adminId,
+                    'action' => $action,
+                    'reason' => $reason !== '' ? $reason : null,
+                    'moderated_at' => $now,
+                ]);
+
+                $affected++;
+            }
+        });
+
+        $statusLabel = $newStatus === 'APPROVED' ? 'APPROVED' : 'REJECTED';
+        $message = "Bulk moderation selesai: {$affected} review diubah ke {$statusLabel}";
+        if ($skipped > 0) {
+            $message .= ", {$skipped} dilewati (status sudah sama).";
+        } else {
+            $message .= '.';
+        }
+
+        return back()->with('notice', $message);
     }
 }

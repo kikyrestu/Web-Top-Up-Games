@@ -70,9 +70,31 @@
         </div>
 
         <div class="panel">
+            <form id="bulk-review-form" method="post" action="{{ route('admin.reviews.bulk-moderate') }}" class="grid" style="grid-template-columns:2fr 1fr auto; align-items:end; margin-bottom:12px;">
+                @csrf
+                <div>
+                    <label for="bulk_reason">Catatan Bulk Moderation (opsional)</label>
+                    <input id="bulk_reason" type="text" name="reason" placeholder="Alasan approve/reject massal">
+                </div>
+                <div>
+                    <label for="bulk_action">Aksi</label>
+                    <select id="bulk_action" name="action" required>
+                        <option value="">Pilih aksi</option>
+                        <option value="APPROVE">APPROVE</option>
+                        <option value="REJECT">REJECT</option>
+                    </select>
+                </div>
+                <div>
+                    <button class="btn" type="submit">Apply ke yang dipilih</button>
+                </div>
+            </form>
+
             <table>
                 <thead>
                 <tr>
+                    <th>
+                        <input id="check-all-reviews" type="checkbox" aria-label="Select all reviews">
+                    </th>
                     <th>Review</th>
                     <th>User</th>
                     <th>Produk</th>
@@ -84,6 +106,9 @@
                 <tbody>
                 @forelse ($reviews as $review)
                     <tr>
+                        <td>
+                            <input class="bulk-review-checkbox" type="checkbox" form="bulk-review-form" name="review_ids[]" value="{{ (int) $review->id }}" aria-label="Pilih review {{ (int) $review->id }}">
+                        </td>
                         <td>
                             <strong>{{ (int) $review->rating }}/5</strong><br>
                             <span class="muted">{{ $review->content }}</span>
@@ -120,7 +145,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="muted">Belum ada review untuk dimoderasi.</td></tr>
+                    <tr><td colspan="7" class="muted">Belum ada review untuk dimoderasi.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -129,4 +154,31 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const checkAll = document.getElementById('check-all-reviews');
+            const rowChecks = Array.from(document.querySelectorAll('.bulk-review-checkbox'));
+
+            if (!checkAll || rowChecks.length === 0) {
+                return;
+            }
+
+            checkAll.addEventListener('change', function () {
+                rowChecks.forEach(function (checkbox) {
+                    checkbox.checked = checkAll.checked;
+                });
+            });
+
+            rowChecks.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    const selected = rowChecks.filter(function (node) {
+                        return node.checked;
+                    }).length;
+                    checkAll.checked = selected === rowChecks.length;
+                    checkAll.indeterminate = selected > 0 && selected < rowChecks.length;
+                });
+            });
+        });
+    </script>
 </x-layouts.app>

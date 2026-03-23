@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\AdminAuditLogController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminOrderController;
 use App\Http\Controllers\Web\AdminReviewModerationController;
+use App\Http\Controllers\Web\AdminSecurityEventController;
 use App\Http\Controllers\Web\AdminSeoController;
 use App\Http\Controllers\Web\AccountController;
 use App\Http\Controllers\Web\OtpAuthController;
@@ -83,11 +84,14 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
 
         Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('/audit-logs/export/csv', [AdminAuditLogController::class, 'exportCsv'])->name('audit-logs.export.csv');
+        Route::get('/security-events', [AdminSecurityEventController::class, 'index'])->name('security-events.index');
+        Route::get('/security-events/export/csv', [AdminSecurityEventController::class, 'exportCsv'])->name('security-events.export.csv');
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{orderCode}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{orderCode}/reprocess', [AdminOrderController::class, 'reprocess'])->name('orders.reprocess');
 
         Route::get('/reviews', [AdminReviewModerationController::class, 'index'])->name('reviews.index');
+        Route::post('/reviews/bulk-moderate', [AdminReviewModerationController::class, 'bulkModerate'])->name('reviews.bulk-moderate');
         Route::get('/reviews/{review}', [AdminReviewModerationController::class, 'show'])->name('reviews.show');
         Route::post('/reviews/{review}/approve', [AdminReviewModerationController::class, 'approve'])->name('reviews.approve');
         Route::post('/reviews/{review}/reject', [AdminReviewModerationController::class, 'reject'])->name('reviews.reject');
