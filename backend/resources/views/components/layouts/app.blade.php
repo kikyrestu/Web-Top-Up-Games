@@ -33,45 +33,41 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f4f7f2;
-            --ink: #13221a;
-            --ink-soft: #415245;
-            --line: #c8d6cb;
-            --panel: #ffffff;
-            --accent: #0f7b52;
+            --bg: #08152d;
+            --ink: #e8f0ff;
+            --ink-soft: #9ab0d1;
+            --line: #2b4368;
+            --panel: #122445;
+            --accent: #ff9f2d;
             --accent-2: #ffd166;
             --danger: #b00020;
-            --ok: #196d3a;
-            --warn: #946200;
+            --ok: #59cb8d;
+            --warn: #d7ad57;
         }
 
         * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            background:
-                radial-gradient(circle at 10% 15%, #d9f4e7 0%, #f4f7f2 38%),
-                radial-gradient(circle at 92% 5%, #fff2cd 0%, transparent 30%),
-                var(--bg);
+            background: linear-gradient(180deg, #061127 0%, #081a34 45%, #07162e 100%);
             color: var(--ink);
             font-family: 'Manrope', sans-serif;
         }
 
         .shell {
-            max-width: 1120px;
+            max-width: 1220px;
             margin: 0 auto;
-            padding: 24px 16px 48px;
+            padding: 10px 16px 48px;
         }
 
         .topbar {
             display: grid;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #0f1a2b, #1a2e4a 62%, #173658);
-            border: 1px solid #2c4668;
-            border-radius: 18px;
-            padding: 12px;
-            box-shadow: 0 14px 28px rgba(12, 24, 42, 0.25);
+            gap: 8px;
+            margin-bottom: 14px;
+            background: #0a1731;
+            border: 1px solid #1f365a;
+            border-radius: 10px;
+            padding: 10px 12px;
         }
 
         .top-utility {
@@ -79,10 +75,10 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            border-bottom: 1px solid #2e4c73;
+            border-bottom: 1px solid #223a5f;
             padding-bottom: 8px;
-            color: #b8cce5;
-            font-size: 11px;
+            color: #8ea8cf;
+            font-size: 10px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.03em;
@@ -112,16 +108,16 @@
 
         .brand {
             text-decoration: none;
-            color: #f6fbff;
+            color: #ffffff;
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 22px;
+            font-size: 30px;
             font-weight: 700;
             letter-spacing: -0.02em;
         }
 
         .brand-sub {
-            color: #b8cce5;
-            font-size: 12px;
+            color: #8ea8cf;
+            font-size: 11px;
             font-weight: 700;
         }
 
@@ -133,10 +129,10 @@
 
         .top-search {
             width: 100%;
-            border: 1px solid #4f6888;
+            border: 1px solid #2f4a74;
             border-radius: 10px;
-            background: #12263f;
-            color: #e8f3ff;
+            background: #0a1830;
+            color: #dce8ff;
             padding: 9px 11px;
             font-size: 12px;
         }
@@ -154,35 +150,35 @@
         }
 
         .action-link {
-            border: 1px solid #5f7898;
-            border-radius: 999px;
-            padding: 8px 12px;
+            border: 1px solid #2f4a74;
+            border-radius: 8px;
+            padding: 8px 10px;
             text-decoration: none;
-            color: #e8f3ff;
+            color: #cfe0ff;
             font-weight: 800;
             font-size: 12px;
-            background: #234364;
+            background: #102543;
         }
 
         .action-link:hover {
-            border-color: #80a7d2;
-            background: #2a517a;
+            border-color: #4f73ab;
+            background: #17325a;
         }
 
         .cta-link {
             border-color: transparent;
-            background: linear-gradient(120deg, #f39f34, #e36f27);
+            background: linear-gradient(120deg, #ffab39, #f07d2f);
             color: #fff;
         }
 
         .locale-pill {
-            border: 1px solid #587295;
+            border: 1px solid #2f4a74;
             border-radius: 999px;
             padding: 6px 10px;
-            color: #d6e7fb;
+            color: #cfe0ff;
             font-size: 11px;
             font-weight: 800;
-            background: rgba(21, 43, 69, 0.9);
+            background: #102543;
             text-decoration: none;
         }
 
@@ -190,20 +186,22 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            border-top: 1px solid #223a5f;
+            padding-top: 8px;
         }
 
         .market-link {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            border: 1px solid #4b6689;
-            border-radius: 12px;
-            padding: 7px 10px;
-            color: #d6e7fb;
+            border: 1px solid #2f4a74;
+            border-radius: 8px;
+            padding: 6px 9px;
+            color: #cfe0ff;
             text-decoration: none;
             font-size: 12px;
             font-weight: 800;
-            background: rgba(18, 39, 63, 0.75);
+            background: #102543;
         }
 
         .market-link:hover {
@@ -214,11 +212,11 @@
         .market-icon {
             width: 22px;
             height: 22px;
-            border-radius: 8px;
+            border-radius: 6px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #315a84;
+            background: #1a355d;
             color: #ffffff;
         }
 
@@ -236,27 +234,27 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            border-top: 1px dashed #4f6889;
+            border-top: 1px dashed #30507b;
             padding-top: 10px;
         }
 
         .admin-link {
-            border: 1px solid #5e7ba0;
+            border: 1px solid #2f4a74;
             border-radius: 999px;
             padding: 7px 11px;
             text-decoration: none;
             font-size: 11px;
             font-weight: 800;
-            color: #d6e7fb;
-            background: #234364;
+            color: #cfe0ff;
+            background: #102543;
         }
 
         .logout-btn {
-            border: 1px solid #5f7898;
+            border: 1px solid #2f4a74;
             border-radius: 999px;
             padding: 8px 12px;
-            background: #234364;
-            color: #e8f3ff;
+            background: #102543;
+            color: #dce8ff;
             font-size: 12px;
             font-weight: 800;
             cursor: pointer;
@@ -266,8 +264,8 @@
         .panel {
             background: var(--panel);
             border: 1px solid var(--line);
-            border-radius: 18px;
-            box-shadow: 0 10px 32px rgba(19, 34, 26, 0.08);
+            border-radius: 14px;
+            box-shadow: none;
             padding: 18px;
         }
 
@@ -280,15 +278,15 @@
         }
 
         .flash-ok {
-            border-color: #a8debc;
-            background: #edf9f1;
-            color: var(--ok);
+            border-color: #2d5f4a;
+            background: #123527;
+            color: #8ad8ad;
         }
 
         .flash-err {
-            border-color: #efb8c0;
-            background: #fff2f4;
-            color: var(--danger);
+            border-color: #7a3441;
+            background: #351822;
+            color: #f4a5b0;
         }
 
         h1, h2, h3 {
@@ -338,14 +336,14 @@
             font-weight: 800;
             font-family: 'Manrope', sans-serif;
             cursor: pointer;
-            background: linear-gradient(120deg, var(--accent), #0ea26a);
+            background: linear-gradient(120deg, #ffab39, #f07d2f);
             color: #fff;
         }
 
         .btn-ghost {
-            background: #fff;
+            background: #102543;
             border: 1px solid var(--line);
-            color: var(--ink);
+            color: #dce8ff;
         }
 
         input, select {
@@ -354,7 +352,8 @@
             border-radius: 10px;
             padding: 10px 11px;
             font-size: 14px;
-            background: #fff;
+            background: #0d1d38;
+            color: #e8f0ff;
         }
 
         .grid {
@@ -372,7 +371,7 @@
             border: 1px solid var(--line);
             border-radius: 14px;
             padding: 14px;
-            background: #fbfcfb;
+            background: #102543;
         }
 
         .card .k { color: var(--ink-soft); font-size: 12px; text-transform: uppercase; font-weight: 700; }
