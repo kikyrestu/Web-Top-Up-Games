@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureAdminRole;
 use App\Http\Middleware\GlobalRateLimit;
 use App\Http\Middleware\EnsureWebAuth;
 use App\Http\Middleware\EnsureWebAdminRole;
+use App\Http\Middleware\EnsureWebPermission;
 use App\Http\Middleware\HandleIdempotency;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'global.rate' => GlobalRateLimit::class,
             'web.auth' => EnsureWebAuth::class,
             'web.admin' => EnsureWebAdminRole::class,
+            'web.permission' => EnsureWebPermission::class,
             'idempotency' => HandleIdempotency::class,
         ]);
     })

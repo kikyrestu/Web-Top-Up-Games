@@ -22,7 +22,7 @@ final class EnsureWebAdminRole
             return new RedirectResponse(url('/admin/buildywebadmin/Login?=AdminPanel'));
         }
 
-        if ((string) ($user->role ?? 'user') !== 'admin') {
+        if (!in_array((string) ($user->role ?? 'user'), ['admin', 'editor', 'ops', 'finance'], true)) {
             return new RedirectResponse(route('storefront.index'));
         }
 

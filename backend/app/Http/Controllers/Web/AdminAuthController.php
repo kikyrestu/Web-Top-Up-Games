@@ -67,7 +67,7 @@ final class AdminAuthController extends Controller
 
         $request->session()->regenerate();
 
-        if ((string) (Auth::user()?->role ?? 'user') !== 'admin') {
+        if (!in_array((string) (Auth::user()?->role ?? 'user'), ['admin', 'editor', 'ops', 'finance'], true)) {
             RateLimiter::hit($throttleKey, 300);
             $this->writeAudit('ADMIN_LOGIN_FAILED_WEB', $request, [
                 'email' => (string) $validated['email'],

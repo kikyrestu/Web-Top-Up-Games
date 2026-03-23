@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminNominalController;
 use App\Http\Controllers\Web\AdminOrderController;
 use App\Http\Controllers\Web\AdminPaymentManagementController;
+use App\Http\Controllers\Web\AdminPermissionMatrixController;
 use App\Http\Controllers\Web\AdminPricingController;
 use App\Http\Controllers\Web\AdminPromoCampaignController;
 use App\Http\Controllers\Web\AdminReviewModerationController;
@@ -75,7 +76,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         ->name('login.submit');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
-    Route::middleware(['web.admin'])->group(function (): void {
+    Route::middleware(['web.admin', 'web.permission'])->group(function (): void {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/alerts', [AdminDashboardController::class, 'alerts'])->name('dashboard.alerts');
         Route::get('/dashboard/metrics/excel', [AdminDashboardController::class, 'metricsExcel'])->name('dashboard.metrics.excel');
@@ -170,6 +171,9 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/support/tickets/{ticket}', [AdminSupportTicketController::class, 'show'])->name('support.tickets.show');
         Route::put('/support/tickets/{ticket}', [AdminSupportTicketController::class, 'update'])->name('support.tickets.update');
         Route::post('/support/tickets/{ticket}/reply', [AdminSupportTicketController::class, 'reply'])->name('support.tickets.reply');
+
+        Route::get('/permissions/matrix', [AdminPermissionMatrixController::class, 'index'])->name('permissions.matrix.index');
+        Route::put('/permissions/matrix', [AdminPermissionMatrixController::class, 'update'])->name('permissions.matrix.update');
 
         Route::get('/reviews', [AdminReviewModerationController::class, 'index'])->name('reviews.index');
         Route::post('/reviews/bulk-moderate', [AdminReviewModerationController::class, 'bulkModerate'])->name('reviews.bulk-moderate');

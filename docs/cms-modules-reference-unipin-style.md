@@ -112,8 +112,8 @@ Status:
 14. Analytics dashboard: PARTIAL
     - Dashboard operasional sudah ada, analitik bisnis lanjutan belum lengkap.
 
-15. Role and permission: PARTIAL
-    - Role dasar ada, permission granular per aksi/menu belum ada.
+15. Role and permission: DONE
+   - Role backoffice + permission matrix granular per menu/aksi sudah tersedia.
 
 ## Master TODO Eksekusi (Urutan Wajib)
 
@@ -138,7 +138,7 @@ Aturan eksekusi:
 
 ### Phase 3 - Governance and Optimization
 
-- [ ] Permission matrix granular (menu/action scope per role).
+- [x] Permission matrix granular (menu/action scope per role).
 - [ ] Dashboard analytics bisnis (funnel, cohort, conversion deep-dive).
 - [ ] Homepage composer CMS (manage blok konten storefront dari admin).
 
@@ -210,3 +210,10 @@ Update terbaru:
 - Scope: ticketing/complaint customer + admin console support + SLA due tracking + threaded replies
 - Bukti: route account.tickets.* + route admin.support.tickets.* + migration support_tickets/support_ticket_messages + controller AccountSupportTicketController/AdminSupportTicketController + view account/admin support
 - Catatan: admin bisa kirim internal note (tidak terlihat customer) dan update status ticket lifecycle
+
+- Item: Permission matrix granular
+- Phase: 3
+- Status: DONE
+- Scope: role backoffice (admin/editor/ops/finance) + matrix allow/deny per menu/action + middleware enforcement by route scope
+- Bukti: migration role_permission_matrix + model/service permission matrix + middleware EnsureWebPermission + AdminPermissionMatrixController + view admin permissions
+- Catatan: default fallback admin tetap full access sampai matrix diset explicit

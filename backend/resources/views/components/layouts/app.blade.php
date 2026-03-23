@@ -544,7 +544,7 @@
 <body>
 <div class="shell">
     @php
-        $isAdminUser = auth()->check() && strtolower((string) (auth()->user()->role ?? '')) === 'admin';
+        $isAdminUser = auth()->check() && in_array(strtolower((string) (auth()->user()->role ?? '')), ['admin', 'editor', 'ops', 'finance'], true);
         $isAdminRoute = request()->routeIs('admin.*');
     @endphp
     <div class="topbar">
@@ -646,6 +646,7 @@
                     <a class="admin-nav-link {{ request()->routeIs('admin.orders.*') ? 'is-active' : '' }}" href="{{ route('admin.orders.index') }}">Orders</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.customers.*') ? 'is-active' : '' }}" href="{{ route('admin.customers.index') }}">Customers</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.support.tickets.*') ? 'is-active' : '' }}" href="{{ route('admin.support.tickets.index') }}">Support Tickets</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.permissions.matrix.*') ? 'is-active' : '' }}" href="{{ route('admin.permissions.matrix.index') }}">Permission Matrix</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.reviews.*') ? 'is-active' : '' }}" href="{{ route('admin.reviews.index') }}">Reviews</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.audit-logs.*') ? 'is-active' : '' }}" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.security-events.*') ? 'is-active' : '' }}" href="{{ route('admin.security-events.index') }}">Security Events</a>
