@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\AuthTokenController;
 use App\Http\Controllers\Api\V1\Admin\OrderProviderAttemptController;
 use App\Http\Controllers\Api\V1\Admin\OrderReprocessController;
+use App\Http\Controllers\Api\V1\Admin\SystemOpsController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\QuoteController;
@@ -20,6 +22,7 @@ Route::prefix('v1')->group(function (): void {
     ]);
 
     Route::post('/validation/game-id', [ValidationController::class, 'gameId']);
+    Route::post('/auth/token/login', [AuthTokenController::class, 'login']);
     Route::post('/orders/quote', [QuoteController::class, 'store']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{orderCode}', [OrderController::class, 'show']);
@@ -27,7 +30,13 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/payments/{gatewayReference}/status', [PaymentController::class, 'status']);
     Route::post('/payments/webhook/{gateway}', [PaymentWebhookController::class, 'handle']);
 
-    Route::prefix('admin')->middleware(['auth', 'admin.role'])->group(function (): void {
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::post('/auth/token/logout', [AuthTokenController::class, 'logout']);
+    });
+
+    Route::prefix('admin')->middleware(['auth:sanctum', 'admin.role'])->group(function (): void {
+        Route::post('/providers/sync-products', [SystemOpsController::class, 'syncProviders']);
+        Route::get('/dashboard/overview', [SystemOpsController::class, 'dashboardOverview']);
         Route::get('/orders/{orderCode}/provider-attempts', [OrderProviderAttemptController::class, 'index']);
         Route::post('/orders/{orderCode}/reprocess', [OrderReprocessController::class, 'store']);
     });

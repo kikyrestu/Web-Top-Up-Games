@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class AdminOrderReprocessTest extends TestCase
@@ -16,7 +17,7 @@ class AdminOrderReprocessTest extends TestCase
     public function test_admin_can_queue_reprocess_for_failed_order(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin);
 
         $order = $this->createOrder('FAILED');
 
@@ -33,7 +34,7 @@ class AdminOrderReprocessTest extends TestCase
     public function test_non_admin_cannot_access_reprocess_endpoint(): void
     {
         $user = User::factory()->create(['role' => 'user']);
-        $this->actingAs($user);
+        Sanctum::actingAs($user);
 
         $order = $this->createOrder('FAILED');
 
