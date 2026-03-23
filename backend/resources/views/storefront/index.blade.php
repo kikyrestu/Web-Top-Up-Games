@@ -130,6 +130,59 @@
             padding: 16px;
         }
 
+        .promo-rail {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .promo-card {
+            border-radius: 16px;
+            padding: 14px;
+            color: #fff;
+            border: 1px solid transparent;
+            min-height: 132px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .promo-card h3 {
+            margin: 0;
+            font-size: 20px;
+            line-height: 1.1;
+        }
+
+        .promo-card p {
+            margin: 6px 0 10px;
+            font-size: 13px;
+            opacity: 0.96;
+        }
+
+        .promo-card a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .promo-a {
+            background: linear-gradient(135deg, #253c93, #5b3bcf);
+            border-color: #6d7ef0;
+        }
+
+        .promo-b {
+            background: linear-gradient(135deg, #146a46, #1c9a66);
+            border-color: #4bc997;
+        }
+
+        .promo-c {
+            background: linear-gradient(135deg, #9a4e12, #d5772a);
+            border-color: #f3b274;
+        }
+
         .market-wrap {
             display: grid;
             grid-template-columns: 1.2fr 0.8fr;
@@ -382,6 +435,10 @@
             color: var(--ink-soft);
         }
 
+        .mobile-jumpbar {
+            display: none;
+        }
+
         @media (max-width: 920px) {
             .hero-wrap {
                 grid-template-columns: 1fr;
@@ -397,6 +454,10 @@
 
             .checkout-panel {
                 position: static;
+            }
+
+            .promo-rail {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -433,6 +494,42 @@
 
             .action-hint {
                 display: none;
+            }
+
+            .mobile-jumpbar {
+                display: flex;
+                position: fixed;
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                z-index: 60;
+                gap: 8px;
+                background: #ffffff;
+                border: 1px solid var(--line);
+                border-radius: 14px;
+                padding: 8px;
+                box-shadow: 0 12px 24px rgba(19, 34, 26, 0.14);
+            }
+
+            .mobile-jumpbar a {
+                flex: 1;
+                text-align: center;
+                border-radius: 10px;
+                padding: 9px 8px;
+                text-decoration: none;
+                font-size: 12px;
+                font-weight: 800;
+            }
+
+            .mobile-jumpbar .m-primary {
+                background: linear-gradient(120deg, var(--accent), #0ea26a);
+                color: #fff;
+            }
+
+            .mobile-jumpbar .m-ghost {
+                border: 1px solid var(--line);
+                color: var(--ink);
+                background: #fff;
             }
         }
     </style>
@@ -492,6 +589,30 @@
                 <span class="trust-chip" style="background:#ffffff1a; border-color:#ffffff33; color:#fff;">Fast Payment Routing</span>
             </div>
         </div>
+    </div>
+
+    <div class="promo-rail">
+        <article class="promo-card promo-a">
+            <div>
+                <h3>Flash Deal MLBB</h3>
+                <p>Top up favorit dengan jalur pembayaran tercepat.</p>
+            </div>
+            <a href="#checkout-form">Pilih Produk Sekarang</a>
+        </article>
+        <article class="promo-card promo-b">
+            <div>
+                <h3>Voucher & PPOB</h3>
+                <p>Dari pulsa, token listrik, sampai paket data dalam satu alur checkout.</p>
+            </div>
+            <a href="{{ route('public.ppob.index') }}">Lihat Layanan PPOB</a>
+        </article>
+        <article class="promo-card promo-c">
+            <div>
+                <h3>Promo Harian</h3>
+                <p>Voucher diskon harian untuk produk game dan digital favorit.</p>
+            </div>
+            <a href="{{ route('public.promo') }}">Buka Halaman Promo</a>
+        </article>
     </div>
 
     <div class="market-wrap" id="checkout-form">
@@ -628,6 +749,11 @@
             </form>
         </div>
     </div>
+
+    <nav class="mobile-jumpbar" aria-label="Mobile quick action">
+        <a class="m-ghost" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
+        <a class="m-primary" href="#checkout-form">Checkout</a>
+    </nav>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
