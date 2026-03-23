@@ -14,6 +14,7 @@ final class ProviderRouterService
         private readonly DigiflazzAdapter $digiflazzAdapter,
         private readonly RajabillerAdapter $rajabillerAdapter,
         private readonly OrderkuotaAdapter $orderkuotaAdapter,
+        private readonly ProviderCircuitBreakerService $circuitBreakerService,
     ) {
     }
 
@@ -39,6 +40,28 @@ final class ProviderRouterService
 
             $provider = Provider::query()->find($providerId);
             if ($provider === null || !$provider->is_active) {
+                $attemptNo++;
+                continue;
+            }
+
+            if ($this->circuitBreakerService->isProviderBlocked($providerId)) {
+                OrderProviderAttempt::query()->create([
+                    'order_id' => (int) ($payload['order_id'] ?? 0),
+                    'provider_id' => $providerId,
+                    'attempt_no' => $attemptNo,
+                    'status' => 'SKIPPED',
+                    'provider_ref' => null,
+                    'request_payload' => [
+                        'reason' => 'circuit_breaker_open',
+                    ],
+                    'response_payload' => [
+                        'status' => 'FAILED',
+                        'is_retryable' => false,
+                        'raw' => ['error' => 'provider_temporarily_blocked'],
+                    ],
+                    'attempted_at' => now(),
+                ]);
+
                 $attemptNo++;
                 continue;
             }
@@ -83,6 +106,8 @@ final class ProviderRouterService
                     'response_payload' => $response,
                     'attempted_at' => now(),
                 ]);
+
+                $this->circuitBreakerService->recordAttempt($providerId, $status);
 
                 if (in_array($status, ['SUCCESS', 'PAID', 'PENDING'], true)) {
                     return $response;

@@ -36,4 +36,9 @@ final class Provider extends Model
     {
         return $this->hasMany(ProviderProduct::class);
     }
+
+    public function healthChecks(): HasMany
+    {
+        return $this->hasMany(ProviderHealthCheck::class);
+    }
 }

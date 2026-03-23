@@ -55,6 +55,9 @@ return [
 
     'provider_router' => [
         'max_retries_per_provider' => env('PROVIDER_MAX_RETRIES_PER_PROVIDER', 1),
+        'circuit_breaker_enabled' => env('PROVIDER_CIRCUIT_BREAKER_ENABLED', true),
+        'circuit_breaker_failure_threshold' => env('PROVIDER_CIRCUIT_BREAKER_FAILURE_THRESHOLD', 3),
+        'circuit_breaker_cooldown_seconds' => env('PROVIDER_CIRCUIT_BREAKER_COOLDOWN_SECONDS', 120),
     ],
 
     'payment_gateways' => [

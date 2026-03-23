@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderProviderAttempt;
 use App\Models\Product;
 use App\Models\Provider;
+use App\Models\ProviderHealthCheck;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -158,6 +159,81 @@ final class ProviderRouterServiceTest extends TestCase
         $this->assertSame('FAILED', $attempts[1]->status);
         $this->assertSame($rajabiller->id, $attempts[2]->provider_id);
         $this->assertSame('PENDING', $attempts[2]->status);
+    }
+
+    public function test_it_skips_provider_when_circuit_breaker_is_open(): void
+    {
+        config()->set('services.provider_router.max_retries_per_provider', 1);
+        config()->set('services.provider_router.circuit_breaker_enabled', true);
+        config()->set('services.provider_router.circuit_breaker_cooldown_seconds', 120);
+        config()->set('services.digiflazz.base_url', 'https://digiflazz.test/v1');
+        config()->set('services.digiflazz.username', 'digiflazz-user');
+        config()->set('services.digiflazz.api_key', 'digiflazz-key');
+        config()->set('services.rajabiller.base_url', 'https://rajabiller.test');
+        config()->set('services.rajabiller.username', 'rajabiller-user');
+        config()->set('services.rajabiller.api_key', 'rajabiller-key');
+
+        $digiflazz = Provider::query()->create([
+            'code' => 'DIGIFLAZZ',
+            'name' => 'Digiflazz',
+            'is_active' => true,
+        ]);
+
+        $rajabiller = Provider::query()->create([
+            'code' => 'RAJABILLER',
+            'name' => 'Rajabiller',
+            'is_active' => true,
+        ]);
+
+        ProviderHealthCheck::query()->create([
+            'provider_id' => $digiflazz->id,
+            'status' => 'OPEN',
+            'checked_at' => now(),
+            'meta' => ['reason' => 'test_open_state'],
+        ]);
+
+        $order = $this->createOrder();
+
+        Http::fake([
+            'https://rajabiller.test/*' => Http::response([
+                'data' => [
+                    'status' => 'SUCCESS',
+                    'ref_id' => 'RB-REF-CB-001',
+                ],
+            ], 200),
+        ]);
+
+        $result = app(ProviderRouterService::class)->dispatch([
+            [
+                'provider_id' => $digiflazz->id,
+                'provider_code' => 'DIGIFLAZZ',
+                'provider_product_code' => 'SKU-ML-86',
+            ],
+            [
+                'provider_id' => $rajabiller->id,
+                'provider_code' => 'RAJABILLER',
+                'provider_product_code' => 'SKU-ML-86-RB',
+            ],
+        ], [
+            'order_id' => $order->id,
+            'order_code' => $order->order_code,
+            'customer_target' => $order->customer_target,
+        ]);
+
+        $this->assertSame('SUCCESS', $result['status']);
+
+        $attempts = OrderProviderAttempt::query()->orderBy('attempt_no')->get();
+
+        $this->assertCount(2, $attempts);
+        $this->assertSame($digiflazz->id, $attempts[0]->provider_id);
+        $this->assertSame('SKIPPED', $attempts[0]->status);
+        $this->assertSame($rajabiller->id, $attempts[1]->provider_id);
+        $this->assertSame('SUCCESS', $attempts[1]->status);
+
+        Http::assertSentCount(1);
+        Http::assertSent(function (Request $request): bool {
+            return str_contains($request->url(), 'rajabiller.test');
+        });
     }
 
     private function createOrder(): Order
