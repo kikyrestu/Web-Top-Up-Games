@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\AdminCmsController;
 use App\Http\Controllers\Web\AdminAuditLogController;
 use App\Http\Controllers\Web\AdminCatalogController;
 use App\Http\Controllers\Web\AdminDashboardController;
+use App\Http\Controllers\Web\AdminNominalController;
 use App\Http\Controllers\Web\AdminOrderController;
 use App\Http\Controllers\Web\AdminReviewModerationController;
 use App\Http\Controllers\Web\AdminSecurityEventController;
@@ -103,6 +104,20 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/catalog/providers/{provider}/edit', [AdminCatalogController::class, 'providersEdit'])->name('catalog.providers.edit');
         Route::put('/catalog/providers/{provider}', [AdminCatalogController::class, 'providersUpdate'])->name('catalog.providers.update');
         Route::delete('/catalog/providers/{provider}', [AdminCatalogController::class, 'providersDestroy'])->name('catalog.providers.destroy');
+
+        Route::get('/nominal/mappings', [AdminNominalController::class, 'mappingsIndex'])->name('nominal.mappings.index');
+        Route::get('/nominal/mappings/create', [AdminNominalController::class, 'mappingsCreate'])->name('nominal.mappings.create');
+        Route::post('/nominal/mappings', [AdminNominalController::class, 'mappingsStore'])->name('nominal.mappings.store');
+        Route::get('/nominal/mappings/{mapping}/edit', [AdminNominalController::class, 'mappingsEdit'])->name('nominal.mappings.edit');
+        Route::put('/nominal/mappings/{mapping}', [AdminNominalController::class, 'mappingsUpdate'])->name('nominal.mappings.update');
+        Route::delete('/nominal/mappings/{mapping}', [AdminNominalController::class, 'mappingsDestroy'])->name('nominal.mappings.destroy');
+
+        Route::get('/nominal/prices', [AdminNominalController::class, 'pricesIndex'])->name('nominal.prices.index');
+        Route::get('/nominal/prices/create', [AdminNominalController::class, 'pricesCreate'])->name('nominal.prices.create');
+        Route::post('/nominal/prices', [AdminNominalController::class, 'pricesStore'])->name('nominal.prices.store');
+        Route::get('/nominal/prices/{price}/edit', [AdminNominalController::class, 'pricesEdit'])->name('nominal.prices.edit');
+        Route::put('/nominal/prices/{price}', [AdminNominalController::class, 'pricesUpdate'])->name('nominal.prices.update');
+        Route::delete('/nominal/prices/{price}', [AdminNominalController::class, 'pricesDestroy'])->name('nominal.prices.destroy');
 
         Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('/audit-logs/export/csv', [AdminAuditLogController::class, 'exportCsv'])->name('audit-logs.export.csv');

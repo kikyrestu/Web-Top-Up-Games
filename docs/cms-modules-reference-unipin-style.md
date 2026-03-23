@@ -76,8 +76,8 @@ Status:
 2. Katalog game/PPOB: DONE
    - Panel admin untuk CRUD category/product/provider sudah tersedia.
 
-3. Paket nominal/top-up item management: TODO
-   - Belum ada panel admin untuk manage denominasi/item per produk.
+3. Paket nominal/top-up item management: DONE
+   - Panel admin untuk mapping provider product dan provider price sudah tersedia.
 
 4. Pricing engine: PARTIAL
    - Logic pricing sudah jalan di backend checkout, tapi belum ada admin rule editor.
@@ -125,7 +125,7 @@ Aturan eksekusi:
 ### Phase 1 - Core Commerce Admin
 
 - [x] Katalog game/PPOB admin (category/product/provider CRUD).
-- [ ] Paket nominal/top-up item admin.
+- [x] Paket nominal/top-up item admin.
 - [ ] Payment management panel (gateway, metode, fee, routing).
 - [ ] Pricing rule editor (margin, admin fee, fallback rule).
 
@@ -161,3 +161,10 @@ Update terbaru:
 - Scope: CRUD kategori, produk, provider + filtering + active toggle + proteksi hapus relasi
 - Bukti: route admin.catalog.* + AdminCatalogController + view admin/catalog/* + sidebar admin
 - Catatan: berikutnya lanjut item nominal panel agar pricing input dapat dikelola dari admin
+
+- Item: Paket nominal/top-up item admin
+- Phase: 1
+- Status: DONE
+- Scope: CRUD mapping provider product + CRUD provider price + validasi kombinasi provider-product
+- Bukti: route admin.nominal.* + AdminNominalController + view admin/nominal/* + sidebar admin
+- Catatan: berikutnya lanjut payment management panel
