@@ -101,6 +101,22 @@ class AdminDashboardMetricsTest extends TestCase
             ->assertJsonPath('data.payments.0.paid_rate_pct', 50);
 
         $this->assertNotNull($response->json('data.providers.0.p95_latency_ms'));
+
+        $alertResponse = $this->getJson('/api/v1/admin/dashboard/metrics?hours=24&alert_min_attempts=1&alert_success_rate_threshold=85');
+
+        $alertResponse
+            ->assertOk()
+            ->assertJsonPath('code', 'ADMIN_DASHBOARD_METRICS')
+            ->assertJsonPath('data.alerts.providers.0.provider_code', 'DIGIFLAZZ')
+            ->assertJsonPath('data.alerts.providers.0.success_rate_pct', 50)
+            ->assertJsonPath('data.alerts.providers.0.threshold_pct', 85)
+            ->assertJsonPath('data.alerts.providers.0.severity', 'HIGH');
+
+        $excelResponse = $this->get('/api/v1/admin/dashboard/metrics/excel?hours=24&alert_min_attempts=1&alert_success_rate_threshold=85');
+
+        $excelResponse->assertOk();
+        $this->assertStringContainsString('application/vnd.ms-excel', (string) $excelResponse->headers->get('content-type'));
+        $this->assertStringContainsString('.xls', (string) $excelResponse->headers->get('content-disposition'));
     }
 
     public function test_non_admin_is_forbidden_from_dashboard_metrics(): void
@@ -109,6 +125,10 @@ class AdminDashboardMetricsTest extends TestCase
         Sanctum::actingAs($user);
 
         $this->getJson('/api/v1/admin/dashboard/metrics')
+            ->assertStatus(403)
+            ->assertJsonPath('code', 'FORBIDDEN');
+
+        $this->get('/api/v1/admin/dashboard/metrics/excel')
             ->assertStatus(403)
             ->assertJsonPath('code', 'FORBIDDEN');
     }
