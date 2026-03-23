@@ -15,6 +15,7 @@
         $rateLimitContainer = is_array($rateLimitStats ?? null) ? $rateLimitStats : [];
         $rateLimitRows = is_iterable($rateLimitContainer['rows'] ?? null) ? collect($rateLimitContainer['rows']) : collect();
         $rateLimitTotals = is_iterable($rateLimitContainer['totals'] ?? null) ? collect($rateLimitContainer['totals']) : collect();
+        $rateLimitWindowHours = (int) ($rateLimitWindowHours ?? ($rateLimitContainer['window_hours'] ?? 12));
     @endphp
 
     <div class="grid">
@@ -154,31 +155,58 @@
             <h2>Rate Limit Monitor</h2>
             <p class="muted">{{ $rateLimitContainer['window_label'] ?? 'Window' }}</p>
 
+            <form method="get" action="{{ route('admin.dashboard') }}" class="grid" style="grid-template-columns:140px auto auto; align-items:end; margin:10px 0 12px;">
+                <div>
+                    <label for="rl_hours">Window</label>
+                    <select id="rl_hours" name="rl_hours">
+                        @foreach ([1, 6, 12, 24] as $optHour)
+                            <option value="{{ $optHour }}" @selected($rateLimitWindowHours === $optHour)>{{ $optHour }}h</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <button class="btn" type="submit">Apply</button>
+                </div>
+                <div>
+                    <a class="pill" href="{{ route('admin.dashboard.rate-limit.csv', ['rl_hours' => $rateLimitWindowHours]) }}">Export CSV</a>
+                </div>
+            </form>
+
             <div class="cards" style="margin:10px 0 12px;">
                 @foreach ($rateLimitTotals as $total)
+                    @php
+                        $severity = strtoupper((string) ($total['severity'] ?? 'LOW'));
+                        $tagClass = $severity === 'HIGH' ? 'tag-fail' : ($severity === 'MEDIUM' ? 'tag-warn' : 'tag-pass');
+                    @endphp
                     <div class="card">
                         <div class="k">{{ strtoupper((string) ($total['profile'] ?? '-')) }}</div>
                         <div class="v" style="font-size:20px;">{{ (int) ($total['blocked'] ?? 0) }}/{{ (int) ($total['hits'] ?? 0) }}</div>
                         <div class="muted">Blocked rate {{ (float) ($total['blocked_rate_pct'] ?? 0) }}%</div>
+                        <div style="margin-top:8px;"><span class="tag {{ $tagClass }}">{{ $severity }}</span></div>
                     </div>
                 @endforeach
             </div>
 
             <table>
                 <thead>
-                <tr><th>Profile</th><th>Hour</th><th>Hits</th><th>Blocked</th><th>Blocked Rate</th></tr>
+                <tr><th>Profile</th><th>Hour</th><th>Hits</th><th>Blocked</th><th>Blocked Rate</th><th>Severity</th></tr>
                 </thead>
                 <tbody>
                 @forelse ($rateLimitRows as $row)
+                    @php
+                        $rowSeverity = strtoupper((string) ($row['severity'] ?? 'LOW'));
+                        $rowTagClass = $rowSeverity === 'HIGH' ? 'tag-fail' : ($rowSeverity === 'MEDIUM' ? 'tag-warn' : 'tag-pass');
+                    @endphp
                     <tr>
                         <td>{{ $row['profile'] ?? '-' }}</td>
                         <td>{{ $row['hour'] ?? '-' }}</td>
                         <td>{{ (int) ($row['hits'] ?? 0) }}</td>
                         <td>{{ (int) ($row['blocked'] ?? 0) }}</td>
                         <td>{{ (float) ($row['blocked_rate_pct'] ?? 0) }}%</td>
+                        <td><span class="tag {{ $rowTagClass }}">{{ $rowSeverity }}</span></td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="muted">Belum ada data rate limit.</td></tr>
+                    <tr><td colspan="6" class="muted">Belum ada data rate limit.</td></tr>
                 @endforelse
                 </tbody>
             </table>

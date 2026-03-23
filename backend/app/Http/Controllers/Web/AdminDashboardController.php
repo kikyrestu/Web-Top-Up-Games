@@ -21,6 +21,8 @@ final class AdminDashboardController extends Controller
 
     public function index(Request $request): View
     {
+        $rateLimitWindowHours = $this->resolveRateLimitWindowHours((int) $request->integer('rl_hours', 12));
+
         $overviewResponse = $this->systemOpsController->dashboardOverview();
         $metricsResponse = $this->systemOpsController->dashboardMetrics();
         $alertsResponse = $this->systemOpsController->dashboardAlerts($request);
@@ -55,7 +57,8 @@ final class AdminDashboardController extends Controller
             'housekeepingHistory' => is_array($housekeepingHistoryPayload['data'] ?? null) ? $housekeepingHistoryPayload['data'] : [],
             'readiness' => is_array($readinessPayload['data'] ?? null) ? $readinessPayload['data'] : [],
             'recentOrders' => $recentOrders,
-            'rateLimitStats' => $this->rateLimitStats(),
+            'rateLimitStats' => $this->rateLimitStats($rateLimitWindowHours),
+            'rateLimitWindowHours' => $rateLimitWindowHours,
         ]);
     }
 
@@ -106,14 +109,46 @@ final class AdminDashboardController extends Controller
         return $this->systemOpsController->dashboardMetricsExcel($request);
     }
 
+    public function rateLimitCsv(Request $request): StreamedResponse
+    {
+        $windowHours = $this->resolveRateLimitWindowHours((int) $request->integer('rl_hours', 12));
+        $stats = $this->rateLimitStats($windowHours);
+        $rows = collect(is_iterable($stats['rows'] ?? null) ? $stats['rows'] : []);
+
+        return response()->streamDownload(function () use ($rows): void {
+            $handle = fopen('php://output', 'wb');
+            if ($handle === false) {
+                return;
+            }
+
+            fputcsv($handle, ['profile', 'hour', 'hits', 'blocked', 'blocked_rate_pct', 'severity']);
+
+            foreach ($rows as $row) {
+                fputcsv($handle, [
+                    (string) ($row['profile'] ?? ''),
+                    (string) ($row['hour'] ?? ''),
+                    (int) ($row['hits'] ?? 0),
+                    (int) ($row['blocked'] ?? 0),
+                    (float) ($row['blocked_rate_pct'] ?? 0),
+                    (string) ($row['severity'] ?? 'LOW'),
+                ]);
+            }
+
+            fclose($handle);
+        }, 'rate-limit-monitor.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
-    private function rateLimitStats(): array
+    private function rateLimitStats(int $windowHours = 12): array
     {
         $profiles = GlobalRateLimit::monitoredProfiles();
-        $hours = collect(range(0, 11))
-            ->map(static fn (int $offset) => now()->subHours(11 - $offset))
+        $windowHours = $this->resolveRateLimitWindowHours($windowHours);
+        $hours = collect(range(0, $windowHours - 1))
+            ->map(fn (int $offset) => now()->subHours(($windowHours - 1) - $offset))
             ->values();
 
         $rows = [];
@@ -128,6 +163,7 @@ final class AdminDashboardController extends Controller
                 $hits = (int) Cache::get('rate_limit_metric:'.$profile.':hits:'.$hourKey, 0);
                 $blocked = (int) Cache::get('rate_limit_metric:'.$profile.':blocked:'.$hourKey, 0);
                 $rate = $hits > 0 ? round(($blocked / $hits) * 100, 2) : 0.0;
+                $severity = $this->severityFromRate((float) $rate);
 
                 $rows[] = [
                     'profile' => $profile,
@@ -135,6 +171,7 @@ final class AdminDashboardController extends Controller
                     'hits' => $hits,
                     'blocked' => $blocked,
                     'blocked_rate_pct' => $rate,
+                    'severity' => $severity,
                 ];
 
                 $profileHits += $hits;
@@ -146,13 +183,33 @@ final class AdminDashboardController extends Controller
                 'hits' => $profileHits,
                 'blocked' => $profileBlocked,
                 'blocked_rate_pct' => $profileHits > 0 ? round(($profileBlocked / $profileHits) * 100, 2) : 0.0,
+                'severity' => $this->severityFromRate($profileHits > 0 ? (($profileBlocked / $profileHits) * 100) : 0.0),
             ];
         }
 
         return [
             'rows' => $rows,
             'totals' => $totals,
-            'window_label' => 'Last 12 hours',
+            'window_label' => 'Last '.$windowHours.' hours',
+            'window_hours' => $windowHours,
         ];
+    }
+
+    private function resolveRateLimitWindowHours(int $hours): int
+    {
+        return in_array($hours, [1, 6, 12, 24], true) ? $hours : 12;
+    }
+
+    private function severityFromRate(float $rate): string
+    {
+        if ($rate >= 30.0) {
+            return 'HIGH';
+        }
+
+        if ($rate >= 10.0) {
+            return 'MEDIUM';
+        }
+
+        return 'LOW';
     }
 }
