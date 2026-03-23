@@ -31,17 +31,6 @@ final class PaymentWebhookService
         $amount = (float) Arr::get($payload, 'amount', 0);
         $method = Arr::get($payload, 'method');
 
-        $verified = $this->verify($gateway, $payload, $headers);
-
-        if (!$verified) {
-            return [
-                'verified' => false,
-                'duplicate' => false,
-                'processed' => false,
-                'code' => 'WEBHOOK_INVALID_SIGNATURE',
-            ];
-        }
-
         if ($eventKey !== '') {
             $existingEvent = PaymentWebhook::query()
                 ->where('gateway', $gateway)
@@ -56,6 +45,17 @@ final class PaymentWebhookService
                     'code' => 'WEBHOOK_DUPLICATE_EVENT',
                 ];
             }
+        }
+
+        $verification = $this->verify($gateway, $payload, $headers);
+
+        if (!(bool) ($verification['verified'] ?? false)) {
+            return [
+                'verified' => false,
+                'duplicate' => false,
+                'processed' => false,
+                'code' => (string) ($verification['code'] ?? 'WEBHOOK_INVALID_SIGNATURE'),
+            ];
         }
 
         if ($orderCode === '' || $gatewayReference === '') {
@@ -151,29 +151,61 @@ final class PaymentWebhookService
         ];
     }
 
-    private function verify(string $gateway, array $payload, array $headers): bool
+    /**
+     * @return array{verified: bool, code: string}
+     */
+    private function verify(string $gateway, array $payload, array $headers): array
     {
         $providedSignature = $this->extractSignature($headers);
+        $timestamp = $this->extractTimestamp($headers);
 
         if ($providedSignature === null || $providedSignature === '') {
-            return false;
+            return [
+                'verified' => false,
+                'code' => 'WEBHOOK_INVALID_SIGNATURE',
+            ];
+        }
+
+        if ($timestamp === null) {
+            return [
+                'verified' => false,
+                'code' => 'WEBHOOK_MISSING_TIMESTAMP',
+            ];
+        }
+
+        if (!$this->isWithinReplayWindow($timestamp)) {
+            return [
+                'verified' => false,
+                'code' => 'WEBHOOK_EXPIRED_TIMESTAMP',
+            ];
         }
 
         $secret = (string) config('services.payment_gateways.'.$gateway.'.webhook_secret', '');
 
         if ($secret === '') {
-            return false;
+            return [
+                'verified' => false,
+                'code' => 'WEBHOOK_INVALID_SIGNATURE',
+            ];
         }
 
         $raw = json_encode($payload, JSON_UNESCAPED_SLASHES);
 
         if (!is_string($raw)) {
-            return false;
+            return [
+                'verified' => false,
+                'code' => 'WEBHOOK_INVALID_SIGNATURE',
+            ];
         }
 
-        $expected = hash_hmac('sha256', $raw, $secret);
+        $expected = hash_hmac('sha256', $timestamp.'.'.$raw, $secret);
 
-        return hash_equals($expected, $providedSignature);
+        return [
+            'verified' => hash_equals($expected, $providedSignature),
+            'code' => hash_equals($expected, $providedSignature)
+                ? 'WEBHOOK_SIGNATURE_VERIFIED'
+                : 'WEBHOOK_INVALID_SIGNATURE',
+        ];
     }
 
     private function extractSignature(array $headers): ?string
@@ -189,6 +221,41 @@ final class PaymentWebhookService
         }
 
         return null;
+    }
+
+    private function extractTimestamp(array $headers): ?int
+    {
+        foreach ($headers as $key => $value) {
+            if (!is_string($key)) {
+                continue;
+            }
+
+            if (Str::lower($key) !== 'x-timestamp') {
+                continue;
+            }
+
+            $stringValue = is_string($value) ? trim($value) : '';
+            if ($stringValue === '') {
+                return null;
+            }
+
+            if (ctype_digit($stringValue)) {
+                return (int) $stringValue;
+            }
+
+            $parsed = strtotime($stringValue);
+
+            return $parsed === false ? null : $parsed;
+        }
+
+        return null;
+    }
+
+    private function isWithinReplayWindow(int $timestamp): bool
+    {
+        $allowedDriftSeconds = max(30, (int) config('services.payment_webhook.allowed_drift_seconds', 300));
+
+        return abs(now()->timestamp - $timestamp) <= $allowedDriftSeconds;
     }
 
     private function mapPaymentStatus(string $status): string

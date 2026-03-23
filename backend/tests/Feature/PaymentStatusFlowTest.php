@@ -25,6 +25,10 @@ class PaymentStatusFlowTest extends TestCase
             'amount' => 31500,
             'status' => 'PAID',
             'paid_at' => now(),
+            'expired_at' => now()->addMinutes(15),
+            'meta' => [
+                'pay_url' => 'https://pay.example/mid-status-001',
+            ],
         ]);
 
         $response = $this->getJson('/api/v1/payments/MID-STATUS-001/status');
@@ -34,7 +38,10 @@ class PaymentStatusFlowTest extends TestCase
             ->assertJsonPath('code', 'PAYMENT_STATUS_FOUND')
             ->assertJsonPath('data.gateway_reference', 'MID-STATUS-001')
             ->assertJsonPath('data.status', 'PAID')
+            ->assertJsonPath('data.pay_url', 'https://pay.example/mid-status-001')
             ->assertJsonPath('data.order.order_code', $order->order_code);
+
+        $this->assertNotNull($response->json('data.expired_at'));
     }
 
     private function createOrder(): Order

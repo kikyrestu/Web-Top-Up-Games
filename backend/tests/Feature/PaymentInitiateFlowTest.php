@@ -28,6 +28,11 @@ class PaymentInitiateFlowTest extends TestCase
             ->assertJsonPath('data.order_code', $order->order_code)
             ->assertJsonPath('data.gateway', 'MIDTRANS')
             ->assertJsonPath('data.status', 'UNPAID');
+
+        $payUrl = (string) $response->json('data.pay_url');
+        $this->assertStringEndsWith('/pay/midtrans/'.$response->json('data.gateway_reference'), $payUrl);
+
+        $this->assertNotNull($response->json('data.expired_at'));
     }
 
     private function createOrder(): Order

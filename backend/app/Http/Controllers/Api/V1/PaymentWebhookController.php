@@ -27,7 +27,11 @@ final class PaymentWebhookController extends Controller
 
         $result = $this->paymentWebhookService->handle($payload, $headers);
 
-        $isSuccess = (bool) ($result['verified'] ?? false) && (bool) ($result['processed'] ?? false || $result['duplicate'] ?? false);
+        $verified = (bool) ($result['verified'] ?? false);
+        $processed = (bool) ($result['processed'] ?? false);
+        $duplicate = (bool) ($result['duplicate'] ?? false);
+
+        $isSuccess = $verified && ($processed || $duplicate);
 
         return response()->json([
             'success' => $isSuccess,
@@ -36,9 +40,9 @@ final class PaymentWebhookController extends Controller
                 ? 'Webhook accepted'
                 : 'Webhook rejected',
             'data' => [
-                'verified' => (bool) ($result['verified'] ?? false),
-                'duplicate' => (bool) ($result['duplicate'] ?? false),
-                'processed' => (bool) ($result['processed'] ?? false),
+                'verified' => $verified,
+                'duplicate' => $duplicate,
+                'processed' => $processed,
             ],
         ], $isSuccess ? 200 : 422);
     }

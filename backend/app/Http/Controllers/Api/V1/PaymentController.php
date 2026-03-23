@@ -55,6 +55,8 @@ final class PaymentController extends Controller
                 'status' => $payment->status,
                 'amount' => (float) $payment->amount,
                 'method' => $payment->method,
+                'pay_url' => is_array($payment->meta) ? ($payment->meta['pay_url'] ?? null) : null,
+                'expired_at' => $payment->expired_at,
             ],
         ]);
     }
@@ -85,11 +87,13 @@ final class PaymentController extends Controller
                 'status' => $payment->status,
                 'amount' => (float) $payment->amount,
                 'method' => $payment->method,
+                'pay_url' => is_array($payment->meta) ? ($payment->meta['pay_url'] ?? null) : null,
                 'order' => [
                     'order_code' => $payment->order?->order_code,
                     'status' => $payment->order?->status,
                 ],
                 'paid_at' => $payment->paid_at,
+                'expired_at' => $payment->expired_at,
             ],
         ]);
     }

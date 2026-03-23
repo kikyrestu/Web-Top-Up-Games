@@ -16,6 +16,7 @@ class PaymentWebhookFlowTest extends TestCase
     public function test_payment_webhook_updates_payment_and_order_status(): void
     {
         config()->set('services.payment_gateways.MIDTRANS.webhook_secret', 'test-secret-midtrans');
+        config()->set('services.payment_webhook.allowed_drift_seconds', 300);
 
         $order = $this->createOrder();
 
@@ -28,11 +29,14 @@ class PaymentWebhookFlowTest extends TestCase
             'method' => 'qris',
         ];
 
-        $signature = hash_hmac('sha256', json_encode(array_merge($payload, ['gateway' => 'MIDTRANS']), JSON_UNESCAPED_SLASHES), 'test-secret-midtrans');
+        $timestamp = (string) now()->timestamp;
+        $rawPayload = json_encode(array_merge($payload, ['gateway' => 'MIDTRANS']), JSON_UNESCAPED_SLASHES);
+        $signature = hash_hmac('sha256', $timestamp.'.'.$rawPayload, 'test-secret-midtrans');
 
-        $response = $this
-            ->withHeader('x-signature', $signature)
-            ->postJson('/api/v1/payments/webhook/midtrans', $payload);
+        $response = $this->postJson('/api/v1/payments/webhook/midtrans', $payload, [
+            'x-signature' => $signature,
+            'x-timestamp' => $timestamp,
+        ]);
 
         $response
             ->assertOk()
@@ -52,6 +56,7 @@ class PaymentWebhookFlowTest extends TestCase
     public function test_duplicate_webhook_event_key_is_deduplicated(): void
     {
         config()->set('services.payment_gateways.DUITKU.webhook_secret', 'test-secret-duitku');
+        config()->set('services.payment_webhook.allowed_drift_seconds', 300);
 
         $order = $this->createOrder();
 
@@ -65,20 +70,58 @@ class PaymentWebhookFlowTest extends TestCase
         ];
 
         $fullPayload = array_merge($payload, ['gateway' => 'DUITKU']);
-        $signature = hash_hmac('sha256', json_encode($fullPayload, JSON_UNESCAPED_SLASHES), 'test-secret-duitku');
+        $timestamp = (string) now()->timestamp;
+        $signature = hash_hmac('sha256', $timestamp.'.'.json_encode($fullPayload, JSON_UNESCAPED_SLASHES), 'test-secret-duitku');
 
-        $this
-            ->withHeader('x-signature', $signature)
-            ->postJson('/api/v1/payments/webhook/duitku', $payload)
+        $this->postJson('/api/v1/payments/webhook/duitku', $payload, [
+            'x-signature' => $signature,
+            'x-timestamp' => $timestamp,
+        ])
             ->assertOk()
             ->assertJsonPath('code', 'WEBHOOK_PROCESSED');
 
-        $this
-            ->withHeader('x-signature', $signature)
-            ->postJson('/api/v1/payments/webhook/duitku', $payload)
-            ->assertOk()
+        $timestamp2 = (string) now()->timestamp;
+        $signature2 = hash_hmac('sha256', $timestamp2.'.'.json_encode($fullPayload, JSON_UNESCAPED_SLASHES), 'test-secret-duitku');
+
+        $response = $this->postJson('/api/v1/payments/webhook/duitku', $payload, [
+            'x-signature' => $signature2,
+            'x-timestamp' => $timestamp2,
+        ]);
+
+        $response
             ->assertJsonPath('code', 'WEBHOOK_DUPLICATE_EVENT')
-            ->assertJsonPath('data.duplicate', true);
+            ->assertJsonPath('data.duplicate', true)
+            ->assertOk();
+    }
+
+    public function test_webhook_rejects_expired_timestamp_to_prevent_replay(): void
+    {
+        config()->set('services.payment_gateways.MIDTRANS.webhook_secret', 'test-secret-midtrans');
+        config()->set('services.payment_webhook.allowed_drift_seconds', 60);
+
+        $order = $this->createOrder();
+
+        $payload = [
+            'event_key' => 'evt-midtrans-replay-001',
+            'order_code' => $order->order_code,
+            'gateway_reference' => 'MID-REF-REPLAY-1',
+            'status' => 'PAID',
+            'amount' => 31500,
+            'method' => 'qris',
+        ];
+
+        $timestamp = (string) now()->subMinutes(10)->timestamp;
+        $rawPayload = json_encode(array_merge($payload, ['gateway' => 'MIDTRANS']), JSON_UNESCAPED_SLASHES);
+        $signature = hash_hmac('sha256', $timestamp.'.'.$rawPayload, 'test-secret-midtrans');
+
+        $this->postJson('/api/v1/payments/webhook/midtrans', $payload, [
+            'x-signature' => $signature,
+            'x-timestamp' => $timestamp,
+        ])
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'WEBHOOK_EXPIRED_TIMESTAMP')
+            ->assertJsonPath('data.verified', false)
+            ->assertJsonPath('data.processed', false);
     }
 
     private function createOrder(): Order

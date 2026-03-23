@@ -62,14 +62,30 @@ return [
 
     'payment_gateways' => [
         'KLIKQRISS' => [
+            'base_url' => env('KLIKQRISS_BASE_URL'),
+            'api_key' => env('KLIKQRISS_API_KEY'),
+            'invoice_path' => env('KLIKQRISS_INVOICE_PATH', '/invoice'),
+            'expiry_minutes' => env('KLIKQRISS_EXPIRY_MINUTES', 15),
             'webhook_secret' => env('KLIKQRISS_WEBHOOK_SECRET'),
         ],
         'MIDTRANS' => [
+            'base_url' => env('MIDTRANS_BASE_URL'),
+            'api_key' => env('MIDTRANS_API_KEY'),
+            'invoice_path' => env('MIDTRANS_INVOICE_PATH', '/invoice'),
+            'expiry_minutes' => env('MIDTRANS_EXPIRY_MINUTES', 15),
             'webhook_secret' => env('MIDTRANS_WEBHOOK_SECRET'),
         ],
         'DUITKU' => [
+            'base_url' => env('DUITKU_BASE_URL'),
+            'api_key' => env('DUITKU_API_KEY'),
+            'invoice_path' => env('DUITKU_INVOICE_PATH', '/invoice'),
+            'expiry_minutes' => env('DUITKU_EXPIRY_MINUTES', 15),
             'webhook_secret' => env('DUITKU_WEBHOOK_SECRET'),
         ],
+    ],
+
+    'payment_webhook' => [
+        'allowed_drift_seconds' => env('PAYMENT_WEBHOOK_ALLOWED_DRIFT_SECONDS', 300),
     ],
 
 ];
