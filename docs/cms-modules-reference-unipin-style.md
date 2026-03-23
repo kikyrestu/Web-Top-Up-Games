@@ -73,8 +73,8 @@ Status:
 1. Banner dan homepage management: PARTIAL
    - Banner CMS sudah ada, tapi page-composer homepage belum ada.
 
-2. Katalog game/PPOB: TODO
-   - Belum ada panel admin untuk CRUD category/product/provider.
+2. Katalog game/PPOB: DONE
+   - Panel admin untuk CRUD category/product/provider sudah tersedia.
 
 3. Paket nominal/top-up item management: TODO
    - Belum ada panel admin untuk manage denominasi/item per produk.
@@ -124,7 +124,7 @@ Aturan eksekusi:
 
 ### Phase 1 - Core Commerce Admin
 
-- [ ] Katalog game/PPOB admin (category/product/provider CRUD).
+- [x] Katalog game/PPOB admin (category/product/provider CRUD).
 - [ ] Paket nominal/top-up item admin.
 - [ ] Payment management panel (gateway, metode, fee, routing).
 - [ ] Pricing rule editor (margin, admin fee, fallback rule).
@@ -152,3 +152,12 @@ Gunakan format ini setiap selesai 1 item agar tracking konsisten:
 - Scope: <fitur yang selesai>
 - Bukti: <route/controller/view/migration>
 - Catatan: <risk/next dependency>
+
+Update terbaru:
+
+- Item: Katalog game/PPOB admin (category/product/provider CRUD)
+- Phase: 1
+- Status: DONE
+- Scope: CRUD kategori, produk, provider + filtering + active toggle + proteksi hapus relasi
+- Bukti: route admin.catalog.* + AdminCatalogController + view admin/catalog/* + sidebar admin
+- Catatan: berikutnya lanjut item nominal panel agar pricing input dapat dikelola dari admin

@@ -430,6 +430,27 @@
             color: #dce8ff;
         }
 
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #2f4a74;
+            border-radius: 999px;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #dce8ff;
+            font-size: 12px;
+            font-weight: 800;
+            background: #102543;
+            font-family: 'Manrope', sans-serif;
+            cursor: pointer;
+        }
+
+        .pill:hover {
+            border-color: #4f73ab;
+            background: #17325a;
+        }
+
         input, select {
             width: 100%;
             border: 1px solid var(--line);
@@ -614,6 +635,9 @@
                     <p class="admin-sidebar-sub">Navigasi cepat operasional</p>
                     <a class="admin-nav-link {{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.dashboard.alerts') ? 'is-active' : '' }}" href="{{ route('admin.dashboard.alerts') }}">Alerts</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.catalog.categories.*') ? 'is-active' : '' }}" href="{{ route('admin.catalog.categories.index') }}">Catalog Categories</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.catalog.products.*') ? 'is-active' : '' }}" href="{{ route('admin.catalog.products.index') }}">Catalog Products</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.catalog.providers.*') ? 'is-active' : '' }}" href="{{ route('admin.catalog.providers.index') }}">Catalog Providers</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.orders.*') ? 'is-active' : '' }}" href="{{ route('admin.orders.index') }}">Orders</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.reviews.*') ? 'is-active' : '' }}" href="{{ route('admin.reviews.index') }}">Reviews</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.audit-logs.*') ? 'is-active' : '' }}" href="{{ route('admin.audit-logs.index') }}">Audit Logs</a>

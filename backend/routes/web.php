@@ -3,6 +3,7 @@
 use App\Http\Controllers\Web\AdminAuthController;
 use App\Http\Controllers\Web\AdminCmsController;
 use App\Http\Controllers\Web\AdminAuditLogController;
+use App\Http\Controllers\Web\AdminCatalogController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminOrderController;
 use App\Http\Controllers\Web\AdminReviewModerationController;
@@ -81,6 +82,27 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/cms/banners/{banner}/edit', [AdminCmsController::class, 'bannersEdit'])->name('cms.banners.edit');
         Route::put('/cms/banners/{banner}', [AdminCmsController::class, 'bannersUpdate'])->name('cms.banners.update');
         Route::delete('/cms/banners/{banner}', [AdminCmsController::class, 'bannersDestroy'])->name('cms.banners.destroy');
+
+        Route::get('/catalog/categories', [AdminCatalogController::class, 'categoriesIndex'])->name('catalog.categories.index');
+        Route::get('/catalog/categories/create', [AdminCatalogController::class, 'categoriesCreate'])->name('catalog.categories.create');
+        Route::post('/catalog/categories', [AdminCatalogController::class, 'categoriesStore'])->name('catalog.categories.store');
+        Route::get('/catalog/categories/{category}/edit', [AdminCatalogController::class, 'categoriesEdit'])->name('catalog.categories.edit');
+        Route::put('/catalog/categories/{category}', [AdminCatalogController::class, 'categoriesUpdate'])->name('catalog.categories.update');
+        Route::delete('/catalog/categories/{category}', [AdminCatalogController::class, 'categoriesDestroy'])->name('catalog.categories.destroy');
+
+        Route::get('/catalog/products', [AdminCatalogController::class, 'productsIndex'])->name('catalog.products.index');
+        Route::get('/catalog/products/create', [AdminCatalogController::class, 'productsCreate'])->name('catalog.products.create');
+        Route::post('/catalog/products', [AdminCatalogController::class, 'productsStore'])->name('catalog.products.store');
+        Route::get('/catalog/products/{product}/edit', [AdminCatalogController::class, 'productsEdit'])->name('catalog.products.edit');
+        Route::put('/catalog/products/{product}', [AdminCatalogController::class, 'productsUpdate'])->name('catalog.products.update');
+        Route::delete('/catalog/products/{product}', [AdminCatalogController::class, 'productsDestroy'])->name('catalog.products.destroy');
+
+        Route::get('/catalog/providers', [AdminCatalogController::class, 'providersIndex'])->name('catalog.providers.index');
+        Route::get('/catalog/providers/create', [AdminCatalogController::class, 'providersCreate'])->name('catalog.providers.create');
+        Route::post('/catalog/providers', [AdminCatalogController::class, 'providersStore'])->name('catalog.providers.store');
+        Route::get('/catalog/providers/{provider}/edit', [AdminCatalogController::class, 'providersEdit'])->name('catalog.providers.edit');
+        Route::put('/catalog/providers/{provider}', [AdminCatalogController::class, 'providersUpdate'])->name('catalog.providers.update');
+        Route::delete('/catalog/providers/{provider}', [AdminCatalogController::class, 'providersDestroy'])->name('catalog.providers.destroy');
 
         Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('/audit-logs/export/csv', [AdminAuditLogController::class, 'exportCsv'])->name('audit-logs.export.csv');
