@@ -70,8 +70,8 @@ Status:
 - PARTIAL: Sudah ada fondasi, perlu dilengkapi.
 - TODO: Belum tersedia.
 
-1. Banner dan homepage management: PARTIAL
-   - Banner CMS sudah ada, tapi page-composer homepage belum ada.
+1. Banner dan homepage management: DONE
+   - Banner CMS dan homepage composer block-based sudah tersedia.
 
 2. Katalog game/PPOB: DONE
    - Panel admin untuk CRUD category/product/provider sudah tersedia.
@@ -140,7 +140,7 @@ Aturan eksekusi:
 
 - [x] Permission matrix granular (menu/action scope per role).
 - [x] Dashboard analytics bisnis (funnel, cohort, conversion deep-dive).
-- [ ] Homepage composer CMS (manage blok konten storefront dari admin).
+- [x] Homepage composer CMS (manage blok konten storefront dari admin).
 
 ## Progress Tracker
 
@@ -224,3 +224,10 @@ Update terbaru:
 - Scope: dashboard analytics lanjutan mencakup funnel checkout-to-success, trend harian, cohort retention 30D, conversion deep-dive gateway dan produk
 - Bukti: route admin.analytics.index + AdminAnalyticsController + view admin/analytics/index + permission key analytics.view + sidebar analytics
 - Catatan: window analytics mendukung 7/14/30/60/90 hari untuk analisis cepat operasional dan growth
+
+- Item: Homepage composer CMS
+- Phase: 3
+- Status: DONE
+- Scope: CRUD homepage block composer untuk hero/benefit/promo/support/footer + rendering dinamis storefront dengan fallback konten default
+- Bukti: migration cms_homepage_blocks + model CmsHomepageBlock + route admin.cms.homepage-blocks.* + AdminCmsController homepageBlocks* + view admin/cms/homepage-blocks/* + integrasi StorefrontController/index
+- Catatan: block aktif mengikuti window start/end dan urutan sort_order

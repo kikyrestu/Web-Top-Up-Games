@@ -653,6 +653,7 @@
                     <a class="admin-nav-link {{ request()->routeIs('admin.security-events.*') ? 'is-active' : '' }}" href="{{ route('admin.security-events.index') }}">Security Events</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.cms.pages.*') ? 'is-active' : '' }}" href="{{ route('admin.cms.pages.index') }}">CMS Pages</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.cms.banners.*') ? 'is-active' : '' }}" href="{{ route('admin.cms.banners.index') }}">CMS Banners</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.cms.homepage-blocks.*') ? 'is-active' : '' }}" href="{{ route('admin.cms.homepage-blocks.index') }}">Homepage Composer</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.seo.*') ? 'is-active' : '' }}" href="{{ route('admin.seo.index') }}">SEO</a>
                 </aside>
 

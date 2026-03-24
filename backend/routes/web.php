@@ -98,6 +98,13 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::put('/cms/banners/{banner}', [AdminCmsController::class, 'bannersUpdate'])->name('cms.banners.update');
         Route::delete('/cms/banners/{banner}', [AdminCmsController::class, 'bannersDestroy'])->name('cms.banners.destroy');
 
+        Route::get('/cms/homepage-blocks', [AdminCmsController::class, 'homepageBlocksIndex'])->name('cms.homepage-blocks.index');
+        Route::get('/cms/homepage-blocks/create', [AdminCmsController::class, 'homepageBlocksCreate'])->name('cms.homepage-blocks.create');
+        Route::post('/cms/homepage-blocks', [AdminCmsController::class, 'homepageBlocksStore'])->name('cms.homepage-blocks.store');
+        Route::get('/cms/homepage-blocks/{block}/edit', [AdminCmsController::class, 'homepageBlocksEdit'])->name('cms.homepage-blocks.edit');
+        Route::put('/cms/homepage-blocks/{block}', [AdminCmsController::class, 'homepageBlocksUpdate'])->name('cms.homepage-blocks.update');
+        Route::delete('/cms/homepage-blocks/{block}', [AdminCmsController::class, 'homepageBlocksDestroy'])->name('cms.homepage-blocks.destroy');
+
         Route::get('/catalog/categories', [AdminCatalogController::class, 'categoriesIndex'])->name('catalog.categories.index');
         Route::get('/catalog/categories/create', [AdminCatalogController::class, 'categoriesCreate'])->name('catalog.categories.create');
         Route::post('/catalog/categories', [AdminCatalogController::class, 'categoriesStore'])->name('catalog.categories.store');

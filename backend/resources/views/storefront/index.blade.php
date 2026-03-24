@@ -3,7 +3,15 @@
         $allProducts = $productsByCategory->flatten(1)->values();
         $popularProducts = $allProducts->take(10);
         $sectionProducts = $productsByCategory->take(6);
-        $promoItems = [
+        $composerBlocks = is_iterable($homepageBlocks ?? null) ? collect($homepageBlocks) : collect();
+
+        $heroSlides = $composerBlocks->where('block_type', 'HERO_SLIDE')->values();
+        $benefitItems = $composerBlocks->where('block_type', 'BENEFIT_ITEM')->values();
+        $promoBlocks = $composerBlocks->where('block_type', 'PROMO_CARD')->values();
+        $supportBlocks = $composerBlocks->where('block_type', 'SUPPORT_CHANNEL')->values();
+        $footerColumns = $composerBlocks->where('block_type', 'FOOTER_COLUMN')->values();
+
+        $defaultPromoItems = [
             ['title' => 'Ramadan Mega Deal', 'desc' => 'Cashback hingga 10%', 'class' => 'promo-1'],
             ['title' => 'Bundle Hemat', 'desc' => 'Diskon top up pilihan', 'class' => 'promo-2'],
             ['title' => 'Mystic Event', 'desc' => 'Promo malam ini', 'class' => 'promo-3'],
@@ -11,6 +19,67 @@
             ['title' => 'Voucher Blast', 'desc' => 'Voucher digital all-in', 'class' => 'promo-5'],
             ['title' => 'Top Up Sprint', 'desc' => 'Jalur tercepat hari ini', 'class' => 'promo-6'],
         ];
+
+        $promoItems = $promoBlocks->isNotEmpty()
+            ? $promoBlocks->values()->map(static function ($block, $index): array {
+                $payload = is_array($block->payload ?? null) ? $block->payload : [];
+                $fallbackClasses = ['promo-1', 'promo-2', 'promo-3', 'promo-4', 'promo-5', 'promo-6'];
+
+                return [
+                    'title' => (string) ($block->title ?: 'Promo Item'),
+                    'desc' => (string) ($block->subtitle ?: $block->body ?: 'Promo aktif tersedia'),
+                    'class' => (string) ($payload['class'] ?? $fallbackClasses[$index % count($fallbackClasses)]),
+                    'target_url' => (string) ($block->target_url ?? ''),
+                ];
+            })->all()
+            : $defaultPromoItems;
+
+        $defaultFooterColumns = [
+            [
+                'title' => 'TopUp Atlas',
+                'paragraph' => 'Marketplace top up game dan PPOB dengan jalur pembayaran aman dan cepat.',
+                'links' => [],
+            ],
+            [
+                'title' => 'Produk dan Layanan',
+                'paragraph' => null,
+                'links' => ['Game', 'Voucher', 'PPOB', 'Promo'],
+            ],
+            [
+                'title' => 'Informasi',
+                'paragraph' => null,
+                'links' => ['FAQ', 'Panduan', 'Syarat dan Ketentuan', 'Kebijakan Privasi'],
+            ],
+            [
+                'title' => 'Korporat dan Kemitraan',
+                'paragraph' => null,
+                'links' => ['Tentang Kami', 'Program Kemitraan', 'Karier', 'Kontak Bisnis'],
+            ],
+        ];
+
+        $footerData = $footerColumns->isNotEmpty()
+            ? $footerColumns->map(static function ($block): array {
+                $payload = is_array($block->payload ?? null) ? $block->payload : [];
+                $links = collect($payload['links'] ?? [])
+                    ->filter(static fn ($item): bool => is_string($item) && trim($item) !== '')
+                    ->values()
+                    ->all();
+
+                if (empty($links) && !empty($block->body)) {
+                    $links = collect(explode("\n", (string) $block->body))
+                        ->map(static fn (string $item): string => trim($item))
+                        ->filter(static fn (string $item): bool => $item !== '')
+                        ->values()
+                        ->all();
+                }
+
+                return [
+                    'title' => (string) ($block->title ?: 'Info'),
+                    'paragraph' => empty($links) ? (string) ($block->subtitle ?: $block->body ?: '') : (string) ($block->subtitle ?: ''),
+                    'links' => $links,
+                ];
+            })->all()
+            : $defaultFooterColumns;
     @endphp
 
     <style>
@@ -600,26 +669,43 @@
     <div class="uni-wrap">
         <section class="hero-banner">
             <div class="hero-track" id="hero-track">
-                <article class="hero-slide h1">
-                    <h1>Ramadan Taktis 2026: Top Up Anti Ribet</h1>
-                    <p>Pengalaman top up cepat dengan tampilan marketplace gelap seperti platform favorit kamu.</p>
-                    <a href="#quick-checkout">Baca Selengkapnya</a>
-                </article>
-                <article class="hero-slide h2">
-                    <h1>Game Populer dan PPOB Lengkap</h1>
-                    <p>Semua kategori digital ada dalam satu alur transaksi yang sederhana.</p>
-                    <a href="#catalog">Lihat Kategori</a>
-                </article>
-                <article class="hero-slide h3">
-                    <h1>Promo Dan Acara Mingguan</h1>
-                    <p>Voucher cashback dan bonus event untuk top up harianmu.</p>
-                    <a href="{{ route('public.promo') }}">Lihat Promo</a>
-                </article>
+                @if ($heroSlides->isNotEmpty())
+                    @foreach ($heroSlides as $index => $slide)
+                        @php
+                            $heroClass = ['h1', 'h2', 'h3'][$index % 3];
+                            $slideUrl = trim((string) ($slide->target_url ?: '#quick-checkout'));
+                        @endphp
+                        <article class="hero-slide {{ $heroClass }}">
+                            <h1>{{ $slide->title ?: 'Top Up Anti Ribet' }}</h1>
+                            <p>{{ $slide->subtitle ?: $slide->body ?: 'Kelola konten hero dari Homepage Composer.' }}</p>
+                            <a href="{{ $slideUrl }}">Baca Selengkapnya</a>
+                        </article>
+                    @endforeach
+                @else
+                    <article class="hero-slide h1">
+                        <h1>Ramadan Taktis 2026: Top Up Anti Ribet</h1>
+                        <p>Pengalaman top up cepat dengan tampilan marketplace gelap seperti platform favorit kamu.</p>
+                        <a href="#quick-checkout">Baca Selengkapnya</a>
+                    </article>
+                    <article class="hero-slide h2">
+                        <h1>Game Populer dan PPOB Lengkap</h1>
+                        <p>Semua kategori digital ada dalam satu alur transaksi yang sederhana.</p>
+                        <a href="#catalog">Lihat Kategori</a>
+                    </article>
+                    <article class="hero-slide h3">
+                        <h1>Promo Dan Acara Mingguan</h1>
+                        <p>Voucher cashback dan bonus event untuk top up harianmu.</p>
+                        <a href="{{ route('public.promo') }}">Lihat Promo</a>
+                    </article>
+                @endif
             </div>
             <div class="hero-dots">
-                <button class="hero-dot is-active" type="button" data-slide="0"></button>
-                <button class="hero-dot" type="button" data-slide="1"></button>
-                <button class="hero-dot" type="button" data-slide="2"></button>
+                @php
+                    $dotCount = max(1, $heroSlides->isNotEmpty() ? $heroSlides->count() : 3);
+                @endphp
+                @for ($dotIndex = 0; $dotIndex < $dotCount; $dotIndex++)
+                    <button class="hero-dot {{ $dotIndex === 0 ? 'is-active' : '' }}" type="button" data-slide="{{ $dotIndex }}"></button>
+                @endfor
             </div>
         </section>
 
@@ -652,9 +738,18 @@
         </section>
 
         <section class="benefit-row">
-            <article class="benefit"><strong>Isi ulang instan</strong><span>Akses cepat untuk semua game dan produk digital.</span></article>
-            <article class="benefit"><strong>Dapatkan hadiah besar</strong><span>Promo cashback dan bonus untuk pengguna aktif.</span></article>
-            <article class="benefit"><strong>Terpercaya</strong><span>Jalur pembayaran aman dengan monitoring transaksi.</span></article>
+            @if ($benefitItems->isNotEmpty())
+                @foreach ($benefitItems as $benefit)
+                    <article class="benefit">
+                        <strong>{{ $benefit->title ?: 'Benefit' }}</strong>
+                        <span>{{ $benefit->subtitle ?: $benefit->body ?: 'Tambahkan benefit dari Homepage Composer.' }}</span>
+                    </article>
+                @endforeach
+            @else
+                <article class="benefit"><strong>Isi ulang instan</strong><span>Akses cepat untuk semua game dan produk digital.</span></article>
+                <article class="benefit"><strong>Dapatkan hadiah besar</strong><span>Promo cashback dan bonus untuk pengguna aktif.</span></article>
+                <article class="benefit"><strong>Terpercaya</strong><span>Jalur pembayaran aman dengan monitoring transaksi.</span></article>
+            @endif
         </section>
 
         @foreach ($sectionProducts as $categoryName => $products)
@@ -695,10 +790,13 @@
             <div class="section-head"><h3>Promo dan Acara</h3><a href="{{ route('public.promo') }}">Lainnya</a></div>
             <div class="promo-grid">
                 @foreach ($promoItems as $promo)
-                    <article class="promo-card {{ $promo['class'] }}">
+                    @php
+                        $targetUrl = trim((string) ($promo['target_url'] ?? route('public.promo')));
+                    @endphp
+                    <a href="{{ $targetUrl === '' ? route('public.promo') : $targetUrl }}" class="promo-card {{ $promo['class'] }}" style="text-decoration:none;">
                         <strong>{{ $promo['title'] }}</strong>
                         <span>{{ $promo['desc'] }}</span>
-                    </article>
+                    </a>
                 @endforeach
             </div>
         </section>
@@ -791,11 +889,17 @@
         <section class="support-box">
             <div class="section-head"><h3>Dukungan Pelanggan</h3></div>
             <div class="support-grid">
-                <div class="support-item">Messenger</div>
-                <div class="support-item">WhatsApp</div>
-                <div class="support-item">Email</div>
-                <div class="support-item">FAQ</div>
-                <div class="support-item">Laporan Balik</div>
+                @if ($supportBlocks->isNotEmpty())
+                    @foreach ($supportBlocks as $support)
+                        <div class="support-item">{{ $support->title ?: $support->subtitle ?: 'Support' }}</div>
+                    @endforeach
+                @else
+                    <div class="support-item">Messenger</div>
+                    <div class="support-item">WhatsApp</div>
+                    <div class="support-item">Email</div>
+                    <div class="support-item">FAQ</div>
+                    <div class="support-item">Laporan Balik</div>
+                @endif
             </div>
         </section>
 
@@ -818,37 +922,20 @@
 
         <section class="footer-box">
             <div class="footer-grid">
-                <div>
-                    <h4>TopUp Atlas</h4>
-                    <p>Marketplace top up game dan PPOB dengan jalur pembayaran aman dan cepat.</p>
-                </div>
-                <div>
-                    <h4>Produk dan Layanan</h4>
-                    <ul>
-                        <li>Game</li>
-                        <li>Voucher</li>
-                        <li>PPOB</li>
-                        <li>Promo</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4>Informasi</h4>
-                    <ul>
-                        <li>FAQ</li>
-                        <li>Panduan</li>
-                        <li>Syarat dan Ketentuan</li>
-                        <li>Kebijakan Privasi</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4>Korporat dan Kemitraan</h4>
-                    <ul>
-                        <li>Tentang Kami</li>
-                        <li>Program Kemitraan</li>
-                        <li>Karier</li>
-                        <li>Kontak Bisnis</li>
-                    </ul>
-                </div>
+                @foreach ($footerData as $column)
+                    <div>
+                        <h4>{{ $column['title'] ?? 'Info' }}</h4>
+                        @if (!empty($column['links']))
+                            <ul>
+                                @foreach ($column['links'] as $link)
+                                    <li>{{ $link }}</li>
+                                @endforeach
+                            </ul>
+                        @elseif (!empty($column['paragraph']))
+                            <p>{{ $column['paragraph'] }}</p>
+                        @endif
+                    </div>
+                @endforeach
             </div>
             <div class="legal">© 2026 TopUp Atlas. All Rights Reserved.</div>
         </section>

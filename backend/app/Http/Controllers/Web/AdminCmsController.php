@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web;
 use App\Domain\Upload\Services\AdminImageUploadService;
 use App\Http\Controllers\Controller;
 use App\Models\CmsBanner;
+use App\Models\CmsHomepageBlock;
 use App\Models\CmsPage;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -158,6 +159,80 @@ final class AdminCmsController extends Controller
         return redirect()->route('admin.cms.banners.index')->with('notice', 'Banner berhasil dihapus.');
     }
 
+    public function homepageBlocksIndex(Request $request): View
+    {
+        $blockType = strtoupper(trim((string) $request->query('block_type', '')));
+        $sectionKey = strtoupper(trim((string) $request->query('section_key', '')));
+        $search = trim((string) $request->query('q', ''));
+
+        $blocks = CmsHomepageBlock::query()
+            ->when($blockType !== '', static fn ($query) => $query->whereRaw('UPPER(block_type) = ?', [$blockType]))
+            ->when($sectionKey !== '', static fn ($query) => $query->whereRaw('UPPER(section_key) = ?', [$sectionKey]))
+            ->when($search !== '', static function ($query) use ($search): void {
+                $query->where(function ($inner) use ($search): void {
+                    $inner->where('title', 'like', '%'.$search.'%')
+                        ->orWhere('subtitle', 'like', '%'.$search.'%');
+                });
+            })
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.cms.homepage-blocks.index', [
+            'blocks' => $blocks,
+            'blockTypes' => $this->homepageBlockTypes(),
+            'filters' => [
+                'block_type' => $blockType,
+                'section_key' => $sectionKey,
+                'q' => $search,
+            ],
+        ]);
+    }
+
+    public function homepageBlocksCreate(): View
+    {
+        return view('admin.cms.homepage-blocks.form', [
+            'block' => new CmsHomepageBlock(),
+            'blockTypes' => $this->homepageBlockTypes(),
+            'formMode' => 'create',
+        ]);
+    }
+
+    public function homepageBlocksStore(Request $request): RedirectResponse
+    {
+        $data = $this->validateHomepageBlock($request);
+
+        CmsHomepageBlock::query()->create($data);
+
+        return redirect()->route('admin.cms.homepage-blocks.index')->with('notice', 'Homepage block berhasil dibuat.');
+    }
+
+    public function homepageBlocksEdit(CmsHomepageBlock $block): View
+    {
+        return view('admin.cms.homepage-blocks.form', [
+            'block' => $block,
+            'blockTypes' => $this->homepageBlockTypes(),
+            'formMode' => 'edit',
+        ]);
+    }
+
+    public function homepageBlocksUpdate(Request $request, CmsHomepageBlock $block): RedirectResponse
+    {
+        $data = $this->validateHomepageBlock($request);
+
+        $block->update($data);
+
+        return redirect()->route('admin.cms.homepage-blocks.index')->with('notice', 'Homepage block berhasil diperbarui.');
+    }
+
+    public function homepageBlocksDestroy(CmsHomepageBlock $block): RedirectResponse
+    {
+        $block->delete();
+
+        return redirect()->route('admin.cms.homepage-blocks.index')->with('notice', 'Homepage block berhasil dihapus.');
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -228,5 +303,64 @@ final class AdminCmsController extends Controller
         unset($validated['uploaded_image']);
 
         return $validated;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validateHomepageBlock(Request $request): array
+    {
+        $validated = $request->validate([
+            'section_key' => ['required', 'string', 'max:60'],
+            'block_type' => ['required', 'string', Rule::in($this->homepageBlockTypes())],
+            'title' => ['nullable', 'string', 'max:255'],
+            'subtitle' => ['nullable', 'string', 'max:255'],
+            'body' => ['nullable', 'string'],
+            'image_path' => ['nullable', 'string', 'max:255'],
+            'target_url' => ['nullable', 'string', 'max:1024'],
+            'payload_json' => ['nullable', 'string'],
+            'start_at' => ['nullable', 'date'],
+            'end_at' => ['nullable', 'date', 'after_or_equal:start_at'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $payloadJson = trim((string) ($validated['payload_json'] ?? ''));
+        $payload = null;
+
+        if ($payloadJson !== '') {
+            $decoded = json_decode($payloadJson, true);
+            if (!is_array($decoded)) {
+                throw ValidationException::withMessages([
+                    'payload_json' => 'Payload JSON harus berupa object/array valid.',
+                ]);
+            }
+
+            $payload = $decoded;
+        }
+
+        unset($validated['payload_json']);
+
+        $validated['section_key'] = strtoupper((string) $validated['section_key']);
+        $validated['block_type'] = strtoupper((string) $validated['block_type']);
+        $validated['sort_order'] = (int) ($validated['sort_order'] ?? 0);
+        $validated['is_active'] = $request->boolean('is_active');
+        $validated['payload'] = $payload;
+
+        return $validated;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function homepageBlockTypes(): array
+    {
+        return [
+            'HERO_SLIDE',
+            'BENEFIT_ITEM',
+            'PROMO_CARD',
+            'SUPPORT_CHANNEL',
+            'FOOTER_COLUMN',
+        ];
     }
 }

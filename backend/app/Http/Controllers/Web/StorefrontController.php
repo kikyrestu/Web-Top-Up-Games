@@ -10,6 +10,7 @@ use App\Domain\Order\Services\OrderService;
 use App\Domain\Payment\Services\PaymentService;
 use App\Domain\Pricing\Services\PricingEngineService;
 use App\Http\Controllers\Controller;
+use App\Models\CmsHomepageBlock;
 use App\Models\Margin;
 use App\Models\Order;
 use App\Models\PaymentGatewaySetting;
@@ -54,10 +55,24 @@ final class StorefrontController extends Controller
 
         $defaultGateway = $this->resolveGateway();
 
+        $now = now();
+        $homepageBlocks = CmsHomepageBlock::query()
+            ->where('is_active', true)
+            ->where(static function ($query) use ($now): void {
+                $query->whereNull('start_at')->orWhere('start_at', '<=', $now);
+            })
+            ->where(static function ($query) use ($now): void {
+                $query->whereNull('end_at')->orWhere('end_at', '>=', $now);
+            })
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->get();
+
         return view('storefront.index', [
             'productsByCategory' => $productsByCategory,
             'startingPrices' => $startingPrices,
             'defaultGateway' => $defaultGateway,
+            'homepageBlocks' => $homepageBlocks,
         ]);
     }
 
