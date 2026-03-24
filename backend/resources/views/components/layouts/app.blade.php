@@ -226,6 +226,46 @@
             text-decoration: none;
         }
 
+        .admin-density-btn {
+            border: 1px solid #dbe4ef;
+            border-radius: 999px;
+            padding: 7px 12px;
+            color: #334155;
+            background: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Manrope', sans-serif;
+            cursor: pointer;
+        }
+
+        .admin-density-btn:hover {
+            background: #f8fafc;
+            border-color: #cfd9e6;
+        }
+
+        .admin-breadcrumb-wrap {
+            margin-bottom: 12px;
+        }
+
+        .admin-breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #ffffff;
+            padding: 9px 12px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .admin-breadcrumbs .crumb-current {
+            color: #0f172a;
+            font-weight: 800;
+        }
+
         .topbar-center {
             flex: 1;
             max-width: 520px;
@@ -499,6 +539,29 @@
             color: #64748b;
         }
 
+        body.admin-theme table {
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        body.admin-theme thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f8fafc;
+        }
+
+        body.admin-theme.admin-density-compact th,
+        body.admin-theme.admin-density-compact td {
+            padding-top: 7px;
+            padding-bottom: 7px;
+            font-size: 13px;
+        }
+
         .tag {
             display: inline-block;
             border-radius: 999px;
@@ -729,6 +792,16 @@
     @php
         $isAdminUser = auth()->check() && in_array(strtolower((string) (auth()->user()->role ?? '')), ['admin', 'editor', 'ops', 'finance'], true);
         $isAdminRoute = request()->routeIs('admin.*');
+        $currentRouteName = (string) (request()->route()?->getName() ?? '');
+        $adminTrail = [];
+
+        if ($isAdminRoute && $currentRouteName !== '') {
+            $cleanRoute = str_starts_with($currentRouteName, 'admin.') ? substr($currentRouteName, 6) : $currentRouteName;
+            $segments = array_values(array_filter(explode('.', $cleanRoute), static fn (string $item): bool => $item !== ''));
+            $adminTrail = array_map(static function (string $segment): string {
+                return ucwords(str_replace(['-', '_'], ' ', $segment));
+            }, $segments);
+        }
     @endphp
     <div class="topbar">
         <div class="topbar-frame">
@@ -741,6 +814,7 @@
                     <div class="admin-topbar-right">
                         <a class="admin-chip" href="{{ route('storefront.index') }}">Buka Storefront</a>
                         <span class="admin-chip">{{ strtoupper((string) (auth()->user()->role ?? 'ADMIN')) }}</span>
+                        <button class="admin-density-btn" id="admin-density-toggle" type="button">Compact Table: Off</button>
                         <form method="post" action="{{ route('admin.logout') }}">
                             @csrf
                             <button class="btn btn-ghost" type="submit">Logout Admin</button>
@@ -810,6 +884,22 @@
     </div>
 
     <div class="content-pad">
+        @if ($isAdminUser && $isAdminRoute)
+            <div class="admin-breadcrumb-wrap">
+                <div class="admin-breadcrumbs" aria-label="Breadcrumb Admin">
+                    <span>Admin</span>
+                    @foreach ($adminTrail as $crumb)
+                        <span>/</span>
+                        @if ($loop->last)
+                            <span class="crumb-current">{{ $crumb }}</span>
+                        @else
+                            <span>{{ $crumb }}</span>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         @if (session('checkout_summary'))
             <div class="flash flash-ok">
                 Checkout berhasil diproses. Order sudah dibuat dan invoice payment sudah diinisiasi.
@@ -866,5 +956,34 @@
         @endif
     </div>
 </div>
+<script>
+    (function () {
+        const isAdminTheme = document.body.classList.contains('admin-theme');
+        if (!isAdminTheme) {
+            return;
+        }
+
+        const key = 'admin_density_mode';
+        const toggle = document.getElementById('admin-density-toggle');
+        if (!toggle) {
+            return;
+        }
+
+        const applyMode = function (mode) {
+            const compact = mode === 'compact';
+            document.body.classList.toggle('admin-density-compact', compact);
+            toggle.textContent = compact ? 'Compact Table: On' : 'Compact Table: Off';
+        };
+
+        const saved = localStorage.getItem(key) || 'normal';
+        applyMode(saved);
+
+        toggle.addEventListener('click', function () {
+            const next = document.body.classList.contains('admin-density-compact') ? 'normal' : 'compact';
+            localStorage.setItem(key, next);
+            applyMode(next);
+        });
+    })();
+</script>
 </body>
 </html>
