@@ -3,6 +3,8 @@
         $allProducts = $productsByCategory->flatten(1)->values();
         $popularProducts = $allProducts->take(10);
         $sectionProducts = $productsByCategory->take(6);
+        $gatewayHighlights = is_iterable($gatewayHighlights ?? null) ? collect($gatewayHighlights) : collect();
+        $trustStats = is_array($trustStats ?? null) ? $trustStats : [];
         $composerBlocks = is_iterable($homepageBlocks ?? null) ? collect($homepageBlocks) : collect();
 
         $heroSlides = $composerBlocks->where('block_type', 'HERO_SLIDE')->values();
@@ -185,6 +187,85 @@
             border-radius: var(--radius-lg);
             background: #132544;
             padding: var(--space-box);
+        }
+
+        .trust-strip {
+            border: 1px solid #35547f;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(120deg, #10223f, #16315a);
+            padding: 14px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .trust-item {
+            border: 1px solid #3d6293;
+            border-radius: 10px;
+            background: #102543;
+            padding: 10px;
+        }
+
+        .trust-item .k {
+            color: #a7bfdf;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+        }
+
+        .trust-item .v {
+            color: #ffffff;
+            font-size: 20px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .payment-rail {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .payment-card {
+            border: 1px solid #365886;
+            border-radius: 10px;
+            background: #0f213f;
+            padding: 12px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .payment-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .payment-badge {
+            border: 1px solid #4f73ab;
+            border-radius: 999px;
+            padding: 3px 8px;
+            font-size: 11px;
+            color: #d8e7ff;
+            font-weight: 800;
+        }
+
+        .payment-methods {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .method-chip {
+            border: 1px solid #35547f;
+            border-radius: 999px;
+            padding: 3px 8px;
+            font-size: 11px;
+            color: #bdd3f7;
+            font-weight: 700;
         }
 
         .section-head {
@@ -617,6 +698,14 @@
             .promo-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+
+            .trust-strip {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .payment-rail {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         @media (max-width: 760px) {
@@ -654,6 +743,11 @@
 
             .support-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .trust-strip,
+            .payment-rail {
+                grid-template-columns: 1fr;
             }
 
             .subscribe-row {
@@ -706,6 +800,52 @@
                 @for ($dotIndex = 0; $dotIndex < $dotCount; $dotIndex++)
                     <button class="hero-dot {{ $dotIndex === 0 ? 'is-active' : '' }}" type="button" data-slide="{{ $dotIndex }}"></button>
                 @endfor
+            </div>
+        </section>
+
+        <section class="trust-strip" aria-label="Trust Indicators">
+            <article class="trust-item">
+                <div class="k">Total Orders</div>
+                <div class="v">{{ number_format((int) ($trustStats['total_orders'] ?? 0), 0, ',', '.') }}</div>
+            </article>
+            <article class="trust-item">
+                <div class="k">Success Orders</div>
+                <div class="v">{{ number_format((int) ($trustStats['success_orders'] ?? 0), 0, ',', '.') }}</div>
+            </article>
+            <article class="trust-item">
+                <div class="k">Produk Aktif</div>
+                <div class="v">{{ number_format((int) ($trustStats['active_products'] ?? 0), 0, ',', '.') }}</div>
+            </article>
+            <article class="trust-item">
+                <div class="k">Pelanggan Aktif</div>
+                <div class="v">{{ number_format((int) ($trustStats['verified_users'] ?? 0), 0, ',', '.') }}</div>
+            </article>
+        </section>
+
+        <section class="section-box" id="payment-rail">
+            <div class="section-head">
+                <h3>Metode Pembayaran Populer</h3>
+                <a href="#quick-checkout">Pakai Sekarang</a>
+            </div>
+            <div class="payment-rail">
+                @forelse ($gatewayHighlights as $gateway)
+                    <article class="payment-card">
+                        <div class="payment-head">
+                            <strong>{{ $gateway['display_name'] ?? ($gateway['code'] ?? '-') }}</strong>
+                            <span class="payment-badge">Fee {{ (float) ($gateway['fee_percent'] ?? 0) }}%</span>
+                        </div>
+                        <div class="muted" style="font-size:13px;">Flat Rp {{ number_format((float) ($gateway['fee_flat'] ?? 0), 0, ',', '.') }}</div>
+                        <div class="payment-methods">
+                            @foreach (($gateway['methods'] ?? []) as $method)
+                                <span class="method-chip">{{ $method }}</span>
+                            @endforeach
+                        </div>
+                    </article>
+                @empty
+                    <article class="payment-card"><strong>Gateway Aktif</strong><div class="muted">Konfigurasi payment gateway akan tampil di sini.</div></article>
+                    <article class="payment-card"><strong>Metode Fleksibel</strong><div class="muted">VA, e-wallet, QRIS, dan channel lainnya.</div></article>
+                    <article class="payment-card"><strong>Proses Cepat</strong><div class="muted">Invoice diproses otomatis setelah checkout.</div></article>
+                @endforelse
             </div>
         </section>
 
@@ -824,6 +964,7 @@
 
             <div class="checkout-box">
                 <div class="section-head"><h3>Checkout Cepat</h3></div>
+                <p class="muted" style="margin:0 0 10px;">Top up sekarang, bayar aman, order langsung diproses ke provider aktif.</p>
                 <form method="post" action="{{ route('storefront.checkout') }}">
                     @csrf
                     <input id="gateway_auto" type="hidden" name="gateway" value="{{ $defaultGateway }}">

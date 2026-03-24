@@ -55,6 +55,38 @@ final class StorefrontController extends Controller
 
         $defaultGateway = $this->resolveGateway();
 
+        $gatewayHighlights = PaymentGatewaySetting::query()
+            ->where('is_active', true)
+            ->orderBy('priority')
+            ->orderBy('id')
+            ->limit(6)
+            ->get(['code', 'display_name', 'fee_flat', 'fee_percent', 'supported_methods'])
+            ->map(static function (PaymentGatewaySetting $row): array {
+                $methods = collect(is_array($row->supported_methods) ? $row->supported_methods : [])
+                    ->filter(static fn ($item): bool => is_string($item) && trim($item) !== '')
+                    ->map(static fn (string $item): string => strtoupper(trim($item)))
+                    ->take(3)
+                    ->values()
+                    ->all();
+
+                return [
+                    'code' => (string) $row->code,
+                    'display_name' => (string) $row->display_name,
+                    'fee_flat' => (float) $row->fee_flat,
+                    'fee_percent' => (float) $row->fee_percent,
+                    'methods' => $methods,
+                ];
+            })
+            ->values()
+            ->all();
+
+        $trustStats = [
+            'total_orders' => (int) Order::query()->count(),
+            'success_orders' => (int) Order::query()->where('status', 'SUCCESS')->count(),
+            'active_products' => (int) Product::query()->where('is_active', true)->count(),
+            'verified_users' => (int) \App\Models\User::query()->where('account_status', 'ACTIVE')->count(),
+        ];
+
         $now = now();
         $homepageBlocks = CmsHomepageBlock::query()
             ->where('is_active', true)
@@ -72,6 +104,8 @@ final class StorefrontController extends Controller
             'productsByCategory' => $productsByCategory,
             'startingPrices' => $startingPrices,
             'defaultGateway' => $defaultGateway,
+            'gatewayHighlights' => $gatewayHighlights,
+            'trustStats' => $trustStats,
             'homepageBlocks' => $homepageBlocks,
         ]);
     }
