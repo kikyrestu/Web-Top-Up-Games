@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\AdminAuthController;
+use App\Http\Controllers\Web\AdminAnalyticsController;
 use App\Http\Controllers\Web\AdminCmsController;
 use App\Http\Controllers\Web\AdminAuditLogController;
 use App\Http\Controllers\Web\AdminCatalogController;
@@ -81,6 +82,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/dashboard/alerts', [AdminDashboardController::class, 'alerts'])->name('dashboard.alerts');
         Route::get('/dashboard/metrics/excel', [AdminDashboardController::class, 'metricsExcel'])->name('dashboard.metrics.excel');
         Route::get('/dashboard/rate-limit/csv', [AdminDashboardController::class, 'rateLimitCsv'])->name('dashboard.rate-limit.csv');
+        Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
 
         Route::get('/cms/pages', [AdminCmsController::class, 'pagesIndex'])->name('cms.pages.index');
         Route::get('/cms/pages/create', [AdminCmsController::class, 'pagesCreate'])->name('cms.pages.create');

@@ -109,8 +109,8 @@ Status:
 13. Security/risk operations: DONE
     - Security events, audit logs, dan alerts dashboard sudah tersedia.
 
-14. Analytics dashboard: PARTIAL
-    - Dashboard operasional sudah ada, analitik bisnis lanjutan belum lengkap.
+14. Analytics dashboard: DONE
+   - Dashboard analytics bisnis sudah tersedia: funnel, cohort retention, dan conversion deep-dive per gateway/produk.
 
 15. Role and permission: DONE
    - Role backoffice + permission matrix granular per menu/aksi sudah tersedia.
@@ -139,7 +139,7 @@ Aturan eksekusi:
 ### Phase 3 - Governance and Optimization
 
 - [x] Permission matrix granular (menu/action scope per role).
-- [ ] Dashboard analytics bisnis (funnel, cohort, conversion deep-dive).
+- [x] Dashboard analytics bisnis (funnel, cohort, conversion deep-dive).
 - [ ] Homepage composer CMS (manage blok konten storefront dari admin).
 
 ## Progress Tracker
@@ -217,3 +217,10 @@ Update terbaru:
 - Scope: role backoffice (admin/editor/ops/finance) + matrix allow/deny per menu/action + middleware enforcement by route scope
 - Bukti: migration role_permission_matrix + model/service permission matrix + middleware EnsureWebPermission + AdminPermissionMatrixController + view admin permissions
 - Catatan: default fallback admin tetap full access sampai matrix diset explicit
+
+- Item: Dashboard analytics bisnis
+- Phase: 3
+- Status: DONE
+- Scope: dashboard analytics lanjutan mencakup funnel checkout-to-success, trend harian, cohort retention 30D, conversion deep-dive gateway dan produk
+- Bukti: route admin.analytics.index + AdminAnalyticsController + view admin/analytics/index + permission key analytics.view + sidebar analytics
+- Catatan: window analytics mendukung 7/14/30/60/90 hari untuk analisis cepat operasional dan growth

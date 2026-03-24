@@ -24,6 +24,7 @@ final class PermissionMatrixService
         return [
             'permissions.manage',
             'dashboard.view',
+            'analytics.view',
             'alerts.view',
             'catalog.manage',
             'nominal.manage',
@@ -55,6 +56,10 @@ final class PermissionMatrixService
 
         if (str_starts_with($name, 'admin.dashboard.alerts')) {
             return 'alerts.view';
+        }
+
+        if (str_starts_with($name, 'admin.analytics.')) {
+            return 'analytics.view';
         }
 
         if (str_starts_with($name, 'admin.dashboard')) {

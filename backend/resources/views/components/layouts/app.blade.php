@@ -635,6 +635,7 @@
                     <p class="admin-sidebar-sub">Navigasi cepat operasional</p>
                     <a class="admin-nav-link {{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.dashboard.alerts') ? 'is-active' : '' }}" href="{{ route('admin.dashboard.alerts') }}">Alerts</a>
+                    <a class="admin-nav-link {{ request()->routeIs('admin.analytics.*') ? 'is-active' : '' }}" href="{{ route('admin.analytics.index') }}">Analytics</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.catalog.categories.*') ? 'is-active' : '' }}" href="{{ route('admin.catalog.categories.index') }}">Catalog Categories</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.catalog.products.*') ? 'is-active' : '' }}" href="{{ route('admin.catalog.products.index') }}">Catalog Products</a>
                     <a class="admin-nav-link {{ request()->routeIs('admin.catalog.providers.*') ? 'is-active' : '' }}" href="{{ route('admin.catalog.providers.index') }}">Catalog Providers</a>
