@@ -36,7 +36,7 @@
 
                 <div>
                     <label for="body">Body</label>
-                    <textarea id="body" name="body" rows="5" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 11px; font-size:14px; background:#0d1d38; color:#e8f0ff;">{{ old('body', $block->body) }}</textarea>
+                    <textarea id="body" name="body" rows="5" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 11px; font-size:14px;">{{ old('body', $block->body) }}</textarea>
                 </div>
 
                 <div class="grid" style="grid-template-columns:1fr 1fr;">
@@ -52,7 +52,7 @@
 
                 <div>
                     <label for="payload_json">Payload JSON (opsional)</label>
-                    <textarea id="payload_json" name="payload_json" rows="6" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 11px; font-size:14px; background:#0d1d38; color:#e8f0ff;" placeholder='{"class":"promo-1","links":["Item 1","Item 2"]}'>{{ old('payload_json', !empty($block->payload) ? json_encode($block->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : '') }}</textarea>
+                    <textarea id="payload_json" name="payload_json" rows="6" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 11px; font-size:14px;" placeholder='{"class":"promo-1","links":["Item 1","Item 2"]}'>{{ old('payload_json', !empty($block->payload) ? json_encode($block->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : '') }}</textarea>
                 </div>
 
                 <div class="grid" style="grid-template-columns:1fr 1fr 140px; align-items:end;">

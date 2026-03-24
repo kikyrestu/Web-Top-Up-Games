@@ -11,6 +11,7 @@
         $seoOgDescription = $seo['og_description'] ?? null;
         $seoOgImagePath = $seo['og_image_path'] ?? null;
         $finalTitle = $seoMetaTitle ?: ($title ?? 'Web Top-Up Games');
+        $isAdminRouteGlobal = request()->routeIs('admin.*');
     @endphp
     <title>{{ $finalTitle }}</title>
     @if (!empty($seoMetaDescription))
@@ -54,6 +55,11 @@
             font-family: 'Manrope', sans-serif;
         }
 
+        body.admin-theme {
+            background: #f3f6fb;
+            color: #111827;
+        }
+
         .shell {
             width: 100%;
             max-width: none;
@@ -80,6 +86,15 @@
             padding: 12px clamp(20px, 2.2vw, 32px);
         }
 
+        body.admin-theme .topbar {
+            background: #ffffff;
+            border-top: 0;
+            border-bottom: 1px solid #e5e7eb;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+        }
+
         .topbar-frame {
             width: 100%;
             max-width: 1440px;
@@ -100,6 +115,11 @@
             letter-spacing: 0.03em;
         }
 
+        body.admin-theme .top-utility {
+            border-bottom-color: #eef2f7;
+            color: #64748b;
+        }
+
         .top-utility .left,
         .top-utility .right {
             display: flex;
@@ -111,6 +131,10 @@
         .utility-link {
             color: #8ea8cf;
             text-decoration: none;
+        }
+
+        body.admin-theme .utility-link {
+            color: #64748b;
         }
 
         .utility-link:hover {
@@ -140,10 +164,66 @@
             letter-spacing: -0.02em;
         }
 
+        body.admin-theme .brand {
+            color: #0f172a;
+        }
+
         .brand-sub {
             color: #8ea8cf;
             font-size: 12px;
             font-weight: 700;
+        }
+
+        body.admin-theme .brand-sub {
+            color: #64748b;
+        }
+
+        .admin-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 6px 2px;
+            flex-wrap: wrap;
+        }
+
+        .admin-topbar-left {
+            display: grid;
+            gap: 2px;
+        }
+
+        .admin-kicker {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .admin-title {
+            color: #0f172a;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .admin-topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .admin-chip {
+            border: 1px solid #dbe4ef;
+            border-radius: 999px;
+            padding: 7px 12px;
+            color: #334155;
+            background: #f8fafc;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
         }
 
         .topbar-center {
@@ -353,6 +433,13 @@
             padding: 18px;
         }
 
+        body.admin-theme .panel {
+            background: #ffffff;
+            border-color: #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        }
+
         .flash {
             border-radius: 12px;
             padding: 10px 14px;
@@ -380,6 +467,8 @@
 
         .muted { color: var(--ink-soft); }
 
+        body.admin-theme .muted { color: #64748b; }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -398,6 +487,16 @@
             letter-spacing: 0.04em;
             text-transform: uppercase;
             color: var(--ink-soft);
+        }
+
+        body.admin-theme th,
+        body.admin-theme td {
+            border-bottom-color: #eef2f7;
+            color: #1f2937;
+        }
+
+        body.admin-theme th {
+            color: #64748b;
         }
 
         .tag {
@@ -424,10 +523,20 @@
             color: #fff;
         }
 
+        body.admin-theme .btn {
+            background: linear-gradient(120deg, #2563eb, #1d4ed8);
+        }
+
         .btn-ghost {
             background: #102543;
             border: 1px solid var(--line);
             color: #dce8ff;
+        }
+
+        body.admin-theme .btn-ghost {
+            background: #f8fafc;
+            border-color: #dbe4ef;
+            color: #334155;
         }
 
         .pill {
@@ -446,6 +555,12 @@
             cursor: pointer;
         }
 
+        body.admin-theme .pill {
+            border-color: #dbe4ef;
+            background: #f8fafc;
+            color: #334155;
+        }
+
         .pill:hover {
             border-color: #4f73ab;
             background: #17325a;
@@ -459,6 +574,20 @@
             font-size: 14px;
             background: #0d1d38;
             color: #e8f0ff;
+        }
+
+        body.admin-theme input,
+        body.admin-theme select,
+        body.admin-theme textarea {
+            border-color: #d1d9e6;
+            background: #ffffff;
+            color: #111827;
+        }
+
+        body.admin-theme label {
+            color: #334155;
+            font-weight: 700;
+            font-size: 13px;
         }
 
         .grid {
@@ -477,6 +606,60 @@
             border-radius: 14px;
             padding: 14px;
             background: #102543;
+        }
+
+        body.admin-theme .card {
+            border-color: #e5e7eb;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        body.admin-theme .card .k {
+            color: #64748b;
+        }
+
+        body.admin-theme .card .v {
+            color: #0f172a;
+        }
+
+        body.admin-theme .admin-shell {
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 18px;
+        }
+
+        body.admin-theme .admin-sidebar {
+            border-color: #e2e8f0;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+        }
+
+        body.admin-theme .admin-sidebar-title {
+            color: #0f172a;
+        }
+
+        body.admin-theme .admin-sidebar-sub {
+            color: #64748b;
+        }
+
+        body.admin-theme .admin-nav-link {
+            border-color: #e2e8f0;
+            background: #f8fafc;
+            color: #334155;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        body.admin-theme .admin-nav-link:hover {
+            border-color: #cfd9e6;
+            background: #f1f5f9;
+        }
+
+        body.admin-theme .admin-nav-link.is-active {
+            border-color: #bfdbfe;
+            background: #eff6ff;
+            color: #1d4ed8;
         }
 
         .card .k { color: var(--ink-soft); font-size: 12px; text-transform: uppercase; font-weight: 700; }
@@ -541,7 +724,7 @@
         }
     </style>
 </head>
-<body>
+<body class="{{ $isAdminRouteGlobal ? 'admin-theme' : 'storefront-theme' }}">
 <div class="shell">
     @php
         $isAdminUser = auth()->check() && in_array(strtolower((string) (auth()->user()->role ?? '')), ['admin', 'editor', 'ops', 'finance'], true);
@@ -549,62 +732,79 @@
     @endphp
     <div class="topbar">
         <div class="topbar-frame">
-            <div class="top-utility">
-                <div class="left">
-                    <a class="utility-link" href="{{ route('storefront.index') }}">Instant Top Up</a>
-                    <span>|</span>
-                    <a class="utility-link" href="{{ route('public.promo') }}">Promo dan Acara</a>
-                    <span>|</span>
-                    <a class="utility-link" href="{{ route('public.reviews.index') }}">Keanggotaan</a>
-                    <span>|</span>
-                    <a class="utility-link" href="{{ route('public.articles.index') }}">Lainnya</a>
-                </div>
-                <div class="right">
-                    <a class="locale-pill" href="#">Indonesia</a>
-                    <a class="locale-pill" href="#">IDR</a>
-                </div>
-            </div>
-
-            <div class="topbar-main">
-                <div class="brand-wrap">
-                    <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
-                    <span class="brand-sub">Top up game and PPOB platform</span>
-                </div>
-
-                <div class="topbar-center">
-                    <input class="top-search" type="text" placeholder="Cari game, voucher, atau layanan...">
-                </div>
-
-                <div class="quick-actions">
-                    <a class="action-link" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
-                    <a class="action-link" href="{{ route('public.promo') }}">Promo</a>
-                    <a class="action-link" href="{{ route('storefront.history') }}">Riwayat</a>
-                    @auth
-                        <a class="action-link" href="{{ route('account.dashboard') }}">Akun Saya</a>
-                    @else
-                        <a class="action-link cta-link" href="{{ route('account.login-otp') }}">Masuk</a>
-                    @endauth
-
-                    @auth
-                        <form method="post" action="{{ route('account.logout') }}">
+            @if ($isAdminUser && $isAdminRoute)
+                <div class="admin-topbar">
+                    <div class="admin-topbar-left">
+                        <span class="admin-kicker">Backoffice Console</span>
+                        <a class="admin-title" href="{{ route('admin.dashboard') }}">TopUp Atlas Admin</a>
+                    </div>
+                    <div class="admin-topbar-right">
+                        <a class="admin-chip" href="{{ route('storefront.index') }}">Buka Storefront</a>
+                        <span class="admin-chip">{{ strtoupper((string) (auth()->user()->role ?? 'ADMIN')) }}</span>
+                        <form method="post" action="{{ route('admin.logout') }}">
                             @csrf
-                            <button class="logout-btn" type="submit">Logout</button>
+                            <button class="btn btn-ghost" type="submit">Logout Admin</button>
                         </form>
-                    @endauth
+                    </div>
                 </div>
-            </div>
-
-            <div class="market-strip">
-                <a class="market-link" href="{{ route('public.topup.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8l8-4 8 4-8 4-8-4z"></path><path d="M6 10v6l6 3 6-3v-6"></path></svg></span> Game</a>
-                <a class="market-link" href="{{ route('public.ppob.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M4 10h16"></path></svg></span> PPOB</a>
-                <a class="market-link" href="{{ route('public.articles.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"></path><path d="M8 9h8M8 13h8M8 17h5"></path></svg></span> Artikel</a>
-                <a class="market-link" href="{{ route('public.reviews.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.9 5.9L21 9.8l-4.5 4.4 1.1 6.2L12 17.7 6.4 20.4l1.1-6.2L3 9.8l6.1-.9z"></path></svg></span> Ulasan</a>
-            </div>
-
-            @if ($isAdminUser && !$isAdminRoute)
-                <div class="admin-strip">
-                    <a class="admin-link" href="{{ route('admin.dashboard') }}">Admin</a>
+            @else
+                <div class="top-utility">
+                    <div class="left">
+                        <a class="utility-link" href="{{ route('storefront.index') }}">Instant Top Up</a>
+                        <span>|</span>
+                        <a class="utility-link" href="{{ route('public.promo') }}">Promo dan Acara</a>
+                        <span>|</span>
+                        <a class="utility-link" href="{{ route('public.reviews.index') }}">Keanggotaan</a>
+                        <span>|</span>
+                        <a class="utility-link" href="{{ route('public.articles.index') }}">Lainnya</a>
+                    </div>
+                    <div class="right">
+                        <a class="locale-pill" href="#">Indonesia</a>
+                        <a class="locale-pill" href="#">IDR</a>
+                    </div>
                 </div>
+
+                <div class="topbar-main">
+                    <div class="brand-wrap">
+                        <a class="brand" href="{{ route('storefront.index') }}">TopUp Atlas</a>
+                        <span class="brand-sub">Top up game and PPOB platform</span>
+                    </div>
+
+                    <div class="topbar-center">
+                        <input class="top-search" type="text" placeholder="Cari game, voucher, atau layanan...">
+                    </div>
+
+                    <div class="quick-actions">
+                        <a class="action-link" href="{{ route('public.check-transaction') }}">Cek Transaksi</a>
+                        <a class="action-link" href="{{ route('public.promo') }}">Promo</a>
+                        <a class="action-link" href="{{ route('storefront.history') }}">Riwayat</a>
+                        @auth
+                            <a class="action-link" href="{{ route('account.dashboard') }}">Akun Saya</a>
+                        @else
+                            <a class="action-link cta-link" href="{{ route('account.login-otp') }}">Masuk</a>
+                        @endauth
+
+                        @auth
+                            <form method="post" action="{{ route('account.logout') }}">
+                                @csrf
+                                <button class="logout-btn" type="submit">Logout</button>
+                            </form>
+                        @endauth
+                    </div>
+                </div>
+
+                <div class="market-strip">
+                    <a class="market-link" href="{{ route('public.topup.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8l8-4 8 4-8 4-8-4z"></path><path d="M6 10v6l6 3 6-3v-6"></path></svg></span> Game</a>
+                    <a class="market-link" href="{{ route('public.ppob.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M4 10h16"></path></svg></span> PPOB</a>
+                    <a class="market-link" href="{{ route('public.articles.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"></path><path d="M8 9h8M8 13h8M8 17h5"></path></svg></span> Artikel</a>
+                    <a class="market-link" href="{{ route('public.reviews.index') }}"><span class="market-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.9 5.9L21 9.8l-4.5 4.4 1.1 6.2L12 17.7 6.4 20.4l1.1-6.2L3 9.8l6.1-.9z"></path></svg></span> Ulasan</a>
+                </div>
+
+                @if ($isAdminUser && !$isAdminRoute)
+                    <div class="admin-strip">
+                        <a class="admin-link" href="{{ route('admin.dashboard') }}">Admin</a>
+                    </div>
+                @endif
             @endif
         </div>
     </div>
