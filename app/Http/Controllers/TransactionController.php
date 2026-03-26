@@ -131,16 +131,18 @@ class TransactionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Checkout Error: ' . $e->getMessage());
+            Log::error('Checkout Error: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
             
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                    'message' => 'Terjadi kesalahan sistem. Silakan coba lagi beberapa saat.'
                 ], 500);
             }
             
-            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan sistem. Silakan coba lagi beberapa saat.');
         }
     }
 

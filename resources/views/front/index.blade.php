@@ -52,7 +52,7 @@
                 <h3 class="text-white text-sm font-semibold mb-2">Produk</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     @foreach($searchProducts as $product)
-                    <a href="{{ route('front.category', $product->category->slug ?? $product->category->id) }}" class="block border border-up-border bg-up-card rounded-lg p-3 hover:border-up-yellow transition">
+                    <a href="{{ route('front.category', $product->category->slug ?? $product->category->id) }}?product={{ $product->id }}" class="block border border-up-border bg-up-card rounded-lg p-3 hover:border-up-yellow transition">
                         <div class="text-white text-sm font-semibold truncate">{{ $product->name }}</div>
                         <div class="text-up-textmuted text-[11px] mt-1 truncate">{{ $product->category->name ?? '-' }}</div>
                         <div class="text-up-yellow text-xs font-bold mt-2">Rp {{ number_format($product->price_sell, 0, ',', '.') }}</div>
@@ -180,7 +180,7 @@
 
         <!-- Dynamic Category Pills from DB -->
         <div class="flex overflow-x-auto hide-scroll space-x-3 pb-2 pt-2">
-            @foreach($allGames->take(10) as $cat)
+            @foreach($ppobCategories->take(10) as $cat)
             <a href="{{ route('front.category', $cat->slug ?? $cat->id) }}" class="flex items-center flex-shrink-0 space-x-2 border border-up-border bg-up-card rounded-full px-4 py-2 text-xs font-medium text-gray-300 hover:border-up-yellow hover:text-up-yellow transition">
                 <i class="{{ $cat->icon ?? 'fas fa-tag' }} text-up-yellow"></i> <span>{{ $cat->name }}</span>
             </a>
@@ -214,9 +214,7 @@
     </section>
 
     @php
-        $gameTypes = ['game', 'seluler', 'pc', 'voucher'];
-        $ppobCategories = $allGames->filter(fn($c) => !in_array(strtolower((string) $c->type), $gameTypes));
-        $gameCategories = $allGames->filter(fn($c) => in_array(strtolower((string) $c->type), $gameTypes));
+        $gameCategories = $allGames;
     @endphp
 
     <section class="bg-[#161a29] p-5 md:p-6 rounded-xl border border-up-border shadow-lg mb-12">
@@ -230,10 +228,10 @@
 
         @if($gameCategories->isNotEmpty())
         <div class="flex items-center space-x-2.5 overflow-x-auto hide-scroll pb-2 mb-6">
-            @foreach($gameCategories as $category)
-            <a href="{{ route('front.category', $category->slug ?? $category->id) }}" class="flex items-center flex-shrink-0 space-x-1.5 border border-up-border bg-up-card rounded-full px-4 py-1.5 text-xs font-medium text-gray-300 hover:border-up-yellow hover:text-up-yellow transition whitespace-nowrap">
-                <span class="text-up-yellow text-base"><i class="{{ $category->icon ?? 'fas fa-gamepad' }}"></i></span>
-                <span>{{ $category->name }}</span>
+            @foreach($gameCategories->pluck('type')->unique() as $type)
+            <a href="{{ route('front.top-up-game') }}#{{ Str::slug($type) }}" class="flex items-center flex-shrink-0 space-x-1.5 border border-up-border bg-up-card rounded-full px-4 py-1.5 text-xs font-medium text-gray-300 hover:border-up-yellow hover:text-up-yellow transition whitespace-nowrap">
+                <span class="text-up-yellow text-base"><i class="fas fa-gamepad"></i></span>
+                <span class="capitalize">{{ $type }}</span>
             </a>
             @endforeach
         </div>

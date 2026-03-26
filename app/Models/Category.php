@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
     use HasFactory;
+
+    public const GAME_TYPES = ['game', 'seluler', 'pc', 'voucher'];
 
     protected $fillable = [
         "name",
@@ -38,6 +41,21 @@ class Category extends Model
         return $this->hasMany(Product::class);
     }
 
+    public function scopeGameTypes(Builder $query): Builder
+    {
+        return $query->whereIn('type', self::GAME_TYPES);
+    }
+
+    public function scopeNonGameTypes(Builder $query): Builder
+    {
+        return $query->whereNotIn('type', self::GAME_TYPES);
+    }
+
+    public static function isGameType(?string $type): bool
+    {
+        return in_array(strtolower((string) $type), self::GAME_TYPES, true);
+    }
+
     /**
      * Get input fields with defaults if none configured.
      */
@@ -48,10 +66,7 @@ class Category extends Model
         }
 
         // Default fields based on category type
-        $type = strtolower((string) $this->type);
-        $gameTypes = ['game', 'seluler', 'pc', 'voucher'];
-
-        if (in_array($type, $gameTypes)) {
+        if (self::isGameType($this->type)) {
             return [
                 ['name' => 'target', 'label' => 'User ID', 'placeholder' => 'Masukkan User ID', 'required' => true],
                 ['name' => 'target_zone', 'label' => 'Server', 'placeholder' => 'Masukkan Server (jika ada)', 'required' => false],

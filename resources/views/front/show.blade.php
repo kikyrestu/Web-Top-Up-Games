@@ -2,8 +2,8 @@
 @section('title', $category->name . ' Top Up Murah')
 @section('meta_description', 'Top up ' . $category->name . ' cepat dan aman. Pilih nominal, metode pembayaran lengkap, dan proses otomatis.')
 @section('canonical', route('front.category', $category->slug ?? $category->id))
-@if(!empty($category->image))
-    @section('meta_image', asset('storage/' . $category->image))
+@if(!empty($category->thumbnail))
+    @section('meta_image', asset('storage/' . $category->thumbnail))
 @endif
 @push('jsonld')
 <script type="application/ld+json">
@@ -89,12 +89,12 @@
 <!-- Hero Background & Category Info -->
 <div class="relative w-full h-[280px] md:h-[400px]">
     <!-- Background Image -->
-    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ $category->image ? asset('storage/'.$category->image) : 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80' }}'); filter: brightness(0.35);"></div>
+    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ $category->thumbnail ? asset('storage/'.$category->thumbnail) : 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80' }}'); filter: brightness(0.35);"></div>
     <div class="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-transparent"></div>
     
     <!-- Game Detail Overlay -->
     <div class="absolute bottom-0 left-0 w-full px-4 md:px-8 lg:px-20 pb-4 flex items-end container mx-auto gap-4 md:gap-6 z-10 translate-y-12 md:translate-y-16">
-        <img src="{{ $category->image ? asset('storage/'.$category->image) : 'https://placehold.co/150' }}" alt="{{ $category->name }}" class="w-24 h-24 md:w-40 md:h-40 rounded-xl object-cover border-2 md:border-4 border-[#1c1c1c] shadow-2xl z-20 shrink-0">
+        <img src="{{ $category->thumbnail ? asset('storage/'.$category->thumbnail) : 'https://placehold.co/150' }}" alt="{{ $category->name }}" class="w-24 h-24 md:w-40 md:h-40 rounded-xl object-cover border-2 md:border-4 border-[#1c1c1c] shadow-2xl z-20 shrink-0">
         <div class="pb-1 md:pb-2 flex-grow">
             <h1 class="text-2xl md:text-5xl font-black text-white uppercase italic tracking-wider mb-0.5 md:mb-1 drop-shadow-lg">{{ $category->name }}</h1>
             <p class="text-gray-400 text-xs md:text-base mb-2 md:mb-4 font-medium">{{ $category->publisher ?? 'Publisher Unknown' }}</p>
@@ -253,9 +253,9 @@
                         <div class="space-y-4">
                             <!-- Direct Items (e.g. QRIS, Credit) -->
                             @foreach($paymentGateways->take(2) as $pg)
-                            <div class="border border-[#333] hover:border-[#f97316] bg-[#222] rounded-xl p-3 md:p-4 cursor-pointer relative overflow-hidden group transition-all"
-                                 :class="{'border-[#f97316] bg-[#f97316]/5': selectedPayment === {{ $pg->id }}}"
-                                 @click="selectPayment({{ $pg->id }}, '{{ $pg->name }}')">
+                               <div class="border border-[#333] hover:border-[#f97316] bg-[#222] rounded-xl p-3 md:p-4 cursor-pointer relative overflow-hidden group transition-all"
+                                   :class="{'border-[#f97316] bg-[#f97316]/5': selectedPayment === {{ $pg->id }}}"
+                                   @click="selectPayment({{ $pg->id }}, '{{ $pg->display_name ?? $pg->name }}')">
                                  
                                 <!-- Orange Tag top right -->
                                 <div class="absolute top-0 right-0 bg-[#f97316] text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg transform origin-top-right z-10">
@@ -274,7 +274,8 @@
                                             </div>
                                         @endif
                                         <div>
-                                            <h3 class="font-bold text-sm md:text-base text-gray-200 group-hover:text-white transition">{{ $pg->name }}</h3>
+                                            <h3 class="font-bold text-sm md:text-base text-gray-200 group-hover:text-white transition">{{ $pg->display_name ?? $pg->name }}</h3>
+                                            <p class="text-[10px] md:text-xs text-gray-500 mt-0.5">via {{ $pg->name }}</p>
                                             <p class="text-[10px] md:text-xs text-gray-500 line-through mt-0.5">Rp <span x-text="formatRupiah((selectedPrice * quantity) + 1250)"></span></p>
                                         </div>
                                     </div>
@@ -296,8 +297,8 @@
                                     <div class="p-3 md:p-4 grid grid-cols-1 gap-3 bg-[#222]">
                                         @foreach($paymentGateways->skip(2) as $pg)
                                         <div class="border border-[#444] hover:border-[#f97316] bg-[#1c1c1c] rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer group"
-                                             :class="{'border-[#f97316]': selectedPayment === {{ $pg->id }}}"
-                                             @click="selectPayment({{ $pg->id }}, '{{ $pg->name }}')">
+                                            :class="{'border-[#f97316]': selectedPayment === {{ $pg->id }}}"
+                                            @click="selectPayment({{ $pg->id }}, '{{ $pg->display_name ?? $pg->name }}')">
                                             <div class="flex items-center gap-3">
                                                  @if($pg->logo)
                                                     <div class="w-14 h-8 md:w-16 md:h-10 bg-white rounded flex items-center justify-center p-1 shrink-0">
@@ -308,7 +309,10 @@
                                                         <i class="fas fa-wallet"></i>
                                                     </div>
                                                 @endif
-                                                <div class="text-sm font-bold text-gray-300 group-hover:text-white">{{ $pg->name }}</div>
+                                                <div>
+                                                    <div class="text-sm font-bold text-gray-300 group-hover:text-white">{{ $pg->display_name ?? $pg->name }}</div>
+                                                    <p class="text-[10px] md:text-xs text-gray-500 mt-0.5">via {{ $pg->name }}</p>
+                                                </div>
                                             </div>
                                             <div class="text-[#f97316] font-bold text-sm">
                                                 Rp <span x-text="formatRupiah(selectedPrice * quantity)"></span>
@@ -488,7 +492,7 @@
                         <h4 class="text-white font-black text-lg mb-4">Ringkasan Pesanan</h4>
                         
                         <div class="flex items-center gap-3 mb-4 p-3 bg-[#222] border border-[#333] rounded-lg">
-                            <img src="{{ $category->image ? asset('storage/'.$category->image) : 'https://placehold.co/150' }}" class="w-12 h-12 rounded object-cover border border-[#444]">
+                            <img src="{{ $category->thumbnail ? asset('storage/'.$category->thumbnail) : 'https://placehold.co/150' }}" class="w-12 h-12 rounded object-cover border border-[#444]">
                             <div>
                                 <p class="text-white text-sm font-bold" x-text="selectedProductName">Product Name</p>
                                 <p class="text-xs text-gray-400" x-text="'Jumlah: ' + quantity + 'x'">Jumlah: 1x</p>

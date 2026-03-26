@@ -64,17 +64,17 @@
 <script type="application/ld+json">{!! json_encode($ppobProductsSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 @endpush
 @section('content')
-<div class="container mx-auto px-4 pt-24 md:pt-28 relative z-20">
+<div class="container mx-auto px-4 pt-6 md:pt-10 relative z-20">
     <nav class="text-sm text-gray-400 mb-6" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-2">
             <li><a href="{{ route('front.index') }}" class="hover:text-white transition">Beranda</a></li>
-            <li><i class="fas fa-chevron-right text-xs text-gray-500"></i></li>
+            <li><i class="fas fa-chevron-right text-[10px] text-gray-500"></i></li>
             <li class="text-[#f97316] font-medium">{{ $category->name }}</li>
         </ol>
     </nav>
 </div>
 
-<div class="container mx-auto px-4 pb-20" x-data="ppobCheckout({{ json_encode($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'price' => $p->price_sell])) }}, {{ json_encode($paymentGateways->map(fn($pg) => ['id' => $pg->id, 'name' => $pg->name])) }})">
+<div class="container mx-auto px-4 pb-20" x-data="ppobCheckout({{ json_encode($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'price' => $p->price_sell])) }}, {{ json_encode($paymentGateways->map(fn($pg) => ['id' => $pg->id, 'name' => $pg->display_name ?? $pg->name, 'provider' => $pg->name, 'methods' => $pg->customer_methods ?? []])) }})">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         <div class="lg:col-span-8 flex flex-col gap-5 md:gap-6">
@@ -184,7 +184,11 @@
                                  @click="selectPayment(pg.id, pg.name)">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold" x-text="pg.name.substring(0,2)"></div>
-                                    <p class="text-gray-200 font-bold text-sm" x-text="pg.name"></p>
+                                    <div>
+                                        <p class="text-gray-200 font-bold text-sm" x-text="pg.name"></p>
+                                        <p class="text-gray-500 text-[11px]" x-show="pg.provider && pg.provider !== pg.name" x-text="'via ' + pg.provider"></p>
+                                        <p class="text-gray-500 text-[11px]" x-show="pg.methods && pg.methods.length > 1" x-text="pg.methods.join(' • ')"></p>
+                                    </div>
                                 </div>
                                 <div class="absolute top-3 right-3 text-green-500 scale-0 transition-transform duration-200"
                                      :class="{'scale-100': selectedPayment === pg.id}">
@@ -331,9 +335,19 @@ document.addEventListener('alpine:init', () => {
         selectedProduct: null,
         selectedProductName: '',
         selectedProductPrice: 0,
+
+        preselectedProductId: {{ (int) ($preselectedProductId ?? 0) }},
+        preselectedProductName: @js(optional($products->firstWhere('id', (int) ($preselectedProductId ?? 0)))->name ?? ''),
+        preselectedProductPrice: {{ (float) (optional($products->firstWhere('id', (int) ($preselectedProductId ?? 0)))->price_sell ?? 0) }},
         selectedPayment: null,
         selectedPaymentName: '',
         isSubmitting: false,
+
+        init() {
+            if (this.preselectedProductId > 0) {
+                this.selectProduct(this.preselectedProductId, this.preselectedProductName, this.preselectedProductPrice);
+            }
+        },
 
         get filteredProducts() {
             if (!this.isPulsaMode || !this.detectedProvider) {

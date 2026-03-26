@@ -228,13 +228,19 @@ function testPaymentGateway(id, btn) {
     .then(r => r.json())
     .then(data => {
         resultDiv.classList.remove('hidden');
+        let htmlContent = '';
         if (data.success) {
             resultDiv.className = 'mt-3 p-3 rounded-xl text-sm font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-            resultDiv.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + data.message;
+            htmlContent = '<i class="fas fa-check-circle mr-2"></i>' + data.message;
         } else {
             resultDiv.className = 'mt-3 p-3 rounded-xl text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/20';
-            resultDiv.innerHTML = '<i class="fas fa-times-circle mr-2"></i>' + data.message;
+            htmlContent = '<i class="fas fa-times-circle mr-2"></i>' + data.message;
         }
+        
+        if (data.raw) {
+            htmlContent += '<div class="mt-2 p-2 bg-dark-900 rounded border border-dark-600 text-left overflow-x-auto"><pre class="text-xs text-gray-300"><code>' + JSON.stringify(data.raw, null, 2) + '</code></pre></div>';
+        }
+        resultDiv.innerHTML = htmlContent;
     })
     .catch(err => {
         resultDiv.classList.remove('hidden');

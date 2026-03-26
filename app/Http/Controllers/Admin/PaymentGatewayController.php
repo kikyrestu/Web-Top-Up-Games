@@ -163,6 +163,7 @@ class PaymentGatewayController extends Controller
                     return response()->json([
                         'success' => false,
                         'message' => 'Server Key Midtrans tidak valid (401 Unauthorized). Periksa kembali key Anda.',
+                        'raw' => $response->json() ?? $response->body()
                     ]);
                 }
 
@@ -170,17 +171,26 @@ class PaymentGatewayController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => "Koneksi Midtrans ({$modeLabel}) berhasil! Server key terautentikasi.",
+                    'raw' => [
+                        'status' => $response->status(),
+                        'data' => $response->json() ?? $response->body()
+                    ]
                 ]);
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Kredensial ' . $paymentGateway->name . ' tersimpan. Test koneksi otomatis belum tersedia untuk gateway ini.',
+                'raw' => null
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Koneksi gagal: ' . $e->getMessage(),
+                'raw' => [
+                    'error' => class_basename($e),
+                    'trace' => $e->getTraceAsString()
+                ]
             ]);
         }
     }

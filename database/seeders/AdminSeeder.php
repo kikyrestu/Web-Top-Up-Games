@@ -14,10 +14,23 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
+        $email = (string) env('ADMIN_SEED_EMAIL', '');
+        $password = (string) env('ADMIN_SEED_PASSWORD', '');
+
+        // Prevent accidental weak default admin account on production deployments.
+        if (app()->environment('production') && ($email === '' || $password === '')) {
+            return;
+        }
+
+        if ($email === '' || $password === '') {
+            $email = 'admin@example.test';
+            $password = 'ChangeMe123!';
+        }
+
         User::create([
             'name' => 'Admin PPOB',
-            'email' => 'admin@admin.com',
-            'password' => Hash::make('password'),
+            'email' => $email,
+            'password' => Hash::make($password),
             'is_admin' => true,
         ]);
     }

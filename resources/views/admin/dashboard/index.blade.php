@@ -68,7 +68,7 @@
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="grid grid-cols-1 gap-6">
     <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 overflow-x-auto">
         <h3 class="font-bold text-lg mb-4 text-white">Update Transaksi Terbaru</h3>
         @if($recentTransactions->count() > 0)
@@ -105,24 +105,5 @@
         @endif
     </div>
 
-    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
-        <h3 class="font-bold text-lg mb-4 text-white">Status Provider</h3>
-        <div class="space-y-4">
-            <div class="flex justify-between items-center p-3 bg-gray-900/50 rounded">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-indigo-600 rounded flex items-center justify-center text-white font-bold">DF</div>
-                    <span class="font-medium text-white">Digiflazz</span>
-                </div>
-                <span class="px-2 py-1 bg-emerald-900/30 text-emerald-400 border border-emerald-800 text-xs rounded-full font-bold">Active</span>
-            </div>
-            <div class="flex justify-between items-center p-3 bg-gray-900/50 rounded">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-indigo-600 rounded flex items-center justify-center text-white font-bold">TP</div>
-                    <span class="font-medium text-white">Tripay (Payment)</span>
-                </div>
-                <span class="px-2 py-1 bg-emerald-900/30 text-emerald-400 border border-emerald-800 text-xs rounded-full font-bold">Active</span>
-            </div>
-        </div>
-    </div>
 </div>
 @endsection

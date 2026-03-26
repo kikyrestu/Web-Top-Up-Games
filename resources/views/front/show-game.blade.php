@@ -2,8 +2,8 @@
 @section('title', $category->name . ' Top Up Murah')
 @section('meta_description', 'Top up ' . $category->name . ' cepat dan aman. Pilih nominal, metode pembayaran lengkap, dan proses otomatis.')
 @section('canonical', route('front.category', $category->slug ?? $category->id))
-@if(!empty($category->image))
-    @section('meta_image', asset('storage/' . $category->image))
+@if(!empty($category->thumbnail))
+    @section('meta_image', asset('storage/' . $category->thumbnail))
 @endif
 @push('jsonld')
 <script type="application/ld+json">
@@ -72,29 +72,29 @@
 @endpush
 
 @section('content')
-<div class="container mx-auto px-4 pt-24 md:pt-28 relative z-20">
-    <nav class="text-sm text-gray-400 mb-4" aria-label="Breadcrumb">
-        <ol class="inline-flex items-center space-x-2">
-            <li>
-                <a href="{{ route('front.index') }}" class="hover:text-white transition">Beranda</a>
-            </li>
-            <li>
-                <i class="fas fa-chevron-right text-xs text-gray-500"></i>
-            </li>
-            <li class="text-[#f97316] font-medium">{{ $category->name }}</li>
-        </ol>
-    </nav>
-</div>
-
 <!-- Hero Background & Category Info -->
 <div class="relative w-full h-[280px] md:h-[400px]">
     <!-- Background Image -->
-    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ $category->image ? asset('storage/'.$category->image) : 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80' }}'); filter: brightness(0.35);"></div>
-    <div class="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-transparent"></div>
+    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ $category->thumbnail ? asset('storage/'.$category->thumbnail) : 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80' }}'); filter: brightness(0.35);"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/20 to-[#121212]/80"></div>
+
+    <div class="container mx-auto px-4 pt-6 relative z-20">
+        <nav class="text-sm text-gray-300 drop-shadow-md mb-4 flex items-center" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-2">
+                <li>
+                    <a href="{{ route('front.index') }}" class="hover:text-white transition">Beranda</a>
+                </li>
+                <li>
+                    <i class="fas fa-chevron-right text-[10px] text-gray-400"></i>
+                </li>
+                <li class="text-[#f97316] font-medium">{{ $category->name }}</li>
+            </ol>
+        </nav>
+    </div>
     
     <!-- Game Detail Overlay -->
     <div class="absolute bottom-0 left-0 w-full px-4 md:px-8 lg:px-20 pb-4 flex items-end container mx-auto gap-4 md:gap-6 z-10 translate-y-12 md:translate-y-16">
-        <img src="{{ $category->image ? asset('storage/'.$category->image) : 'https://placehold.co/150' }}" alt="{{ $category->name }}" class="w-24 h-24 md:w-40 md:h-40 rounded-xl object-cover border-2 md:border-4 border-[#1c1c1c] shadow-2xl z-20 shrink-0">
+        <img src="{{ $category->thumbnail ? asset('storage/'.$category->thumbnail) : 'https://placehold.co/150' }}" alt="{{ $category->name }}" class="w-24 h-24 md:w-40 md:h-40 rounded-xl object-cover border-2 md:border-4 border-[#1c1c1c] shadow-2xl z-20 shrink-0">
         <div class="pb-1 md:pb-2 flex-grow">
             <h1 class="text-2xl md:text-5xl font-black text-white uppercase italic tracking-wider mb-0.5 md:mb-1 drop-shadow-lg">{{ $category->name }}</h1>
             <p class="text-gray-400 text-xs md:text-base mb-2 md:mb-4 font-medium">{{ $category->publisher ?? 'Publisher Unknown' }}</p>
@@ -198,83 +198,55 @@
             <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden">
                 <div class="bg-[#151515] px-4 py-3 md:p-4 border-b border-[#2d2d2d] flex items-center gap-3">
                     <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">4</span>
-                    <h2 class="text-base md:text-lg font-bold text-white">Pilih Pembayaran</h2>
+                    <h2 class="text-base md:text-lg font-bold text-white">Pilih Saluran Pembayaran</h2>
                 </div>
-                <div class="p-4 md:p-6" x-data="{ openEwallet: true, openVA: false }">
-                    @if($paymentGateways->isEmpty())
+                @php
+                    $groupedChannels = collect($paymentChannels ?? [])->groupBy('group_key');
+                    $firstGroupKey = $groupedChannels->keys()->first();
+                @endphp
+                <div class="p-4 md:p-6" x-data="{ activePayGroup: '{{ $firstGroupKey ?? '' }}' }">
+                    @if($groupedChannels->isEmpty())
                         <div class="text-center text-gray-500 py-8 bg-[#121212] rounded-lg border border-dashed border-[#333]">
                             <p class="text-sm text-gray-400">Metode pembayaran belum dikonfigurasi.</p>
                         </div>
                     @else
-                        <div class="space-y-4">
-                            <!-- Direct Items (e.g. QRIS, Credit) -->
-                            @foreach($paymentGateways->take(2) as $pg)
-                            <div class="border border-[#333] hover:border-[#f97316] bg-[#222] rounded-xl p-3 md:p-4 cursor-pointer relative overflow-hidden group transition-all"
-                                 :class="{'border-[#f97316] bg-[#f97316]/5': selectedPayment === {{ $pg->id }}}"
-                                 @click="selectPayment({{ $pg->id }}, '{{ $pg->name }}')">
-                                 
-                                <!-- Orange Tag top right -->
-                                <div class="absolute top-0 right-0 bg-[#f97316] text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg transform origin-top-right z-10">
-                                    CEPAT & MUDAH
-                                </div>
-
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
-                                    <div class="flex items-center gap-4">
-                                        @if($pg->logo)
-                                            <div class="w-16 h-10 md:w-20 md:h-12 bg-white rounded-lg flex items-center justify-center p-1.5 shrink-0">
-                                                <img src="{{ asset('storage/'.$pg->logo) }}" class="max-h-full max-w-full object-contain">
-                                            </div>
-                                        @else
-                                            <div class="w-16 h-10 md:w-20 md:h-12 bg-[#333] rounded-lg flex items-center justify-center text-gray-400 shrink-0">
-                                                <i class="fas fa-qrcode text-xl"></i>
-                                            </div>
-                                        @endif
-                                        <div>
-                                            <h3 class="font-bold text-sm md:text-base text-gray-200 group-hover:text-white transition">{{ $pg->name }}</h3>
-                                            <p class="text-[10px] md:text-xs text-gray-500 line-through mt-0.5">Rp <span x-text="formatRupiah((selectedPrice * quantity) + 1250)"></span></p>
-                                        </div>
-                                    </div>
-                                    <div class="text-[#f97316] font-black text-sm md:text-lg">
-                                        Rp <span x-text="formatRupiah(selectedPrice * quantity)"></span>
-                                    </div>
-                                </div>
-                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#f97316] scale-y-0 transition-transform duration-200" :class="{'scale-y-100': selectedPayment === {{ $pg->id }}}"></div>
-                            </div>
-                            @endforeach
-
-                            <!-- Accordion: E-Wallet -->
-                            <div class="border border-[#333] bg-[#1c1c1c] rounded-xl overflow-hidden mt-4">
-                                <button @click="openEwallet = !openEwallet" class="w-full bg-[#151515] px-4 py-3 md:p-4 flex items-center justify-between hover:bg-[#222] transition outline-none">
-                                    <h3 class="text-gray-300 font-bold text-sm md:text-base">E-Wallet</h3>
-                                    <i class="fas fa-chevron-down text-gray-500 transition-transform duration-300" :class="{'rotate-180': openEwallet}"></i>
+                        <div class="text-sm text-gray-400 mb-4">Semua Saluran Pembayaran</div>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                            <div class="lg:col-span-4 border border-[#333] rounded-xl bg-[#1a1a1a] overflow-hidden">
+                                @foreach($groupedChannels as $groupKey => $channels)
+                                <button type="button"
+                                        @click="activePayGroup = '{{ $groupKey }}'"
+                                        class="w-full text-left px-4 py-3 border-b border-[#2a2a2a] last:border-b-0 transition"
+                                        :class="activePayGroup === '{{ $groupKey }}' ? 'bg-[#f97316]/15 border-l-4 border-l-[#f97316]' : 'hover:bg-[#222]'">
+                                    <div class="text-white font-bold text-sm">{{ $channels->first()['group_label'] ?? 'Metode' }}</div>
+                                    <div class="text-[#f97316] text-xs font-semibold mt-1">Rp <span x-text="formatRupiah(selectedPrice * quantity)"></span></div>
                                 </button>
-                                <div x-show="openEwallet" x-collapse>
-                                    <div class="p-3 md:p-4 grid grid-cols-1 gap-3 bg-[#222]">
-                                        @foreach($paymentGateways->skip(2) as $pg)
-                                        <div class="border border-[#444] hover:border-[#f97316] bg-[#1c1c1c] rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer group"
-                                             :class="{'border-[#f97316]': selectedPayment === {{ $pg->id }}}"
-                                             @click="selectPayment({{ $pg->id }}, '{{ $pg->name }}')">
-                                            <div class="flex items-center gap-3">
-                                                 @if($pg->logo)
-                                                    <div class="w-14 h-8 md:w-16 md:h-10 bg-white rounded flex items-center justify-center p-1 shrink-0">
-                                                        <img src="{{ asset('storage/'.$pg->logo) }}" class="max-h-full max-w-full object-contain">
-                                                    </div>
-                                                @else
-                                                    <div class="w-14 h-8 md:w-16 md:h-10 bg-[#333] rounded flex items-center justify-center text-gray-400 shrink-0">
-                                                        <i class="fas fa-wallet"></i>
-                                                    </div>
-                                                @endif
-                                                <div class="text-sm font-bold text-gray-300 group-hover:text-white">{{ $pg->name }}</div>
+                                @endforeach
+                            </div>
+                            <div class="lg:col-span-8">
+                                @foreach($groupedChannels as $groupKey => $channels)
+                                <div x-show="activePayGroup === '{{ $groupKey }}'" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    @foreach($channels as $channel)
+                                    @php($channelDisplay = $channel['name'] . ' / ' . $channel['provider'])
+                                    <button type="button"
+                                            class="text-left border border-[#333] hover:border-[#f97316] bg-[#222] rounded-xl p-3 transition-all"
+                                            :class="(selectedPayment === {{ $channel['gateway_id'] }} && selectedPaymentName === @js($channelDisplay)) ? 'border-[#f97316] bg-[#f97316]/10' : ''"
+                                            @click="selectPayment({{ $channel['gateway_id'] }}, @js($channelDisplay))">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-12 h-12 rounded-lg bg-white text-gray-800 flex items-center justify-center text-[10px] font-bold px-1 text-center">
+                                                {{ strtoupper(substr($channel['name'], 0, 7)) }}
                                             </div>
-                                            <div class="text-[#f97316] font-bold text-sm">
-                                                Rp <span x-text="formatRupiah(selectedPrice * quantity)"></span>
+                                            <div>
+                                                <p class="text-white font-bold text-sm leading-tight">{{ $channel['name'] }}</p>
+                                                <p class="text-gray-500 text-[11px]">via {{ $channel['provider'] }}</p>
+                                                <p class="text-[#f97316] text-sm font-black mt-1">Rp <span x-text="formatRupiah(selectedPrice * quantity)"></span></p>
                                             </div>
                                         </div>
-                                        @endforeach
-                                    </div>
+                                    </button>
+                                    @endforeach
                                 </div>
+                                @endforeach
                             </div>
-
                         </div>
                     @endif
                 </div>
@@ -308,19 +280,23 @@
             <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden p-4 md:p-6 text-sm text-gray-300">
                 <h3 class="font-bold text-white mb-3">Deskripsi {{ $category->name }}</h3>
                 <div class="prose prose-sm prose-invert max-w-none">
-                    <p>Cara top up {{ $category->name }} proses cepat instan dengan pembayaran 100% aman terlengkap:</p>
-                    <ol class="list-decimal pl-5 space-y-1 mt-2 mb-4">
-                        <li>Pilih nominal</li>
-                        <li>Masukkan data akun</li>
-                        <li>Masukkan jumlah pembelian</li>
-                        <li>Pilih pembayaran</li>
-                        <li>Isi detail kontak</li>
-                        <li>Masukkan kode promo (jika ada)</li>
-                        <li>Klik order dan lakukan pembayaran</li>
-                        <li>Selesai</li>
-                    </ol>
-                    <hr class="border-[#333] my-4">
-                    <p class="text-xs text-gray-400">Pastikan ID dan server anda benar. Kesalahan input ID merupakan tanggung jawab pembeli sepenuhnya.</p>
+                    @if($category->description)
+                        {!! $category->description !!}
+                    @else
+                        <p>Cara top up {{ $category->name }} proses cepat instan dengan pembayaran 100% aman terlengkap:</p>
+                        <ol class="list-decimal pl-5 space-y-1 mt-2 mb-4 text-gray-400">
+                            <li>Pilih nominal</li>
+                            <li>Masukkan data akun</li>
+                            <li>Masukkan jumlah pembelian</li>
+                            <li>Pilih pembayaran</li>
+                            <li>Isi detail kontak</li>
+                            <li>Masukkan kode promo (jika ada)</li>
+                            <li>Klik order dan lakukan pembayaran</li>
+                            <li>Selesai</li>
+                        </ol>
+                        <hr class="border-[#333] my-4">
+                        <p class="text-xs text-gray-400">Pastikan ID dan server anda benar. Kesalahan input ID merupakan tanggung jawab pembeli sepenuhnya.</p>
+                    @endif
                 </div>
             </div>
 
@@ -387,7 +363,7 @@
             {{-- Rating box: removed fake data, will be added back when review system is built --}}
 
             <!-- Bantuan Box -->
-            <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] p-4 flex items-center gap-4 group cursor-pointer hover:bg-[#222] transition">
+            <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', \App\Models\Setting::get('contact_whatsapp') ?? '') }}" target="_blank" class="block bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] p-4 flex items-center gap-4 group cursor-pointer hover:bg-[#222] transition">
                 <div class="w-10 h-10 rounded-full bg-[#f97316]/10 flex items-center justify-center text-[#f97316]">
                     <i class="fas fa-headset text-xl group-hover:scale-110 transition-transform"></i>
                 </div>
@@ -395,7 +371,7 @@
                     <h4 class="text-white font-bold text-sm">Butuh Bantuan?</h4>
                     <p class="text-xs text-gray-400">Kamu bisa hubungi admin disini.</p>
                 </div>
-            </div>
+            </a>
 
             <!-- Checkout Summary Floating/Sticky -->
             <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden sticky top-24 shadow-2xl">
@@ -414,7 +390,7 @@
                         <h4 class="text-white font-black text-lg mb-4">Ringkasan Pesanan</h4>
                         
                         <div class="flex items-center gap-3 mb-4 p-3 bg-[#222] border border-[#333] rounded-lg">
-                            <img src="{{ $category->image ? asset('storage/'.$category->image) : 'https://placehold.co/150' }}" class="w-12 h-12 rounded object-cover border border-[#444]">
+                            <img src="{{ $category->thumbnail ? asset('storage/'.$category->thumbnail) : 'https://placehold.co/150' }}" class="w-12 h-12 rounded object-cover border border-[#444]">
                             <div>
                                 <p class="text-white text-sm font-bold" x-text="selectedProductName">Product Name</p>
                                 <p class="text-xs text-gray-400" x-text="'Jumlah: ' + quantity + 'x'">Jumlah: 1x</p>
@@ -476,9 +452,19 @@
             selectedProduct: null,
             selectedProductName: '',
             selectedPrice: 0,
+
+            preselectedProductId: {{ (int) ($preselectedProductId ?? 0) }},
+            preselectedProductName: @js(optional($products->firstWhere('id', (int) ($preselectedProductId ?? 0)))->name ?? ''),
+            preselectedProductPrice: {{ (float) (optional($products->firstWhere('id', (int) ($preselectedProductId ?? 0)))->price_sell ?? 0) }},
             
             selectedPayment: null,
             selectedPaymentName: '',
+
+            init() {
+                if (this.preselectedProductId > 0) {
+                    this.selectProduct(this.preselectedProductId, this.preselectedProductName, this.preselectedProductPrice);
+                }
+            },
 
             selectProduct(id, name, price) {
                 this.selectedProduct = id;

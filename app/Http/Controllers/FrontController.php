@@ -26,19 +26,20 @@ class FrontController extends Controller
 
         // Game Popular
         $popularGames = Category::where('is_active', true)
+                                ->gameTypes()
                                 ->where('is_popular', true)
                                 ->orderBy('sort_order')
                                 ->get();
 
         // PPOB categories for tabs (non-game types)
-        $gameTypes = ['game', 'seluler', 'pc', 'voucher'];
         $ppobCategories = Category::where('is_active', true)
-            ->whereNotIn('type', $gameTypes)
+            ->nonGameTypes()
             ->orderBy('sort_order')
             ->get();
 
         // Semua Game
         $allGamesQuery = Category::where('is_active', true)
+                            ->gameTypes()
                             ->orderBy('sort_order');
                             
         if ($searchQuery !== '') {
@@ -100,9 +101,8 @@ class FrontController extends Controller
      */
     public function topUpGame()
     {
-        $gameTypes = ['game', 'seluler', 'pc', 'voucher'];
         $categories = Category::where('is_active', true)
-            ->whereIn('type', $gameTypes)
+            ->gameTypes()
             ->orderBy('sort_order')
             ->get();
 
@@ -116,9 +116,8 @@ class FrontController extends Controller
      */
     public function ppob()
     {
-        $gameTypes = ['game', 'seluler', 'pc', 'voucher'];
         $categories = Category::where('is_active', true)
-            ->whereNotIn('type', $gameTypes)
+            ->nonGameTypes()
             ->orderBy('sort_order')
             ->get();
 
@@ -127,7 +126,7 @@ class FrontController extends Controller
         return view('front.ppob', compact('categories', 'grouped'));
     }
 
-    public function showCategory($slug)
+    public function showCategory(Request $request, $slug)
     {
         $category = Category::where('slug', $slug)
             ->where('is_active', true)
@@ -152,16 +151,27 @@ class FrontController extends Controller
             ->where('is_active', true)
             ->orderBy('price_sell')
             ->get();
-        $paymentGateways = PaymentGateway::where('is_active', true)->get();
+
+        $preselectedProductId = (int) $request->query('product', 0);
+        if ($preselectedProductId > 0) {
+            $existsInCategory = $products->contains(fn($product) => (int) $product->id === $preselectedProductId);
+            if (! $existsInCategory) {
+                $preselectedProductId = 0;
+            }
+        }
+
+        $paymentGateways = $this->mapPaymentGatewaysForCustomer(
+            PaymentGateway::where('is_active', true)->get()
+        );
+        $paymentChannels = $this->buildPaymentChannelOptions($paymentGateways);
         $formFields = $category->getFormFields();
 
         // Route to correct view based on category type
-        $gameTypes = ['game', 'seluler', 'pc', 'voucher'];
-        $viewName = in_array(strtolower((string) $category->type), $gameTypes)
+        $viewName = Category::isGameType($category->type)
             ? 'front.show-game'
             : 'front.show-ppob';
 
-        return view($viewName, compact('category', 'products', 'paymentGateways', 'formFields'));
+        return view($viewName, compact('category', 'products', 'paymentGateways', 'paymentChannels', 'formFields', 'preselectedProductId'));
     }
 
     public function checkout(Request $request)
@@ -277,6 +287,124 @@ class FrontController extends Controller
         $contactEmail = Setting::get('contact_email');
 
         return view('front.page', compact('slug', 'page', 'contactWhatsapp', 'contactEmail'));
+    }
+
+    private function mapPaymentGatewaysForCustomer($gateways)
+    {
+        return $gateways->map(function ($gateway) {
+            [$displayName, $fallbackType, $methods, $channels] = $this->resolveGatewayPresentation((string) $gateway->code, (string) $gateway->name);
+
+            $gateway->setAttribute('display_name', $displayName);
+            $gateway->setAttribute('customer_methods', $methods);
+            $gateway->setAttribute('customer_channels', $channels);
+
+            if (empty($gateway->type)) {
+                $gateway->setAttribute('type', $fallbackType);
+            }
+
+            return $gateway;
+        });
+    }
+
+    private function resolveGatewayPresentation(string $code, string $name): array
+    {
+        $normalizedCode = strtolower(trim($code));
+
+        if (in_array($normalizedCode, ['doku', 'dompetx'], true)) {
+            return [
+                'QRIS / E-Wallet / Virtual Account / Retail',
+                'otomatis',
+                ['QRIS', 'E-Wallet', 'Virtual Account', 'Alfamart/Indomaret'],
+                [
+                    'e_wallet' => ['DANA', 'ShopeePay', 'GoPay', 'GoPay Token', 'OVO', 'LinkAja', 'Jenius Pay', 'Sakuku', 'Doku Wallet'],
+                    'transfer_bank' => ['BCA Virtual Account', 'BNI Virtual Account', 'BRI Virtual Account', 'Permata Virtual Account', 'CIMB Virtual Account'],
+                    'qris' => ['QRIS'],
+                    'otc_non_bank' => ['Alfamart', 'Indomaret'],
+                    'perbankan_online' => ['Perbankan Online'],
+                    'kartu_debit_kredit' => ['Kartu Debit / Kredit'],
+                ],
+            ];
+        }
+
+        if ($normalizedCode === 'midtrans') {
+            return [
+                'QRIS / E-Wallet / Virtual Account / Retail',
+                'otomatis',
+                ['QRIS', 'GoPay/ShopeePay', 'Virtual Account', 'Alfamart/Indomaret'],
+                [
+                    'e_wallet' => ['GoPay', 'ShopeePay'],
+                    'transfer_bank' => ['BCA Virtual Account', 'BNI Virtual Account', 'BRI Virtual Account', 'Permata Virtual Account'],
+                    'qris' => ['QRIS'],
+                    'otc_non_bank' => ['Alfamart', 'Indomaret'],
+                    'kartu_debit_kredit' => ['Kartu Debit / Kredit'],
+                ],
+            ];
+        }
+
+        if ($normalizedCode === 'klikqris') {
+            return [
+                'QRIS',
+                'qris',
+                ['QRIS'],
+                [
+                    'qris' => ['QRIS'],
+                ],
+            ];
+        }
+
+        return [
+            $name,
+            'other',
+            [$name],
+            [
+                'other' => [$name],
+            ],
+        ];
+    }
+
+    private function buildPaymentChannelOptions($gateways)
+    {
+        $result = [];
+        $seen = [];
+
+        foreach ($gateways as $gateway) {
+            $channels = (array) ($gateway->customer_channels ?? []);
+            foreach ($channels as $groupKey => $items) {
+                foreach ((array) $items as $channelName) {
+                    $dedupeKey = strtolower($groupKey . '|' . $gateway->id . '|' . $channelName);
+                    if (isset($seen[$dedupeKey])) {
+                        continue;
+                    }
+                    $seen[$dedupeKey] = true;
+                    $result[] = [
+                        'group_key' => (string) $groupKey,
+                        'group_label' => $this->channelGroupLabel((string) $groupKey),
+                        'name' => (string) $channelName,
+                        'gateway_id' => (int) $gateway->id,
+                        'provider' => (string) $gateway->name,
+                    ];
+                }
+            }
+        }
+
+        return collect($result);
+    }
+
+    private function channelGroupLabel(string $groupKey): string
+    {
+        $labels = [
+            'e_wallet' => 'E-wallet',
+            'transfer_bank' => 'Transfer Bank',
+            'qris' => 'QRIS',
+            'otc_non_bank' => 'OTC non-Bank',
+            'perbankan_online' => 'Perbankan online',
+            'kartu_debit_kredit' => 'Kartu Debit / Kredit',
+            'voucher_fisik' => 'Voucher Fisik',
+            'sms_seluler' => 'SMS & Seluler',
+            'other' => 'Lainnya',
+        ];
+
+        return $labels[$groupKey] ?? ucwords(str_replace('_', ' ', $groupKey));
     }
 }
 

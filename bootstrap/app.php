@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             '/callback/*', // Bypass CSRF for all callbacks (like Tripay)
+            '/webhook/pg/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

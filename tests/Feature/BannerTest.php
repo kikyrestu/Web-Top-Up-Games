@@ -12,7 +12,7 @@ class BannerTest extends TestCase
     public function test_can_save_html_banner()
     {
         $this->withoutExceptionHandling();
-        $user = User::factory()->create();
+        $user = User::factory()->create(['is_admin' => true]);
 
         $response = $this->actingAs($user)->post('/admin/banners', [
             'title' => 'Test Promo',

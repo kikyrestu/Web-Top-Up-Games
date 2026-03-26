@@ -1,9 +1,11 @@
 <?php
 namespace Tests\Feature;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ErrorDetailTest extends TestCase
 {
+    use RefreshDatabase;
     public function test_artikel_exception(): void
     {
         try {
@@ -16,6 +18,7 @@ class ErrorDetailTest extends TestCase
 
     public function test_kategori_exception(): void
     {
+        $category = \App\Models\Category::create(['name' => 'Pulsa Reguler', 'slug' => 'pulsa-reguler', 'category_type' => 'ppob', 'is_active' => true]);
         try {
             $response = $this->withoutExceptionHandling()->get('/kategori/pulsa-reguler');
         } catch (\Throwable $e) {

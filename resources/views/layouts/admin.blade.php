@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $global_site_name ?? 'PPOBKu' }} Admin - @yield('title', 'Control Panel')</title>
     
     <!-- Google Fonts: Plus Jakarta Sans -->
@@ -88,7 +89,7 @@
     <div class="flex h-screen overflow-hidden">
 
         <!-- Sidebar -->
-        <aside :class="sidebarOpen ? 'translate-x-0 w-[270px]' : '-translate-x-full w-0'" class="flex-shrink-0 relative z-20 h-full flex flex-col transition-all duration-300 ease-in-out bg-dark-800 border-r border-dark-700 shadow-2xl">
+        <aside :class="sidebarOpen ? 'w-[270px] translate-x-0 border-r border-dark-700' : 'w-0 -translate-x-[270px] border-r-0'" class="flex-shrink-0 relative z-20 h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out bg-dark-800 shadow-2xl">
             <!-- Logo Area -->
             <div class="h-20 flex items-center justify-between px-6 border-b border-dark-700 bg-dark-800 shrink-0">
                 <div class="flex items-center gap-3 w-full" x-show="sidebarOpen">
@@ -107,7 +108,7 @@
             <nav class="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
                 
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-3 {{ request()->routeIs('admin.dashboard') ? 'bg-brand-500/10 text-brand-400' : 'text-gray-400 hover:bg-dark-700/50 hover:text-white' }} px-4 py-3 rounded-xl transition duration-200 group">
-                    <i class="fas fa-grid-2 w-5 text-xl transition-transform group-hover:scale-110 {{ request()->routeIs('admin.dashboard') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
+                    <i class="fas fa-gauge-high w-5 text-xl transition-transform group-hover:scale-110 {{ request()->routeIs('admin.dashboard') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
                     <span class="font-semibold text-sm" x-show="sidebarOpen">Dashboard</span>
                 </a>
 
