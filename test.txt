@@ -1,0 +1,232 @@
+﻿@extends('layouts.front')
+
+@section('title', 'Top Up Game Cepat & Murah')
+
+@section('content')
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+
+    @if(request()->has('q'))
+    <div class="mb-8 p-6 bg-card rounded-2xl border border-gray-800 shadow-xl text-center">
+        <h2 class="text-2xl md:text-3xl font-bold text-white">
+            Hasil Pencarian untuk: <span class="text-primary">"{{ request('q') }}"</span>
+        </h2>
+        <p class="text-gray-400 mt-2">Menampilkan sekian game yang relevan dengan pencarianmu.</p>
+    </div>
+    @else
+    <!-- Dynamic Hero Banner -->
+    <div x-data="{ activeSlide: 0, slides: {{ count($banners) }} }" x-init="if(slides > 1) setInterval(() => { activeSlide = activeSlide === slides - 1 ? 0 : activeSlide + 1 }, 5000)" class="w-full rounded-2xl h-48 md:h-80 relative overflow-hidden mb-10 shadow-lg group border-2 border-gray-800">
+        @forelse($banners as $index => $banner)
+            <div x-show="activeSlide === {{ $index }}" x-transition.opacity.duration.500ms class="absolute inset-0">
+                @if($banner->link)
+                    <a href="{{ $banner->link }}" target="_blank">
+                @endif
+                <img src="{{ Storage::url($banner->image) }}" alt="{{ $banner->title }}" class="w-full h-full object-cover rounded-xl">
+                @if($banner->link)
+                    </a>
+                @endif
+            </div>
+        @empty
+            <div class="w-full bg-gradient-to-r from-[#FF4E00] to-[#EC9F05] rounded-xl h-48 md:h-80 relative overflow-hidden flex items-center justify-center">
+                <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] mix-blend-overlay"></div>
+                <div class="absolute -right-20 -top-20 opacity-30 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+                <div class="relative z-10 text-center text-white px-4 flex flex-col items-center">
+                    <span class="bg-black/50 text-yellow-400 px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-3 border border-yellow-400/50 backdrop-blur-md">
+                        <i class="fas fa-fire mr-1"></i> Flash Promo
+                    </span>
+                    <h1 class="text-3xl md:text-6xl font-black italic mb-3 tracking-wide transform -skew-x-6 drop-shadow-2xl">
+                        TOP UP GAME<br><span class="text-black bg-yellow-400 px-4 py-1 rounded-sm mt-2 inline-block">PALING BRUTAL ⚡</span>
+                    </h1>
+                    <p class="md:text-lg font-bold bg-black/60 inline-flex items-center px-5 py-2 rounded-lg backdrop-blur-md mt-2 border border-gray-700">
+                        <i class="fas fa-bolt text-yellow-400 mr-2 text-xl"></i> BUKA 24 JAM NON-STOP
+                    </p>
+                </div>
+            </div>
+        @endforelse
+
+        @if(count($banners) > 1)
+            <button @click="activeSlide = activeSlide === 0 ? slides - 1 : activeSlide - 1" class="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-black/40 rounded-full flex items-center justify-center text-white cursor-pointer hover:bg-black/80 transition opacity-0 group-hover:opacity-100"><i class="fas fa-chevron-left"></i></button>
+            <button @click="activeSlide = activeSlide === slides - 1 ? 0 : activeSlide + 1" class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-black/40 rounded-full flex items-center justify-center text-white cursor-pointer hover:bg-black/80 transition opacity-0 group-hover:opacity-100"><i class="fas fa-chevron-right"></i></button>
+            
+            <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                @foreach($banners as $index => $banner)
+                    <button @click="activeSlide = {{ $index }}" :class="activeSlide === {{ $index }} ? 'bg-primary w-6' : 'bg-white/50 w-2'" class="h-2 rounded-full transition-all duration-300"></button>
+                @endforeach
+            </div>
+        @endif
+    </div>
+    @endif
+
+    <!-- PPOB Instant Widget -->
+    <div class="bg-card rounded-2xl border border-gray-800 shadow-2xl p-4 md:p-6 mb-12 relative z-20 -mt-16 md:-mt-24 mx-2 md:mx-12"
+         x-data="{
+            tab: 'pulsa',
+            phone: '',
+            provider: null,
+            selected: null,
+            products: [],
+            detectProvider() {
+                this.selected = null;
+
+                if (this.tab === 'pln') {
+                    if (this.phone.length >= 10) {
+                        this.provider = {name: 'PLN', color: 'text-yellow-400'};
+                        fetch(`/api/ppob/products?category=pln&provider=pln`)
+                            .then(res => res.json())
+                            .then(data => this.products = data);
+                    } else {
+                        this.provider = null;
+                        this.products = [];
+                    }
+                    return;
+                }
+
+                if (this.tab === 'ewallet') {
+                    if (this.phone.length >= 10) {
+                        this.provider = {name: 'E-WALLET', color: 'text-blue-400'};
+                        fetch(`/api/ppob/products?category=ewallet`)
+                            .then(res => res.json())
+                            .then(data => this.products = data);
+                    } else {
+                        this.provider = null;
+                        this.products = [];
+                    }
+                    return;
+                }
+
+                if(this.phone.length < 4) { this.provider = null; this.products = []; return; }
+                let prefix = this.phone.substring(0,4);
+                if(['0812','0813','0821','0822','0852','0853','0811'].includes(prefix)) { this.provider = {name: 'TELKOMSEL', color: 'text-red-600'}; }
+                else if(['0814','0815','0816','0855','0856','0857','0858'].includes(prefix)) { this.provider = {name: 'INDOSAT', color: 'text-yellow-400'}; }
+                else if(['0895','0896','0897','0898','0899'].includes(prefix)) { this.provider = {name: 'TRI', color: 'text-white'}; }
+                else if(['0817','0818','0819','0859','0877','0878'].includes(prefix)) { this.provider = {name: 'XL', color: 'text-blue-500'}; }
+                else if(['0831','0832','0833','0881','0882'].includes(prefix)) { this.provider = {name: 'SMARTFREN', color: 'text-pink-500'}; }
+                else { this.provider = null; this.products = []; return; }
+
+                if(this.provider && this.phone.length >= 4) {
+                    fetch(`/api/ppob/products?category=${this.tab}&provider=${this.provider.name}`)
+                        .then(res => res.json())
+                        .then(data => this.products = data);
+                }
+            }
+         }">
+
+         <!-- Tabs PPOB -->
+         <div class="flex space-x-6 border-b border-gray-800 pb-3 mb-5 overflow-x-auto hide-scroll text-sm font-bold">
+             <button @click="tab = 'pulsa'; phone = ''; provider = null; products = []; selected = null" :class="tab === 'pulsa' ? 'text-primary border-b-2 border-primary pb-3 -mb-3' : 'text-gray-400 hover:text-gray-200 transition'">
+                 <i class="fas fa-mobile-alt mr-1"></i> Pulsa
+             </button>
+             <button @click="tab = 'data'; phone = ''; provider = null; products = []; selected = null" :class="tab === 'data' ? 'text-primary border-b-2 border-primary pb-3 -mb-3' : 'text-gray-400 hover:text-gray-200 transition'">
+                 <i class="fas fa-wifi mr-1"></i> Paket Data
+             </button>
+             <button @click="tab = 'pln'; phone = ''; provider = null; products = []; selected = null" :class="tab === 'pln' ? 'text-primary border-b-2 border-primary pb-3 -mb-3' : 'text-gray-400 hover:text-gray-200 transition'">
+                 <i class="fas fa-bolt mr-1"></i> Token PLN
+             </button>
+             <button @click="tab = 'ewallet'; phone = ''; provider = null; products = []; selected = null" :class="tab === 'ewallet' ? 'text-primary border-b-2 border-primary pb-3 -mb-3' : 'text-gray-400 hover:text-gray-200 transition'">
+                 <i class="fas fa-wallet mr-1"></i> E-Wallet
+             </button>
+         </div>
+
+         <!-- Input Area -->
+         <div class="relative mb-4">
+             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                 <i class="fas fa-keyboard text-gray-500"></i>
+             </div>
+             <input type="number" x-model="phone" @keyup="detectProvider" class="w-full bg-gray-900 border border-gray-700 text-white rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition" :placeholder="tab === 'pln' ? 'Masukkan Nomor Meter/ID Pelanggan (min 10 digit)...' : (tab === 'ewallet' ? 'Masukkan Nomor E-Wallet...' : 'Masukkan Nomor HP (Cth: 08123...)')">
+             <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none" x-show="provider">
+                 <span class="text-xs font-bold" :class="provider?.color" x-text="provider?.name"></span>
+             </div>
+         </div>
+
+         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-h-60 overflow-y-auto hide-scroll">
+             <template x-for="prod in products" :key="prod.id">
+                 <div @click="selected = prod" :class="selected?.id === prod.id ? 'border-primary bg-primary/10' : 'border-gray-700 hover:border-gray-500'" class="border rounded-xl p-3 cursor-pointer transition text-center flex flex-col justify-center relative">
+                     <div class="font-bold text-white text-sm mb-1" x-text="prod.name"></div>
+                     <div class="text-primary text-xs font-semibold">Rp <span x-text="new Intl.NumberFormat('id-ID').format(prod.price)"></span></div>
+                     <div x-show="selected?.id === prod.id" class="absolute -top-2 -right-2 bg-primary text-white p-1 rounded-full text-[10px] w-5 h-5 flex items-center justify-center"><i class="fas fa-check"></i></div>
+                 </div>
+             </template>
+             <div x-show="phone.length >= 4 && products.length === 0" class="col-span-full text-center text-gray-500 text-sm py-4">Produk tidak tersedia untuk nomor ini.</div>
+         </div>
+    </div>
+
+    <!-- Games Populer -->
+    <div x-data="{ filter: 'all' }">
+        <div class="flex justify-between items-end mb-4 mt-16">
+            <div>
+                <h2 class="text-2xl font-black text-white tracking-wide uppercase italic"><i class="fas fa-gamepad text-primary mr-2"></i>Katalog Game</h2>
+                <p class="text-sm text-gray-400 mt-1">Paling sering di top-up player!</p>
+            </div>
+            <a href="#" class="text-primary hover:text-white text-sm font-semibold transition hidden sm:block">Lihat Semua Game</a>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="flex space-x-2 md:space-x-3 mb-6 overflow-x-auto hide-scroll pb-2">
+            <button @click="filter = 'all'" :class="filter === 'all' ? 'bg-primary text-white border-primary shadow-[0_0_15px_rgba(249,115,22,0.4)]' : 'bg-card text-gray-400 border-gray-800 hover:border-gray-600 hover:text-white'" class="px-5 py-2 rounded-full border text-sm font-bold whitespace-nowrap transition-all duration-300">
+                Semua Game
+            </button>
+            <button @click="filter = 'mobile'" :class="filter === 'mobile' ? 'bg-primary text-white border-primary shadow-[0_0_15px_rgba(249,115,22,0.4)]' : 'bg-card text-gray-400 border-gray-800 hover:border-gray-600 hover:text-white'" class="px-5 py-2 rounded-full border text-sm font-bold whitespace-nowrap transition-all duration-300">
+                <i class="fas fa-mobile-alt mr-2"></i>Mobile
+            </button>
+            <button @click="filter = 'pc'" :class="filter === 'pc' ? 'bg-primary text-white border-primary shadow-[0_0_15px_rgba(249,115,22,0.4)]' : 'bg-card text-gray-400 border-gray-800 hover:border-gray-600 hover:text-white'" class="px-5 py-2 rounded-full border text-sm font-bold whitespace-nowrap transition-all duration-300">
+                <i class="fas fa-desktop mr-2"></i>PC
+            </button>
+            <button @click="filter = 'voucher'" :class="filter === 'voucher' ? 'bg-primary text-white border-primary shadow-[0_0_15px_rgba(249,115,22,0.4)]' : 'bg-card text-gray-400 border-gray-800 hover:border-gray-600 hover:text-white'" class="px-5 py-2 rounded-full border text-sm font-bold whitespace-nowrap transition-all duration-300">
+                <i class="fas fa-ticket-alt mr-2"></i>Voucher
+            </button>
+        </div>
+
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4 mb-10">
+            @forelse($categories as $category)
+            <a href="{{ route('front.category', $category->id) }}"
+               x-show="filter === 'all' || 
+                      (filter === 'mobile' && ['mobile legends', 'free fire', 'pubg', 'genshin'].some(k => '{{ strtolower($category->name) }}'.includes(k))) ||
+                      (filter === 'pc' && ['valorant', 'point blank'].some(k => '{{ strtolower($category->name) }}'.includes(k))) ||
+                      (filter === 'voucher' && ['voucher', 'playstation', 'steam'].some(k => '{{ strtolower($category->name) }}'.includes(k)))"
+               class="group relative bg-card rounded-2xl overflow-hidden border border-gray-800 hover:border-primary transition duration-300 block hover:-translate-y-1 shadow-md hover:shadow-[0_4px_20px_rgba(249,115,22,0.3)]">
+            <div class="aspect-[3/4] w-full overflow-hidden bg-gray-900 border-b border-gray-800">
+                <img src="{{ $category->thumbnail ? asset('storage/'.$category->thumbnail) : 'https://ui-avatars.com/api/?name='.urlencode($category->name).'&background=random' }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            </div>
+            <div class="p-2 text-center bg-card">
+                <h3 class="font-bold text-white text-xs sm:text-sm line-clamp-1 group-hover:text-primary transition">{{ $category->name }}</h3>
+                <p class="text-[10px] text-gray-500 mt-1 truncate">Publisher</p>
+            </div>
+        </a>
+        @empty
+            <div class="col-span-full py-12 text-center text-gray-500 bg-card rounded-xl border border-gray-800">
+                <i class="fas fa-box-open text-4xl mb-3 text-gray-600"></i>
+                <p class="text-sm">Belum ada game yang tersedia saat ini.</p>
+            </div>
+        @endforelse
+    </div>
+
+    <!-- Artikel Section -->
+    <div class="mb-10">
+        <div class="flex justify-between items-end mb-2">
+            <h2 class="text-xl font-bold text-white tracking-wide uppercase">Artikel & Berita</h2>
+            <a href="{{ route('front.article.index') }}" class="text-primary hover:text-white text-sm hidden sm:block">Lihat Semua</a>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            @forelse($latestArticles as $article)
+            <a href="{{ route('front.article.show', $article->slug) }}" class="bg-card rounded-2xl overflow-hidden border border-gray-800 group cursor-pointer hover:-translate-y-1 transition duration-300 hover:border-gray-600 flex flex-col h-full">
+                <div class="h-48 bg-gray-800 relative overflow-hidden">
+                    <img src="{{ $article->image ? asset('storage/'.$article->image) : 'https://ui-avatars.com/api/?name=News' }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute bottom-4 left-4 z-20 pr-4">
+                        <h3 class="font-bold text-white leading-tight line-clamp-2">{{ $article->title }}</h3>
+                    </div>
+                </div>
+                <div class="p-5 flex-grow flex flex-col">
+                    <div class="text-xs text-primary font-bold mb-2">{{ $article->created_at->format('d M Y') }}</div>
+                    <p class="text-xs text-gray-400 line-clamp-2">{{ Str::limit(strip_tags($article->content), 80) }}</p>
+                </div>
+            </a>
+            @empty
+            <div class="col-span-full border border-dashed border-gray-800 rounded-2xl text-center py-8 text-gray-500 text-sm">Belum ada artikel.</div>
+            @endforelse
+        </div>
+    </div>
+
+</div>
+@endsection
+
+

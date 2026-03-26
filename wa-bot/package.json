@@ -1,0 +1,14 @@
+{
+  "name": "wa-bot-sidecar",
+  "version": "1.0.0",
+  "description": "WhatsApp Web.js sidecar for PPOB admin notifications",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "^1.26.0",
+    "qrcode": "^1.5.4",
+    "express": "^4.21.0"
+  }
+}
