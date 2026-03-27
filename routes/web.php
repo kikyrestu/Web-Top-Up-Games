@@ -137,7 +137,7 @@ Route::post('/webhook/pg/{gatewayCode}', [TransactionController::class, 'handleW
 // Secret Admin Login
 Route::get('/admin/buildywebadmin/Login', function (Request $request) {
     if (!str_contains($_SERVER['REQUEST_URI'] ?? '', '?=AdminPanel')) {
-        abort(404);
+        return "URL is: " . $request->fullUrl();
     }
     return view('admin.auth.login');
 })->middleware('guest')->name('admin.secret.login');
@@ -243,6 +243,7 @@ Route::middleware('throttle:60,1')->get('/api/ppob/products', function(Request $
     }));
 })->name('api.ppob.products');
 
-
-
-
+// Guest Identity API
+Route::prefix('api/v1')->group(function() {
+    Route::post('/guest/session/init', [\App\Http\Controllers\Api\GuestSessionController::class, 'init'])->name('api.guest.init');
+});

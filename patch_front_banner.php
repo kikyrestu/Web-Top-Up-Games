@@ -5,7 +5,7 @@ $content = file_get_contents($filepath);
 $search = '<!-- Hero Banner (Static Placeholder) -->
     <div class="w-full bg-gradient-to-r from-orange-600 to-red-600 rounded-2xl h-48 md:h-80 relative overflow-hidden mb-10 shadow-lg flex items-center justify-center">
         <!-- Overlay pattern or image can go here -->
-        <div class="absolute inset-0 opacity-20 bg-[url(''https://www.transparenttextures.com/patterns/carbon-fibre.png'')]"></div>
+        <div class="absolute inset-0 opacity-20 bg-[url(\'https://www.transparenttextures.com/patterns/carbon-fibre.png\')]"></div>
         <div class="relative z-10 text-center text-white px-4">
             <h1 class="text-3xl md:text-5xl font-black italic mb-2 tracking-wide transform -skew-x-6 drop-shadow-md">TOP UP GAME<br><span class="text-yellow-300">CEPAT DAN MURAH</span></h1>
             <p class="md:text-lg font-semibold bg-black/30 inline-block px-4 py-1 rounded-full backdrop-blur-sm mt-2">BUKA 24 JAM, KIAMAT BUKA SETENGAH HARI</p>
@@ -29,7 +29,7 @@ $replace = '<!-- Dynamic Hero Banner -->
             </div>
         @empty
             <div class="w-full bg-gradient-to-r from-orange-600 to-red-600 rounded-2xl h-48 md:h-80 relative overflow-hidden mb-10 flex items-center justify-center">
-                <div class="absolute inset-0 opacity-20 bg-[url(''https://www.transparenttextures.com/patterns/carbon-fibre.png'')]"></div>
+                <div class="absolute inset-0 opacity-20 bg-[url(\'https://www.transparenttextures.com/patterns/carbon-fibre.png\')]"></div>
                 <div class="relative z-10 text-center text-white px-4">
                     <h1 class="text-3xl md:text-5xl font-black italic mb-2 tracking-wide transform -skew-x-6 drop-shadow-md">TOP UP GAME<br><span class="text-yellow-300">CEPAT DAN MURAH</span></h1>
                     <p class="md:text-lg font-semibold bg-black/30 inline-block px-4 py-1 rounded-full backdrop-blur-sm mt-2">BUKA 24 JAM, KIAMAT BUKA SETENGAH HARI</p>
@@ -45,7 +45,7 @@ $replace = '<!-- Dynamic Hero Banner -->
             <!-- Indicators -->
             <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
                 @foreach($banners as $index => $banner)
-                    <button @click="activeSlide = {{ $index }}" :class="activeSlide === {{ $index }} ? ''bg-primary w-6'' : ''bg-white/50 w-2''" class="h-2 rounded-full transition-all duration-300"></button>
+                    <button @click="activeSlide = {{ $index }}" :class="activeSlide === {{ $index }} ? \'bg-primary w-6\' : \'bg-white/50 w-2\'" class="h-2 rounded-full transition-all duration-300"></button>
                 @endforeach
             </div>
         @endif

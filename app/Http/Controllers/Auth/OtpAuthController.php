@@ -94,6 +94,9 @@ class OtpAuthController extends Controller
             $user->update(['is_verified' => true]);
             Auth::login($user);
             
+            // Sync guest transactions
+            app(\App\Services\GuestIdentityService::class)->syncTransactionsToUser($user);
+            
             session()->forget(['otp_target', 'otp_type']);
             
             return redirect()->route('member.dashboard');

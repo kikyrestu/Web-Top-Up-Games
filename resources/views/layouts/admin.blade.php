@@ -133,6 +133,14 @@
                     <span class="font-medium text-sm" x-show="sidebarOpen">API Provider</span>
                 </a>
                 
+                <a href="{{ route('admin.articles.index') }}" class="flex items-center space-x-3 text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded transition">
+                    <i class="fas fa-newspaper w-5"></i>
+                    <span x-show="sidebarOpen">Artikel / Berita</span>
+                </a>
+                <a href="{{ route('admin.banners.index') }}" class="flex items-center space-x-3 text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded transition">
+                    <i class="fas fa-images w-5"></i>
+                    <span x-show="sidebarOpen">Banner Promo</span>
+                </a>
                 <a href="{{ route('admin.payment-gateways.index') }}" class="flex items-center space-x-3 {{ request()->routeIs('admin.payment-gateways.*') ? 'bg-brand-500/10 text-brand-400' : 'text-gray-400 hover:bg-dark-700/50 hover:text-white' }} px-4 py-3 rounded-xl transition duration-200 group">
                     <i class="fas fa-credit-card w-5 text-lg transition-transform group-hover:scale-110 {{ request()->routeIs('admin.payment-gateways.*') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
                     <span class="font-medium text-sm" x-show="sidebarOpen">Payment Gateway</span>
@@ -141,11 +149,6 @@
                 <div class="pt-6 pb-2" x-show="sidebarOpen">
                     <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-4">Konten Website</p>
                 </div>
-
-                <a href="{{ route('admin.banners.index') }}" class="flex items-center space-x-3 {{ request()->routeIs('admin.banners.*') ? 'bg-brand-500/10 text-brand-400' : 'text-gray-400 hover:bg-dark-700/50 hover:text-white' }} px-4 py-3 rounded-xl transition duration-200 group">
-                    <i class="fas fa-image w-5 text-lg transition-transform group-hover:scale-110 {{ request()->routeIs('admin.banners.*') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
-                    <span class="font-medium text-sm" x-show="sidebarOpen">Banner Promo</span>
-                </a>
 
                 <a href="{{ route('admin.articles.index') }}" class="flex items-center space-x-3 {{ request()->routeIs('admin.articles.*') ? 'bg-brand-500/10 text-brand-400' : 'text-gray-400 hover:bg-dark-700/50 hover:text-white' }} px-4 py-3 rounded-xl transition duration-200 group">
                     <i class="fas fa-newspaper w-5 text-lg transition-transform group-hover:scale-110 {{ request()->routeIs('admin.articles.*') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>

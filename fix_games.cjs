@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const file = 'D:/PROJECT/webppobdantopup/resources/views/front/index.blade.php';
+const file = './resources/views/front/index.blade.php';
 let content = fs.readFileSync(file, 'utf8');
 
 const startIdx = content.indexOf('<!-- Kategori Top-Up Game -->');

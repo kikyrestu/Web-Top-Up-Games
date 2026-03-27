@@ -2,7 +2,7 @@
 $filepath = __DIR__.'/resources/views/layouts/admin.blade.php';
 $content = file_get_contents($filepath);
 
-$content = preg_replace('/<a href="\{\{\s*route\(''admin\.banners\.index''\)\s*\}\}".*?<\/a>\s*/s', '', $content);
+$content = preg_replace('/<a href="\{\{\s*route\(\'admin\.banners\.index\'\)\s*\}\}".*?<\/a>\s*/s', '', $content);
 
 $search = '<a href="{{ route(\'admin.articles.index\') }}" class="flex items-center space-x-3 text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded transition">
                     <i class="fas fa-newspaper w-5"></i>
