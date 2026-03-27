@@ -24,12 +24,20 @@ class TransactionController extends Controller
             'target_id' => 'required|string',
             'target_zone' => 'nullable|string',
             'product_id' => 'required|exists:products,id',
-            'payment_gateway_id' => 'required|exists:payment_gateways,id',
+            'payment_method' => 'required|string', // can be 'wallet' or payment gateway ID
             'quantity' => 'required|integer|min:1',
         ]);
 
         $product = Product::with('providerMappings.apiProvider')->findOrFail($request->product_id);
-        $paymentGateway = PaymentGateway::findOrFail($request->payment_gateway_id);
+        
+        $isWalletPayment = $request->payment_method === 'wallet';
+        $paymentGateway = null;
+        
+        if (!$isWalletPayment) {
+            $paymentGateway = PaymentGateway::findOrFail($request->payment_method);
+        } else if (!auth()->check()) {
+            return back()->with('error', 'Silakan login terlebih dahulu untuk membayar menggunakan Saldo.');
+        }
 
         $selectedMapping = $product->resolveCheapestProviderMapping();
         if (! $selectedMapping) {
@@ -49,10 +57,14 @@ class TransactionController extends Controller
         $subtotal = $unitSellPrice * $quantity;
 
         // Fee calculation: flat + percentage
-        $feeFlat = (float) ($paymentGateway->fee_flat ?? 0);
-        $feePct  = (float) ($paymentGateway->fee_percent ?? 0);
+        $feeFlat = $isWalletPayment ? 0 : (float) ($paymentGateway->fee_flat ?? 0);
+        $feePct  = $isWalletPayment ? 0 : (float) ($paymentGateway->fee_percent ?? 0);
         $feeAmount = $feeFlat + (($subtotal * $feePct) / 100);
         $totalAmount = $subtotal + $feeAmount;
+        
+        if ($isWalletPayment && auth()->user()->wallet_balance < $totalAmount) {
+             return back()->with('error', 'Saldo tidak mencukupi untuk transaksi ini.');
+        }
 
         $targetInput = $request->target_id;
         if ($request->filled('target_zone')) {
@@ -72,11 +84,11 @@ class TransactionController extends Controller
                 'customer_email' => $request->customer_email,
                 'customer_whatsapp' => $request->customer_whatsapp,
                 'target_input' => $targetInput,
-                'payment_gateway_id' => $paymentGateway->id,
+                'payment_gateway_id' => $isWalletPayment ? null : $paymentGateway->id,
                 'subtotal' => $subtotal,
                 'fee_amount' => $feeAmount,
                 'total_amount' => $totalAmount,
-                'payment_status' => 'unpaid',
+                'payment_status' => $isWalletPayment ? 'paid' : 'unpaid',
                 'transaction_status' => 'pending',
             ]);
 
@@ -94,18 +106,33 @@ class TransactionController extends Controller
                 'commission_amount' => $commissionAmount * $quantity,
             ]);
 
-            // Dynamic Payment Gateway — resolve driver and create payment
-            $gatewayDriver = PaymentGatewayFactory::resolve($paymentGateway);
-            $credentials   = $paymentGateway->credentials ?? [];
-            $pgResponse    = $gatewayDriver->createPayment($transaction, $credentials, $paymentGateway->is_test_mode);
-
-            if ($pgResponse) {
+            if ($isWalletPayment) {
+                // Deduct from wallet immediately
+                $walletService = new \App\Services\WalletService();
+                $deducted = $walletService->deduct(auth()->user(), $totalAmount, $invoiceNumber, 'Pembayaran Transaksi ' . $invoiceNumber);
+                
+                if (!$deducted) {
+                    throw new \Exception('Gagal memotong saldo wallet.');
+                }
+                
+                // Set pg response custom for wallet
                 $transaction->update([
-                    'api_response' => json_encode($pgResponse),
-                    'payment_reference' => $pgResponse['reference'] ?? null,
+                    'api_response' => json_encode(['method' => 'wallet', 'status' => 'paid']),
                 ]);
             } else {
-                throw new \Exception('Gagal membuat transaksi di Payment Gateway (' . strtoupper($paymentGateway->code) . '). Pastikan konfigurasi API Keys sudah benar di Admin Panel.');
+                // Dynamic Payment Gateway — resolve driver and create payment
+                $gatewayDriver = PaymentGatewayFactory::resolve($paymentGateway);
+                $credentials   = $paymentGateway->credentials ?? [];
+                $pgResponse    = $gatewayDriver->createPayment($transaction, $credentials, $paymentGateway->is_test_mode);
+
+                if ($pgResponse) {
+                    $transaction->update([
+                        'api_response' => json_encode($pgResponse),
+                        'payment_reference' => $pgResponse['reference'] ?? null,
+                    ]);
+                } else {
+                    throw new \Exception('Gagal membuat transaksi di Payment Gateway (' . strtoupper($paymentGateway->code) . '). Pastikan konfigurasi API Keys sudah benar di Admin Panel.');
+                }
             }
 
             DB::commit();
@@ -117,16 +144,33 @@ class TransactionController extends Controller
                 Log::warning('Notification dispatch failed: ' . $notifEx->getMessage());
             }
 
+            // Immediately trigger order to provider if paid with wallet
+            if ($isWalletPayment) {
+                try {
+                    $item = $transaction->items()->first();
+                    if ($item && $item->api_provider_id) {
+                        $providerParams = \App\Models\ApiProvider::find($item->api_provider_id);
+                        if ($providerParams && \App\Services\Provider\ProviderSyncFactory::supportsSync($providerParams->code)) {
+                            $service = \App\Services\Provider\ProviderSyncFactory::resolve($providerParams);
+                            if (method_exists($service, 'createTransaction')) {
+                                $service->createTransaction($transaction);
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Provider order failed (wallet payment): ' . $e->getMessage());
+                }
+            }
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
                     'invoice_number' => $transaction->invoice_number,
-                    'redirect_url' => $pgResponse['checkout_url'] ?? route('transaction.show', $transaction->invoice_number),
+                    'redirect_url' => $isWalletPayment ? route('transaction.show', $transaction->invoice_number) : ($pgResponse['checkout_url'] ?? route('transaction.show', $transaction->invoice_number)),
                 ]);
             }
 
-            // Redirect to gateway checkout URL if available, otherwise invoice page
-            $redirectUrl = $pgResponse['checkout_url'] ?? route('transaction.show', $transaction->invoice_number);
+            $redirectUrl = $isWalletPayment ? route('transaction.show', $transaction->invoice_number) : ($pgResponse['checkout_url'] ?? route('transaction.show', $transaction->invoice_number));
             return redirect($redirectUrl);
 
         } catch (\Exception $e) {
@@ -200,27 +244,40 @@ class TransactionController extends Controller
                 'payment_reference' => $reference,
             ]);
 
-            // Notify admin
-            try {
-                \App\Services\NotificationService::notifyAdmin($transaction, 'paid');
-            } catch (\Exception $e) {
-                Log::warning('Notification failed (paid): ' . $e->getMessage());
-            }
+            // Is it a wallet top-up?
+            if (str_starts_with($transaction->invoice_number, 'TOPUP-') && $transaction->user_id) {
+                $transaction->update(['transaction_status' => 'success']);
+                
+                $walletService = new \App\Services\WalletService();
+                $walletService->topUp(
+                    \App\Models\User::find($transaction->user_id), 
+                    $transaction->subtotal, 
+                    $transaction->invoice_number, 
+                    'Top Up Saldo ' . $gateway->name
+                );
+            } else {
+                // Regular transaction: Notify admin
+                try {
+                    \App\Services\NotificationService::notifyAdmin($transaction, 'paid');
+                } catch (\Exception $e) {
+                    Log::warning('Notification failed (paid): ' . $e->getMessage());
+                }
 
-            // Trigger order to provider
-            try {
-                $item = $transaction->items()->first();
-                if ($item && $item->api_provider_id) {
-                    $provider = \App\Models\ApiProvider::find($item->api_provider_id);
-                    if ($provider && \App\Services\Provider\ProviderSyncFactory::supportsSync($provider->code)) {
-                        $service = \App\Services\Provider\ProviderSyncFactory::resolve($provider);
-                        if (method_exists($service, 'createTransaction')) {
-                            $service->createTransaction($transaction);
+                // Trigger order to provider
+                try {
+                    $item = $transaction->items()->first();
+                    if ($item && $item->api_provider_id) {
+                        $provider = \App\Models\ApiProvider::find($item->api_provider_id);
+                        if ($provider && \App\Services\Provider\ProviderSyncFactory::supportsSync($provider->code)) {
+                            $service = \App\Services\Provider\ProviderSyncFactory::resolve($provider);
+                            if (method_exists($service, 'createTransaction')) {
+                                $service->createTransaction($transaction);
+                            }
                         }
                     }
+                } catch (\Exception $e) {
+                    Log::error('Provider order failed: ' . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                Log::error('Provider order failed: ' . $e->getMessage());
             }
 
         } elseif ($status === 'failed') {
@@ -229,10 +286,12 @@ class TransactionController extends Controller
                 'payment_reference' => $reference,
             ]);
 
-            try {
-                \App\Services\NotificationService::notifyAdmin($transaction, 'failed');
-            } catch (\Exception $e) {
-                Log::warning('Notification failed (failed): ' . $e->getMessage());
+            if (!str_starts_with($transaction->invoice_number, 'TOPUP-')) {
+                try {
+                    \App\Services\NotificationService::notifyAdmin($transaction, 'failed');
+                } catch (\Exception $e) {
+                    Log::warning('Notification failed (failed): ' . $e->getMessage());
+                }
             }
         }
 

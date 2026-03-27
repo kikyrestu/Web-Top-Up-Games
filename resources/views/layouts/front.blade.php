@@ -63,28 +63,7 @@
         <script type="application/ld+json">{!! json_encode($organizationSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
         <script type="application/ld+json">{!! json_encode($websiteSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
         @stack('jsonld')
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        up: {
-                            darkest: '#0c0f17', /* Topbar */
-                            nav: '#1d2235',     /* Navbar bg */
-                            body: '#111620',    /* Main background */
-                            card: '#242a40',    /* Card background */
-                            border: '#343b54',  /* Border line */
-                            textmuted: '#8a94ad',
-                            yellow: '#f49e0b',  /* Buttons/Highlight */
-                            yellowhover: '#d98b08',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Fonts -->

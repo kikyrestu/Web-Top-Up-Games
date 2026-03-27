@@ -17,35 +17,7 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tailwind CSS with Config -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                    },
-                    colors: {
-                        dark: {
-                            900: '#0B0F19',
-                            800: '#151C2C',
-                            700: '#1F293F',
-                            600: '#2A3752',
-                        },
-                        brand: {
-                            500: '#4F46E5', // Indigo
-                            400: '#6366F1',
-                        },
-                        accent: {
-                            500: '#06B6D4', // Cyan
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         /* Custom Scrollbar for modern look */

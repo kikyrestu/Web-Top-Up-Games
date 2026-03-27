@@ -142,10 +142,27 @@ Route::get('/admin/buildywebadmin/Login', function (Request $request) {
     return view('admin.auth.login');
 })->middleware('guest')->name('admin.secret.login');
 
-// --- ADMIN / MEMBER DASHBOARD ---
+// --- ADMIN / CUSTOMER DASHBOARD REDIRECT ---
 Route::get('/dashboard', function () {
-    return redirect()->route('admin.dashboard');
+    if (auth()->user()->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
+    return redirect()->route('member.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+// --- MEMBER DASHBOARD ROUTES ---
+Route::middleware(['auth', 'verified'])->prefix('member')->name('member.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\CustomerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/transactions', [\App\Http\Controllers\CustomerController::class, 'transactions'])->name('transactions');
+    Route::get('/transactions/{invoice}', [\App\Http\Controllers\CustomerController::class, 'transactionDetail'])->name('transactions.show');
+    Route::get('/profile', [\App\Http\Controllers\CustomerController::class, 'profile'])->name('profile');
+    Route::put('/profile', [\App\Http\Controllers\CustomerController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profile/password', [\App\Http\Controllers\CustomerController::class, 'updatePassword'])->name('profile.password');
+    Route::get('/favorites', [\App\Http\Controllers\CustomerController::class, 'favorites'])->name('favorites');
+    Route::post('/favorites/{category}', [\App\Http\Controllers\CustomerController::class, 'toggleFavorite'])->name('favorites.toggle');
+    Route::get('/wallet', [\App\Http\Controllers\WalletController::class, 'index'])->name('wallet');
+    Route::post('/wallet/topup', [\App\Http\Controllers\WalletController::class, 'topUp'])->name('wallet.topup');
+});
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

@@ -9,13 +9,35 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
+Route::middleware([
+    EncryptCookies::class,
+    AddQueuedCookiesToResponse::class,
+    StartSession::class,
+    ShareErrorsFromSession::class,
+    PreventRequestForgery::class,
+    SubstituteBindings::class,
+    'guest',
+])->group(function () {
+    Route::get('register', [\App\Http\Controllers\Auth\OtpAuthController::class, 'showRegister'])
         ->name('register');
 
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    Route::post('register', [\App\Http\Controllers\Auth\OtpAuthController::class, 'register']);
+
+    Route::get('verify-otp', [\App\Http\Controllers\Auth\OtpAuthController::class, 'showVerify'])
+        ->name('otp.verify');
+        
+    Route::post('verify-otp', [\App\Http\Controllers\Auth\OtpAuthController::class, 'verify']);
+    
+    Route::post('resend-otp', [\App\Http\Controllers\Auth\OtpAuthController::class, 'resend'])
+        ->name('otp.resend');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
@@ -35,7 +57,15 @@ Route::middleware('guest')->group(function () {
         ->name('password.store');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware([
+    EncryptCookies::class,
+    AddQueuedCookiesToResponse::class,
+    StartSession::class,
+    ShareErrorsFromSession::class,
+    PreventRequestForgery::class,
+    SubstituteBindings::class,
+    'auth',
+])->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 

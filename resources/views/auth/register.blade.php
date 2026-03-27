@@ -19,6 +19,15 @@
             @error('name') <p class="text-red-400 text-xs mt-1.5">{{ $message }}</p> @enderror
         </div>
 
+        <!-- WhatsApp -->
+        <div class="mt-4">
+            <label for="whatsapp" class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Nomor WhatsApp</label>
+            <input id="whatsapp" type="text" name="whatsapp" value="{{ old('whatsapp') }}" required autocomplete="tel"
+                   class="w-full bg-[#0f1118] border border-[#2d2d2d] text-white text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition placeholder-gray-600"
+                   placeholder="08123456789">
+            @error('whatsapp') <p class="text-red-400 text-xs mt-1.5">{{ $message }}</p> @enderror
+        </div>
+
         <!-- Email Address -->
         <div class="mt-4">
             <label for="email" class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Email</label>
