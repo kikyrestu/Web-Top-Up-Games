@@ -8,15 +8,15 @@ Web PPOB & Top Up Games berbasis Laravel + MySQL. Admin bisa konfigurasi API pro
 ## Phase 1 — Foundation & Setup
 **Target: Project siap dikembangkan**
 
-- [ ] Init Laravel project di `webppobdantopup/`
-- [ ] Setup `.env` dengan koneksi MySQL Laragon
-- [ ] Install dependencies:
+- [x] Init Laravel project di `webppobdantopup/`
+- [x] Setup `.env` dengan koneksi MySQL Laragon
+- [x] Install dependencies:
   - `laravel/ui` atau `breeze` untuk auth admin
   - `intervention/image` untuk upload gambar
   - `maatwebsite/excel` untuk export Excel
   - `barryvdh/laravel-dompdf` untuk export PDF
   - `guzzlehttp/guzzle` untuk HTTP client ke provider API
-- [ ] Setup database & jalankan migrasi awal
+- [x] Setup database & jalankan migrasi awal
 - [ ] Buat seeder: admin default, kategori default
 
 ### Migrasi Database (urutan)
@@ -36,29 +36,29 @@ Web PPOB & Top Up Games berbasis Laravel + MySQL. Admin bisa konfigurasi API pro
 **Target: Admin bisa kelola produk & konfigurasi**
 
 ### 2A. Auth & Layout Admin
-- [ ] Setup middleware admin
-- [ ] Layout admin (sidebar, navbar, breadcrumb)
-- [ ] Halaman login admin
-- [ ] Dashboard placeholder
+- [x] Setup middleware admin
+- [x] Layout admin (sidebar, navbar, breadcrumb)
+- [x] Halaman login admin
+- [x] Dashboard placeholder
 
 ### 2B. Manajemen Kategori & Produk
-- [ ] CRUD kategori
-- [ ] CRUD produk (dengan harga modal, harga jual, margin)
-- [ ] Upload gambar produk
-- [ ] Toggle aktif/nonaktif
+- [x] CRUD kategori
+- [x] CRUD produk (dengan harga modal, harga jual, margin)
+- [x] Upload gambar produk
+- [x] Toggle aktif/nonaktif
 
 ### 2C. Konfigurasi API Provider
-- [ ] CRUD provider
-- [ ] Form input kredensial dinamis (stored encrypted di DB)
+- [x] CRUD provider
+- [x] Form input kredensial dinamis (stored encrypted di DB)
 - [ ] Service Layer: `ProviderInterface` + implementasi Digiflazz
 - [ ] Test koneksi / ping endpoint
 - [ ] Sinkronisasi produk dari provider
 
 ### 2D. Konfigurasi Payment Gateway
-- [ ] CRUD payment gateway
-- [ ] Input kredensial (encrypted)
-- [ ] Toggle test/live mode
-- [ ] Service Layer: `PaymentInterface` + implementasi Tripay
+- [x] CRUD payment gateway
+- [x] Input kredensial (encrypted)
+- [x] Toggle test/live mode
+- [x] Service Layer: `PaymentInterface` + implementasi Tripay
 
 ---
 
@@ -66,17 +66,17 @@ Web PPOB & Top Up Games berbasis Laravel + MySQL. Admin bisa konfigurasi API pro
 **Target: Alur transaksi berjalan end-to-end**
 
 ### 3A. Alur Customer
-- [ ] Halaman home + katalog produk
-- [ ] Form order (input target + pilih produk)
+- [x] Halaman home + katalog produk
+- [x] Form order (input target + pilih produk)
 - [ ] Validasi input (cek nomor/ID jika provider support)
-- [ ] Pilih payment method
-- [ ] Preview order + konfirmasi
+- [x] Pilih payment method
+- [x] Preview order + konfirmasi
 
 ### 3B. Proses Pembayaran
-- [ ] Generate invoice / kode unik transaksi
-- [ ] Redirect ke payment gateway
-- [ ] Halaman waiting payment + countdown
-- [ ] Webhook handler payment gateway (update status bayar)
+- [x] Generate invoice / kode unik transaksi
+- [x] Redirect ke payment gateway
+- [x] Halaman waiting payment + countdown
+- [x] Webhook handler payment gateway (update status bayar)
 
 ### 3C. Proses ke Provider
 - [ ] Setelah payment confirmed → trigger ke API provider
