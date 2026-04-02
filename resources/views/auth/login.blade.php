@@ -13,21 +13,26 @@
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
-        <!-- Email Address -->
+        <!-- Login Credential -->
         <div>
-            <label for="email" class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Email</label>
-            <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username"
+            <label for="login" class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Email / Username / WhatsApp</label>
+            <input id="login" type="text" name="login" value="{{ old('login') }}" required autofocus autocomplete="username"
                    class="w-full bg-[#0f1118] border border-[#2d2d2d] text-white text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition placeholder-gray-600"
-                   placeholder="email@gmail.com">
-            @error('email') <p class="text-red-400 text-xs mt-1.5">{{ $message }}</p> @enderror
+                   placeholder="Masukkan Email, Username, atau nomor WA">
+            @error('login') <p class="text-red-400 text-xs mt-1.5">{{ $message }}</p> @enderror
         </div>
 
         <!-- Password -->
-        <div class="mt-4">
+        <div class="mt-4" x-data="{ show: false }">
             <label for="password" class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Password</label>
-            <input id="password" type="password" name="password" required autocomplete="current-password"
-                   class="w-full bg-[#0f1118] border border-[#2d2d2d] text-white text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition placeholder-gray-600"
-                   placeholder="••••••••">
+            <div class="relative">
+                <input id="password" :type="show ? 'text' : 'password'" name="password" required autocomplete="current-password"
+                       class="w-full bg-[#0f1118] border border-[#2d2d2d] text-white text-sm rounded-lg px-4 py-3 pr-10 focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition placeholder-gray-600"
+                       placeholder="••••••••">
+                <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-[#f97316] transition-colors focus:outline-none">
+                    <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                </button>
+            </div>
             @error('password') <p class="text-red-400 text-xs mt-1.5">{{ $message }}</p> @enderror
         </div>
 
@@ -54,4 +59,6 @@
             <a href="{{ route('register') }}" class="text-[#f97316] font-semibold hover:text-[#ff983f] transition">Daftar Sekarang</a>
         </p>
     </form>
+
+
 </x-guest-layout>

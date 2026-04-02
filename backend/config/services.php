@@ -42,9 +42,9 @@ return [
     ],
 
     'rajabiller' => [
-        'base_url' => env('RAJABILLER_BASE_URL'),
-        'username' => env('RAJABILLER_USERNAME'),
-        'api_key' => env('RAJABILLER_API_KEY'),
+        'base_url' => env('RAJABILLER_BASE_URL', 'https://api.rajabiller.com/transaksi/api_json.php'),
+        'uid' => env('RAJABILLER_UID'),
+        'pin' => env('RAJABILLER_PIN'),
     ],
 
     'orderkuota' => [

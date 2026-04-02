@@ -5,6 +5,7 @@ namespace App\Services\Otp\Drivers;
 use App\Services\Otp\OtpProviderInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config; // Added this line
 
 class SendGridEmail implements OtpProviderInterface
 {
@@ -12,7 +13,9 @@ class SendGridEmail implements OtpProviderInterface
     {
         $apiKey = $credentials['api_key'] ?? '';
         $fromEmail = $credentials['from_address'] ?? '';
-        $fromName = $credentials['from_name'] ?? config('app.name');
+        
+        $siteName = \App\Models\Setting::get('site_name', config('app.name'));
+        $fromName = $credentials['from_name'] ?? $siteName;
 
         if (empty($apiKey) || empty($fromEmail)) {
             Log::error('SendGrid credentials missing.');
@@ -21,6 +24,17 @@ class SendGridEmail implements OtpProviderInterface
 
         $subject = "Kode OTP Anda - {$fromName}";
         $message = "Kode OTP registrasi Anda adalah: {$code}. Jangan memberikan kode ini ke siapapun. Berlaku selama 5 menit.";
+
+        $template = \App\Models\Setting::get('email_otp_template');
+        if (empty($template)) {
+            $template = $message;
+        }
+
+        $htmlMessage = str_replace(
+            ['{OTP}', '{APP_NAME}'],
+            [$code, $fromName],
+            $template
+        );
 
         try {
             $response = Http::withToken($apiKey)->post('https://api.sendgrid.com/v3/mail/send', [
@@ -36,8 +50,8 @@ class SendGridEmail implements OtpProviderInterface
                 'subject' => $subject,
                 'content' => [
                     [
-                        'type' => 'text/plain',
-                        'value' => $message,
+                        'type' => 'text/html',
+                        'value' => $htmlMessage,
                     ]
                 ],
             ]);

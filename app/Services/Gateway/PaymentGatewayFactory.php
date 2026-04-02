@@ -13,6 +13,7 @@ class PaymentGatewayFactory
         'midtrans'  => MidtransGateway::class,
         'xendit'    => XenditGateway::class,
         'doku'      => DokuGateway::class,
+        'klikqris'  => KlikQRISGateway::class,
     ];
 
     /**

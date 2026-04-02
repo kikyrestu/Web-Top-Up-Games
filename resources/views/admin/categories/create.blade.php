@@ -18,7 +18,7 @@
 
         <div class="mb-4">
             <label for="type" class="block text-gray-300 text-sm font-bold mb-2">Tipe / Platform <span class="text-red-500">*</span></label>
-            <select name="type" id="type" x-model="categoryType" class="w-full px-3 py-2 bg-gray-700 border-gray-600 text-white rounded focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" required>
+            <select name="type" id="type" x-model="categoryType" @change="$dispatch('type-changed', { type: categoryType })" class="w-full px-3 py-2 bg-gray-700 border-gray-600 text-white rounded focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" required>
                 <optgroup label="🎮 Game">
                     <option value="game" {{ old('type') == 'game' ? 'selected' : '' }}>Game (Umum)</option>
                     <option value="seluler" {{ old('type') == 'seluler' ? 'selected' : '' }}>Game Seluler (Mobile)</option>
@@ -127,7 +127,7 @@
         </div>
 
         <!-- Form Template Preset -->
-        <div class="mb-4 border border-gray-600 rounded-lg p-4 bg-gray-900/50" x-data="formTemplateBuilder()">
+        <div class="mb-4 border border-gray-600 rounded-lg p-4 bg-gray-900/50" x-data="formTemplateBuilder()" @type-changed.window="handleTypeChange($event.detail.type)">
             <label class="block text-gray-300 text-sm font-bold mb-1">
                 <i class="fas fa-list-alt mr-1"></i> Template Form Pelanggan
             </label>
@@ -282,12 +282,25 @@ function formTemplateBuilder(existing = []) {
         return 'custom';
     }
 
+    const typePresetMap = {
+        'game': 'userid_server', 'seluler': 'userid_server', 'pc': 'userid_only', 'voucher': 'voucher',
+        'pulsa': 'nomor_hp', 'paket_data': 'nomor_hp', 'pln': 'id_pelanggan', 'pdam': 'id_pelanggan',
+        'bpjs': 'nomor_peserta', 'internet': 'id_pelanggan', 'emoney': 'nomor_hp', 'ppob': 'id_pelanggan',
+    };
+
     return {
         fields: existing.length > 0 ? existing.map(f => ({...f})) : [],
         selectedPreset: detectPreset(existing),
         applyPreset() {
             if (this.selectedPreset === 'custom') return;
             this.fields = presets[this.selectedPreset] ? presets[this.selectedPreset].map(f => ({...f})) : [];
+        },
+        handleTypeChange(type) {
+            const preset = typePresetMap[type];
+            if (preset) {
+                this.selectedPreset = preset;
+                this.applyPreset();
+            }
         },
         addField() {
             this.fields.push({ name: 'target', label: '', placeholder: '', required: true });

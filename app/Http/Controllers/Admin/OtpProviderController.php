@@ -107,7 +107,7 @@ class OtpProviderController extends Controller
     public function testConnection(OtpProvider $otpProvider)
     {
         try {
-            $driver = OtpProviderFactory::resolve($otpProvider->code);
+            $driver = OtpProviderFactory::resolve($otpProvider);
             
             // For testing, we just check if the credentials logic passes the basic validation
             $isValid = $driver->validateCredentials($otpProvider->credentials ?? []);

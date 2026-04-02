@@ -19,4 +19,20 @@ interface ProviderSyncInterface
      *                - status_provider (string: available|disturb|empty)
      */
     public function getPriceList(array $credentials, array $options = []): array;
+
+    /**
+     * Create a transaction order to the provider.
+     *
+     * @param  \App\Models\Transaction  $transaction
+     * @return array|bool Array data on success, or false on failed/error
+     */
+    public function createTransaction(\App\Models\Transaction $transaction);
+
+    /**
+     * Check transaction status on the provider.
+     *
+     * @param  \App\Models\Transaction  $transaction
+     * @return string Updated status ('processing', 'success', 'failed')
+     */
+    public function checkStatus(\App\Models\Transaction $transaction): string;
 }

@@ -28,7 +28,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ];
     }
@@ -42,15 +42,45 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+        $login = $this->input('login');
+        
+        // Find the user by username, email, or whatsapp
+        $user = \App\Models\User::where('email', $login)
+            ->orWhere('username', $login)
+            ->orWhere('whatsapp', $login)
+            ->first();
 
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
+        if ($user && \Illuminate\Support\Facades\Hash::check($this->input('password'), $user->password)) {
+            Auth::login($user, $this->boolean('remember'));
+            
+            if (!$user->is_verified) {
+                // Log them out immediately
+                Auth::logout();
+                
+                // Resend OTP
+                $target = $user->email;
+                app(\App\Services\Otp\OtpService::class)->sendOtp($target, 'register');
+                
+                session([
+                    'otp_target' => $target,
+                    'otp_type' => 'register',
+                    'otp_channel' => 'email'
+                ]);
+                
+                throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                    redirect()->route('otp.verify')->with('status', 'Akun Anda belum terverifikasi. Silakan lakukan verifikasi OTP terlebih dahulu sebelum masuk.')
+                );
+            }
+
+            RateLimiter::clear($this->throttleKey());
+            return;
         }
 
-        RateLimiter::clear($this->throttleKey());
+        RateLimiter::hit($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'login' => trans('auth.failed'),
+        ]);
     }
 
     /**
@@ -69,7 +99,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'login' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -81,6 +111,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('login')).'|'.$this->ip());
     }
 }

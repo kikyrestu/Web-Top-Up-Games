@@ -28,19 +28,51 @@ class FrontController extends Controller
         $popularGames = Category::where('is_active', true)
                                 ->gameTypes()
                                 ->where('is_popular', true)
-                                ->orderBy('sort_order')
+                                ->orderBy('name')
                                 ->get();
 
-        // PPOB categories for tabs (non-game types)
+        // PPOB categories for tabs — normalize type variants so 'emoney'/'e-money'
+        // and 'ppob'/seterusnya semuanya masuk ke widget
+        $ppobTypeNormalize = [
+            'emoney'   => 'e-money',
+            'ewallet'  => 'e-money',
+            'e-wallet' => 'e-money',
+            'ppob'     => 'tagihan',   // Merge PPOB (internet pascabayar dll) into Tagihan tab
+        ];
+
         $ppobCategories = Category::where('is_active', true)
             ->nonGameTypes()
-            ->orderBy('sort_order')
-            ->get();
+            ->orderBy('name')
+            ->get()
+            ->map(function ($cat) use ($ppobTypeNormalize) {
+                // Normalize type to a canonical form
+                $normalized = strtolower(trim($cat->type ?? ''));
+                $cat->type  = $ppobTypeNormalize[$normalized] ?? $normalized;
+                return $cat;
+            });
+
+        $ppobGrouped = $ppobCategories->groupBy('type');
+
+        // Urutkan agar: pulsa, e-money, tagihan, tv (max 4 tab)
+        $preferredOrder = ['pulsa', 'e-money', 'tagihan', 'tv'];
+        $remaining = $ppobGrouped->reject(fn($v, $k) => in_array($k, $preferredOrder));
+        // Merge any extra types into 'tagihan' to enforce max 4 tabs
+        if ($remaining->isNotEmpty()) {
+            $tagihanItems = $ppobGrouped->get('tagihan', collect());
+            foreach ($remaining as $items) {
+                $tagihanItems = $tagihanItems->merge($items);
+            }
+            $ppobGrouped->put('tagihan', $tagihanItems);
+        }
+        $ppobGrouped = collect($preferredOrder)
+            ->filter(fn($k) => $ppobGrouped->has($k))
+            ->mapWithKeys(fn($k) => [$k => $ppobGrouped->get($k)]);
+
 
         // Semua Game
         $allGamesQuery = Category::where('is_active', true)
                             ->gameTypes()
-                            ->orderBy('sort_order');
+                            ->orderBy('name');
                             
         if ($searchQuery !== '') {
             $allGamesQuery->where('name', 'like', '%' . $searchQuery . '%');
@@ -52,7 +84,7 @@ class FrontController extends Controller
         if ($searchQuery !== '') {
             $searchCategories = Category::where('is_active', true)
                 ->where('name', 'like', '%' . $searchQuery . '%')
-                ->orderBy('sort_order')
+                ->orderBy('name')
                 ->limit(8)
                 ->get();
 
@@ -73,22 +105,49 @@ class FrontController extends Controller
         }
 
         // Kategori By Type
-        $selulerGames = Category::where('is_active', true)->where('type', 'seluler')->orderBy('sort_order')->get();
-        $pcGames = Category::where('is_active', true)->where('type', 'pc')->orderBy('sort_order')->get();
-        $voucherGames = Category::where('is_active', true)->where('type', 'voucher')->orderBy('sort_order')->get();
+        $selulerGames = Category::where('is_active', true)->where('type', 'seluler')->orderBy('name')->get();
+        $pcGames = Category::where('is_active', true)->where('type', 'pc')->orderBy('name')->get();
+        $voucherGames = Category::where('is_active', true)->where('type', 'voucher')->orderBy('name')->get();
+
+        // All Categories (games + PPOB) untuk section grid homepage
+        $allCategories = Category::where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         // Promo / Artikel terbaru
         $latestArticles = Article::where('is_published', true)->orderBy('created_at', 'desc')->take(3)->get();
+
+        // Produk Terlaris — top categories by transaction count (real-time)
+        try {
+            $topSellingCategories = \Illuminate\Support\Facades\DB::table('categories')
+                ->leftJoin('products', 'products.category_id', '=', 'categories.id')
+                ->leftJoin('transaction_items', 'transaction_items.product_id', '=', 'products.id')
+                ->leftJoin('transactions', function ($join) {
+                    $join->on('transactions.id', '=', 'transaction_items.transaction_id')
+                         ->where('transactions.transaction_status', '!=', 'failed');
+                })
+                ->where('categories.is_active', true)
+                ->groupBy('categories.id', 'categories.name', 'categories.slug', 'categories.type', 'categories.thumbnail', 'categories.icon')
+                ->selectRaw('categories.id, categories.name, categories.slug, categories.type, categories.thumbnail, categories.icon, COUNT(transactions.id) as transaction_count')
+                ->orderByDesc('transaction_count')
+                ->limit(10)
+                ->get();
+        } catch (\Exception $e) {
+            $topSellingCategories = collect();
+        }
 
         return view('front.index', compact(
             'banners',
             'ppobPromoBanner',
             'ppobCategories',
+            'ppobGrouped',
             'popularGames',
+            'topSellingCategories',
             'allGames',
             'selulerGames',
             'pcGames',
             'voucherGames',
+            'allCategories',
             'latestArticles',
             'searchQuery',
             'searchCategories',
@@ -103,7 +162,7 @@ class FrontController extends Controller
     {
         $categories = Category::where('is_active', true)
             ->gameTypes()
-            ->orderBy('sort_order')
+            ->orderBy('name')
             ->get();
 
         $grouped = $categories->groupBy('type');
@@ -149,7 +208,8 @@ class FrontController extends Controller
         $products = Product::with('providerMappings')
             ->where('category_id', $category->id)
             ->where('is_active', true)
-            ->orderBy('price_sell')
+            ->orderByRaw("CASE WHEN status_provider = 'available' THEN 0 ELSE 1 END")
+            ->orderBy('name')
             ->get();
 
         $preselectedProductId = (int) $request->query('product', 0);
@@ -166,12 +226,90 @@ class FrontController extends Controller
         $paymentChannels = $this->buildPaymentChannelOptions($paymentGateways);
         $formFields = $category->getFormFields();
 
+        // Calculate product groups for Modal Drill-Down
+        $productGroups = $products
+            ->whereNotNull('product_group')
+            ->groupBy('product_group')
+            ->map(function($groupItems, $groupName) {
+                return [
+                    'name' => $groupName,
+                    'count' => $groupItems->count(),
+                    // Determine semantic icon based on group name
+                    'icon' => str_contains(strtolower($groupName), 'data') ? 'fas fa-globe' : 
+                              (str_contains(strtolower($groupName), 'pulsa') ? 'fas fa-mobile-alt' : 
+                              (str_contains(strtolower($groupName), 'driver') ? 'fas fa-motorcycle' : 'fas fa-box'))
+                ];
+            })
+            ->values();
+
+        // Only show modal if there's more than 1 distinct group
+        $hasGroups = $productGroups->count() > 1;
+
+        // Calculate product types for 3-level hierarchy (type → group → product)
+        $productTypes = $products
+            ->whereNotNull('product_type')
+            ->groupBy('product_type')
+            ->map(function($typeItems, $typeName) {
+                // Calculate sub-groups within this type
+                $subGroups = $typeItems->whereNotNull('product_group')
+                    ->groupBy('product_group')
+                    ->map(function($groupItems, $groupName) {
+                        return [
+                            'name' => $groupName,
+                            'count' => $groupItems->count(),
+                            'icon' => str_contains(strtolower($groupName), 'data') ? 'fas fa-globe' :
+                                      (str_contains(strtolower($groupName), 'pulsa') ? 'fas fa-mobile-alt' :
+                                      (str_contains(strtolower($groupName), 'driver') ? 'fas fa-motorcycle' :
+                                      (str_contains(strtolower($groupName), 'nelfon') || str_contains(strtolower($groupName), 'sms') ? 'fas fa-phone' : 'fas fa-box')))
+                        ];
+                    })
+                    ->values();
+
+                return [
+                    'name' => $typeName,
+                    'count' => $typeItems->count(),
+                    'subGroups' => $subGroups,
+                    'hasSubGroups' => $subGroups->count() > 1,
+                    'icon' => str_contains(strtolower($typeName), 'data') ? 'fas fa-globe' :
+                              (str_contains(strtolower($typeName), 'pulsa') ? 'fas fa-mobile-alt' :
+                              (str_contains(strtolower($typeName), 'telepon') || str_contains(strtolower($typeName), 'sms') ? 'fas fa-phone' :
+                              (str_contains(strtolower($typeName), 'driver') ? 'fas fa-motorcycle' :
+                              (str_contains(strtolower($typeName), 'customer') || str_contains(strtolower($typeName), 'penumpang') ? 'fas fa-user' :
+                              (str_contains(strtolower($typeName), 'token') ? 'fas fa-bolt' :
+                              (str_contains(strtolower($typeName), 'starlight') ? 'fas fa-star' :
+                              (str_contains(strtolower($typeName), 'global') || str_contains(strtolower($typeName), 'indonesia') || str_contains(strtolower($typeName), 'malaysia') ? 'fas fa-globe-asia' : 'fas fa-box')))))))
+                ];
+            })
+            ->values();
+
+        $hasTypes = $productTypes->count() > 1;
+
+        // Load approved reviews for products in this category
+        $productIds = $products->pluck('id');
+        $reviews = \App\Models\ProductReview::with(['user', 'product'])
+            ->whereIn('product_id', $productIds)
+            ->where('is_approved', true)
+            ->latest()
+            ->take(20)
+            ->get();
+
         // Route to correct view based on category type
         $viewName = Category::isGameType($category->type)
             ? 'front.show-game'
             : 'front.show-ppob';
 
-        return view($viewName, compact('category', 'products', 'paymentGateways', 'paymentChannels', 'formFields', 'preselectedProductId'));
+        $isPostpaid = Category::isPostpaidType($category->type);
+
+        // Check if this game supports ID validation (nickname check)
+        $supportsIdValidation = false;
+        $gameValidatorInfo = null;
+        if (Category::isGameType($category->type)) {
+            $validator = new \App\Services\GameIdValidatorService();
+            $gameValidatorInfo = $validator->detectGameFromCategory($category->name);
+            $supportsIdValidation = $gameValidatorInfo !== null;
+        }
+
+        return view($viewName, compact('category', 'products', 'paymentGateways', 'paymentChannels', 'formFields', 'preselectedProductId', 'productGroups', 'hasGroups', 'productTypes', 'hasTypes', 'reviews', 'isPostpaid', 'supportsIdValidation', 'gameValidatorInfo'));
     }
 
     public function checkout(Request $request)
@@ -209,80 +347,14 @@ class FrontController extends Controller
         return view('front.cek-pesanan', compact('transaction'));
     }
 
+    public function calculator()
+    {
+        return view('front.calculator');
+    }
+
     public function page(string $slug)
     {
-        $pages = [
-            'daftar-harga' => [
-                'title' => 'Daftar Harga Layanan',
-                'description' => 'Lihat daftar harga top up game dan layanan PPOB terbaru dengan update berkala.',
-                'heading' => 'Daftar Harga Layanan',
-                'content' => [
-                    'Harga produk diperbarui secara berkala mengikuti harga provider.',
-                    'Untuk daftar harga terlengkap, gunakan fitur pencarian produk di beranda.',
-                    'Semua harga yang tampil saat checkout adalah harga final sebelum pembayaran.',
-                ],
-            ],
-            'faq' => [
-                'title' => 'FAQ Top Up dan Pembayaran',
-                'description' => 'Pertanyaan yang sering diajukan seputar top up, pembayaran, dan status transaksi.',
-                'heading' => 'Pertanyaan Umum (FAQ)',
-                'content' => [
-                    'Pesanan umumnya diproses otomatis dalam hitungan detik hingga menit.',
-                    'Jika pesanan belum masuk, cek kembali status pada halaman Cek Pesanan.',
-                    'Pastikan ID tujuan, nominal, dan metode pembayaran sudah benar sebelum bayar.',
-                ],
-                'faq_items' => [
-                    [
-                        'question' => 'Berapa lama proses top up setelah pembayaran berhasil?',
-                        'answer' => 'Sebagian besar transaksi diproses otomatis dalam hitungan detik hingga beberapa menit tergantung provider.',
-                    ],
-                    [
-                        'question' => 'Bagaimana jika status pesanan belum berubah?',
-                        'answer' => 'Silakan cek halaman Cek Pesanan menggunakan nomor invoice. Jika masih pending terlalu lama, hubungi customer support dengan menyertakan invoice.',
-                    ],
-                    [
-                        'question' => 'Apakah data tujuan bisa diubah setelah pembayaran?',
-                        'answer' => 'Data tujuan yang sudah dibayar umumnya tidak dapat diubah, jadi pastikan input ID/nomor sudah benar sebelum checkout.',
-                    ],
-                ],
-            ],
-            'kontak' => [
-                'title' => 'Hubungi Customer Support',
-                'description' => 'Hubungi tim customer support untuk bantuan transaksi, komplain, dan pertanyaan layanan.',
-                'heading' => 'Hubungi Customer Support',
-                'content' => [
-                    'Tim dukungan siap membantu kendala transaksi dan pembayaran Anda.',
-                    'Silakan kirim nomor invoice agar proses pengecekan lebih cepat.',
-                    'Gunakan kanal resmi yang tersedia untuk keamanan komunikasi.',
-                ],
-            ],
-            'syarat-ketentuan' => [
-                'title' => 'Syarat dan Ketentuan',
-                'description' => 'Ketentuan penggunaan layanan top up game dan PPOB yang berlaku di website ini.',
-                'heading' => 'Syarat dan Ketentuan',
-                'content' => [
-                    'Dengan menggunakan layanan, pengguna dianggap telah membaca dan menyetujui ketentuan ini.',
-                    'Kesalahan input data tujuan oleh pengguna di luar tanggung jawab sistem.',
-                    'Kami berhak melakukan pembaruan kebijakan tanpa pemberitahuan terpisah.',
-                ],
-            ],
-            'kebijakan-privasi' => [
-                'title' => 'Kebijakan Privasi',
-                'description' => 'Informasi pengelolaan data pengguna dan perlindungan privasi pada layanan kami.',
-                'heading' => 'Kebijakan Privasi',
-                'content' => [
-                    'Data yang dikumpulkan digunakan untuk pemrosesan transaksi dan peningkatan layanan.',
-                    'Kami tidak memperjualbelikan data pribadi pengguna kepada pihak ketiga.',
-                    'Pengguna dapat menghubungi customer support untuk pertanyaan terkait privasi data.',
-                ],
-            ],
-        ];
-
-        if (!isset($pages[$slug])) {
-            abort(404);
-        }
-
-        $page = $pages[$slug];
+        $page = \App\Models\Page::where('slug', $slug)->firstOrFail();
         $contactWhatsapp = Setting::get('contact_whatsapp');
         $contactEmail = Setting::get('contact_email');
 

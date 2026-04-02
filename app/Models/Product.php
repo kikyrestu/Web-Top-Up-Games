@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $fillable = [
-        'category_id', 'name',
-        'description', 'price_capital', 'price_sell', 'is_active', 'image',
+        'category_id', 'name', 'product_type', 'product_group',
+        'description', 'price_capital', 'price_sell', 'is_active', 'status_provider', 'image',
         'commission_type', 'commission_value',
     ];
 
@@ -83,17 +83,41 @@ class Product extends Model
     }
 
     /**
-     * Calculate commission amount for a given sell price.
+     * Calculate markup amount for a given base capital price based on effective commission settings.
+     * Postpaid/PPOB categories have 0 markup (commission fixed by provider).
      */
-    public function calculateCommission(float $sellPrice): float
+    public function calculateMarkup(float $basePrice = 0): float
     {
-        $commission = $this->getEffectiveCommission();
+        $category = $this->relationLoaded('category') ? $this->category : $this->category()->first();
+        if ($category && Category::isPostpaidType($category->type)) {
+            return 0; // Postpaid has no markup
+        }
 
+        $commission = $this->getEffectiveCommission();
         if ($commission['type'] === 'flat') {
             return $commission['value'];
         }
 
         // percentage
-        return round(($sellPrice * $commission['value']) / 100, 2);
+        return round(($basePrice * $commission['value']) / 100, 2);
+    }
+
+    /**
+     * Calculate suggested sell price using global defaults for auto-sync.
+     */
+    public static function calculateSuggestedPrice(float $capitalPrice, ?string $categoryType): float
+    {
+        if (Category::isPostpaidType($categoryType)) {
+            return $capitalPrice; // No markup for postpaid
+        }
+
+        $type  = Setting::get('default_commission_type', 'percentage');
+        $value = (float) Setting::get('default_commission_value', 0);
+
+        if ($type === 'flat') {
+            return $capitalPrice + $value;
+        }
+
+        return round($capitalPrice + (($capitalPrice * $value) / 100), 2);
     }
 }

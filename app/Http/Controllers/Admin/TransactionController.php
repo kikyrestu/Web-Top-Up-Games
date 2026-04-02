@@ -36,11 +36,11 @@ class TransactionController extends Controller
     public function update(Request $request, Transaction $transaction)
     {
         $request->validate([
-            'transaction_status' => 'required|in:PENDING,PAID,PROCESSING,SUCCESS,FAILED,EXPIRED',
+            'transaction_status' => 'required|in:pending,processing,success,failed,expired',
         ]);
 
         $transaction->update([
-            'transaction_status' => $request->transaction_status
+            'transaction_status' => strtolower($request->transaction_status),
         ]);
 
         return redirect()->back()->with('success', 'Status transaksi berhasil diperbarui.');

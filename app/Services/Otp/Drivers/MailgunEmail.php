@@ -3,6 +3,7 @@
 namespace App\Services\Otp\Drivers;
 
 use App\Services\Otp\OtpProviderInterface;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -13,7 +14,9 @@ class MailgunEmail implements OtpProviderInterface
         $domain = $credentials['domain'] ?? '';
         $secret = $credentials['secret'] ?? '';
         $from = $credentials['from_address'] ?? 'noreply@' . $domain;
-        $siteName = config('app.name');
+        
+        $siteName = \App\Models\Setting::get('site_name', config('app.name'));
+        $fromName = $credentials['from_name'] ?? $siteName;
 
         if (empty($domain) || empty($secret)) {
             Log::error('Mailgun credentials missing.');
@@ -21,15 +24,26 @@ class MailgunEmail implements OtpProviderInterface
         }
 
         $message = "Kode OTP registrasi Anda adalah: {$code}. Jangan memberikan kode ini ke siapapun. Berlaku selama 5 menit.";
+        
+        $template = \App\Models\Setting::get('email_otp_template');
+        if (empty($template)) {
+            $template = $message;
+        }
+
+        $htmlMessage = str_replace(
+            ['{OTP}', '{APP_NAME}'],
+            [$code, $siteName],
+            $template
+        );
 
         try {
             $response = Http::withBasicAuth('api', $secret)
                 ->asForm()
                 ->post("https://api.mailgun.net/v3/{$domain}/messages", [
-                    'from' => "{$siteName} <{$from}>",
+                    'from' => "{$fromName} <{$from}>",
                     'to' => $target,
                     'subject' => "Kode OTP Anda - {$siteName}",
-                    'text' => $message,
+                    'html' => $htmlMessage,
                 ]);
 
             if ($response->successful()) {

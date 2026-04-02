@@ -22,7 +22,7 @@
         .card-header p { color: #6b7280; font-size: 0.8rem; margin-top: 0.35rem; }
         .card-body { padding: 1.75rem 2rem 2rem; }
         label { display: block; font-size: 0.75rem; font-weight: 600; color: #9ca3af; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        input[type="email"], input[type="password"] {
+        input[type="text"], input[type="email"], input[type="password"] {
             width: 100%; background: #0f1225; border: 1px solid #1e2540; color: #fff;
             padding: 0.75rem 1rem; border-radius: 0.6rem; font-size: 0.875rem; outline: none; transition: all 0.2s;
         }
@@ -48,7 +48,7 @@
     <div class="bg-glow glow-1"></div>
     <div class="bg-glow glow-2"></div>
 
-    <div class="card">
+    <div class="card" x-data="{ show: false }">
         <div class="card-header">
             <div class="icon"><i class="fas fa-shield-alt"></i></div>
             <h1>Admin Panel</h1>
@@ -62,13 +62,19 @@
             <form method="POST" action="{{ route('login') }}">
                 @csrf
                 <div class="field">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" placeholder="admin@example.com">
+                    <label for="login">Email / Username</label>
+                    <input type="text" id="login" name="login" value="{{ old('login') }}" required autofocus autocomplete="username" placeholder="Masukkan Credential">
+                    @error('login') <div class="error">{{ $message }}</div> @enderror
                     @error('email') <div class="error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                    <div style="position: relative;">
+                        <input :type="show ? 'text' : 'password'" id="password" name="password" required autocomplete="current-password" placeholder="••••••••" style="padding-right: 2.5rem;">
+                        <button type="button" @click="show = !show" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer;">
+                            <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                        </button>
+                    </div>
                     @error('password') <div class="error">{{ $message }}</div> @enderror
                 </div>
 
@@ -81,5 +87,9 @@
             </form>
         </div>
     </div>
+
+
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 </body>
 </html>

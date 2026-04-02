@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\PaymentGateway;
 use App\Models\Setting;
 use App\Services\Gateway\PaymentGatewayFactory;
+use App\Services\ReferralService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,8 @@ class TransactionController extends Controller
             'product_id' => 'required|exists:products,id',
             'payment_method' => 'required|string', // can be 'wallet' or payment gateway ID
             'quantity' => 'required|integer|min:1',
+            'inquiry_ref' => 'nullable|string|max:100',
+            'inquiry_price' => 'nullable|numeric|min:0',
         ]);
 
         $product = Product::with('providerMappings.apiProvider')->findOrFail($request->product_id);
@@ -41,17 +44,26 @@ class TransactionController extends Controller
 
         $selectedMapping = $product->resolveCheapestProviderMapping();
         if (! $selectedMapping) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Produk "' . $product->name . '" belum memiliki provider aktif. Silakan hubungi admin.'], 422);
+            }
             return back()->with('error', 'Produk belum memiliki mapping provider aktif.');
         }
 
         $quantity = $request->quantity;
         $pricingMode = (string) Setting::get('pricing_mode', 'manual');
-        $markupPercentage = (float) Setting::get('markup_percentage', 0);
         $unitCapital = (float) $selectedMapping->price_capital;
 
         $unitSellPrice = (float) $product->price_sell;
         if ($pricingMode === 'cheapest_auto') {
-            $unitSellPrice = $unitCapital + (($unitCapital * $markupPercentage) / 100);
+            $unitSellPrice = $unitCapital + $product->calculateMarkup($unitCapital);
+        }
+
+        // For postpaid, override price with inquiry result
+        $inquiryRef = $request->input('inquiry_ref');
+        if ($inquiryRef && $request->filled('inquiry_price') && (float) $request->inquiry_price > 0) {
+            $unitSellPrice = (float) $request->inquiry_price;
+            $unitCapital = $unitSellPrice; // For postpaid, capital = selling price (no markup on bill amount)
         }
 
         $subtotal = $unitSellPrice * $quantity;
@@ -63,7 +75,10 @@ class TransactionController extends Controller
         $totalAmount = $subtotal + $feeAmount;
         
         if ($isWalletPayment && auth()->user()->wallet_balance < $totalAmount) {
-             return back()->with('error', 'Saldo tidak mencukupi untuk transaksi ini.');
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Saldo tidak mencukupi. Saldo kamu: Rp ' . number_format(auth()->user()->wallet_balance, 0, ',', '.') . ', Total tagihan: Rp ' . number_format($totalAmount, 0, ',', '.') . '.'], 422);
+            }
+            return back()->with('error', 'Saldo tidak mencukupi untuk transaksi ini.');
         }
 
         $targetInput = $request->target_id;
@@ -90,9 +105,10 @@ class TransactionController extends Controller
                 'total_amount' => $totalAmount,
                 'payment_status' => $isWalletPayment ? 'paid' : 'unpaid',
                 'transaction_status' => 'pending',
+                'inquiry_ref' => $inquiryRef,
             ]);
 
-            $commissionAmount = $product->calculateCommission($unitSellPrice);
+            $commissionAmount = $unitSellPrice - $unitCapital;
 
             TransactionItem::create([
                 'transaction_id' => $transaction->id,
@@ -131,7 +147,11 @@ class TransactionController extends Controller
                         'payment_reference' => $pgResponse['reference'] ?? null,
                     ]);
                 } else {
-                    throw new \Exception('Gagal membuat transaksi di Payment Gateway (' . strtoupper($paymentGateway->code) . '). Pastikan konfigurasi API Keys sudah benar di Admin Panel.');
+                    $errDetail = '';
+                    if (isset($pgResponse) && is_array($pgResponse)) {
+                        $errDetail = ' Detail: ' . ($pgResponse['message'] ?? json_encode($pgResponse));
+                    }
+                    throw new \Exception('Gagal membuat transaksi di Payment Gateway (' . strtoupper($paymentGateway->code) . ').' . $errDetail . ' Coba beberapa saat lagi atau pilih metode pembayaran lain.');
                 }
             }
 
@@ -147,19 +167,19 @@ class TransactionController extends Controller
             // Immediately trigger order to provider if paid with wallet
             if ($isWalletPayment) {
                 try {
-                    $item = $transaction->items()->first();
-                    if ($item && $item->api_provider_id) {
-                        $providerParams = \App\Models\ApiProvider::find($item->api_provider_id);
-                        if ($providerParams && \App\Services\Provider\ProviderSyncFactory::supportsSync($providerParams->code)) {
-                            $service = \App\Services\Provider\ProviderSyncFactory::resolve($providerParams);
-                            if (method_exists($service, 'createTransaction')) {
-                                $service->createTransaction($transaction);
-                            }
-                        }
-                    }
+                    \App\Jobs\ProcessProviderOrder::dispatch($transaction);
                 } catch (\Exception $e) {
-                    Log::error('Provider order failed (wallet payment): ' . $e->getMessage());
+                    Log::error('Provider order dispatch failed (wallet payment): ' . $e->getMessage());
                 }
+
+                // Process commission for wallet-paid transactions
+                try {
+                    app(ReferralService::class)->processTransactionCommission($transaction);
+                } catch (\Exception $e) {
+                    Log::warning('Commission processing failed (wallet): ' . $e->getMessage());
+                }
+
+                // Customer email will be sent after provider confirms success (via ProviderWebhookController)
             }
 
             if ($request->expectsJson()) {
@@ -182,11 +202,11 @@ class TransactionController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Terjadi kesalahan sistem. Silakan coba lagi beberapa saat.'
-                ], 500);
+                    'message' => $e->getMessage()
+                ], 422);
             }
             
-            return back()->with('error', 'Terjadi kesalahan sistem. Silakan coba lagi beberapa saat.');
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -199,7 +219,29 @@ class TransactionController extends Controller
             $pgData = json_decode($transaction->api_response);
         }
 
-        return view('front.invoice', compact('transaction', 'pgData'));
+        // Review eligibility: check if logged-in user already reviewed this product
+        $canReview = false;
+        $productId = null;
+        $productName = null;
+        if (auth()->check() && $transaction->user_id === auth()->id() && $transaction->transaction_status === 'success') {
+            $firstItem = $transaction->items->first();
+            if ($firstItem && $firstItem->product_id) {
+                $productId = $firstItem->product_id;
+                $productName = $firstItem->product_name ?? 'Produk';
+                $canReview = !\App\Models\ProductReview::where('user_id', auth()->id())
+                    ->where('product_id', $productId)
+                    ->exists();
+            }
+        }
+
+        return view('front.invoice', compact('transaction', 'pgData', 'canReview', 'productId', 'productName'));
+    }
+
+    public function showReceipt($invoiceNumber)
+    {
+        $transaction = Transaction::with(['items', 'paymentGateway'])->where('invoice_number', $invoiceNumber)->firstOrFail();
+
+        return view('front.receipt', compact('transaction'));
     }
 
     /**
@@ -263,21 +305,21 @@ class TransactionController extends Controller
                     Log::warning('Notification failed (paid): ' . $e->getMessage());
                 }
 
-                // Trigger order to provider
+                // Trigger order to provider via Background Job
                 try {
-                    $item = $transaction->items()->first();
-                    if ($item && $item->api_provider_id) {
-                        $provider = \App\Models\ApiProvider::find($item->api_provider_id);
-                        if ($provider && \App\Services\Provider\ProviderSyncFactory::supportsSync($provider->code)) {
-                            $service = \App\Services\Provider\ProviderSyncFactory::resolve($provider);
-                            if (method_exists($service, 'createTransaction')) {
-                                $service->createTransaction($transaction);
-                            }
-                        }
-                    }
+                    \App\Jobs\ProcessProviderOrder::dispatch($transaction);
                 } catch (\Exception $e) {
-                    Log::error('Provider order failed: ' . $e->getMessage());
+                    Log::error('Provider order dispatch failed: ' . $e->getMessage());
                 }
+
+                // Process commission for payment-gateway-paid transactions
+                try {
+                    app(ReferralService::class)->processTransactionCommission($transaction);
+                } catch (\Exception $e) {
+                    Log::warning('Commission processing failed (pg): ' . $e->getMessage());
+                }
+
+                // Customer email will be sent after provider confirms success (via ProviderWebhookController)
             }
 
         } elseif ($status === 'failed') {

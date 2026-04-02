@@ -36,12 +36,11 @@
                         @csrf
                         @method('PUT')
                         <select name="transaction_status" class="border-gray-600 rounded px-2 py-1 text-sm bg-gray-900/50">
-                            <option value="PENDING" {{ $transaction->transaction_status == 'PENDING' ? 'selected' : '' }}>PENDING</option>
-                            <option value="PAID" {{ $transaction->transaction_status == 'PAID' ? 'selected' : '' }}>PAID</option>
-                            <option value="PROCESSING" {{ $transaction->transaction_status == 'PROCESSING' ? 'selected' : '' }}>PROCESSING</option>
-                            <option value="SUCCESS" {{ $transaction->transaction_status == 'SUCCESS' ? 'selected' : '' }}>SUCCESS</option>
-                            <option value="FAILED" {{ $transaction->transaction_status == 'FAILED' ? 'selected' : '' }}>FAILED</option>
-                            <option value="EXPIRED" {{ $transaction->transaction_status == 'EXPIRED' ? 'selected' : '' }}>EXPIRED</option>
+                            <option value="pending" {{ $transaction->transaction_status == 'pending' ? 'selected' : '' }}>PENDING</option>
+                            <option value="processing" {{ $transaction->transaction_status == 'processing' ? 'selected' : '' }}>PROCESSING</option>
+                            <option value="success" {{ $transaction->transaction_status == 'success' ? 'selected' : '' }}>SUCCESS</option>
+                            <option value="failed" {{ $transaction->transaction_status == 'failed' ? 'selected' : '' }}>FAILED</option>
+                            <option value="expired" {{ $transaction->transaction_status == 'expired' ? 'selected' : '' }}>EXPIRED</option>
                         </select>
                         <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1 rounded">Update</button>
                     </form>
@@ -67,7 +66,7 @@
                 <div class="col-span-2 font-medium text-gray-100 break-all">: {{ $transaction->payment_reference ?? '-' }}</div>
 
                 <div class="text-gray-400">Total Harga</div>
-                <div class="col-span-2 font-bold text-gray-100">: Rp {{ number_format($transaction->grand_total, 0, ',', '.') }}</div>
+                <div class="col-span-2 font-bold text-gray-100">: Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</div>
 
                 <div class="text-gray-400">Fee</div>
                 <div class="col-span-2 font-medium text-gray-100">: Rp {{ number_format($transaction->total_fee, 0, ',', '.') }}</div>

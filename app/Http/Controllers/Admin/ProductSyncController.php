@@ -59,12 +59,25 @@ class ProductSyncController extends Controller
             try {
                 $service       = ProviderSyncFactory::resolve($provider);
                 $credentials   = $provider->credentials ?? [];
-                $products      = $service->getPriceList($credentials);
 
-                $markupPct = (float) \App\Models\Setting::get('markup_percentage', 5);
+                // Ambil produk prepaid
+                $prepaidProducts = $service->getPriceList($credentials, ['cmd' => 'prepaid']);
+
+                // Kalau provider adalah Digiflazz, ambil juga produk pascabayar
+                $pascaProducts = [];
+                if (strtolower($provider->code) === 'digiflazz') {
+                    try {
+                        $pascaProducts = $service->getPriceList($credentials, ['cmd' => 'pasca']);
+                    } catch (\Exception $e) {
+                        Log::warning("Digiflazz pasca sync skipped: " . $e->getMessage());
+                    }
+                }
+
+                // Gabungkan prepaid + pasca
+                $products = array_merge($prepaidProducts, $pascaProducts);
 
                 foreach ($products as $item) {
-                    $sellSuggestion = $item['price'] + (($item['price'] * $markupPct) / 100);
+                    $sellSuggestion = \App\Models\Product::calculateSuggestedPrice($item['price'], $item['type'] ?? 'prepaid');
 
                     // Check if already imported as a product mapping
                     $existingMapping = \App\Models\ProductProviderMapping::where('api_provider_id', $provider->id)
@@ -90,6 +103,23 @@ class ProductSyncController extends Controller
                         ]
                     );
 
+                    if ($existingMapping && $existingMapping->product_id) {
+                        // Update mapping capital price
+                        $existingMapping->update([
+                            'price_capital' => $item['price'],
+                        ]);
+
+                        // Update actual product price and provider status
+                        $product = \App\Models\Product::with('category')->find($existingMapping->product_id);
+                        if ($product) {
+                            $product->update([
+                                'price_capital'    => $item['price'],
+                                'price_sell'       => \App\Models\Product::calculateSuggestedPrice($item['price'], $product->category->type ?? 'prepaid'),
+                                'status_provider'  => $item['status_provider'] ?? 'available',
+                            ]);
+                        }
+                    }
+
                     $totalSynced++;
                 }
 
@@ -114,5 +144,11 @@ class ProductSyncController extends Controller
         }
 
         return back()->with($errors ? 'error' : 'success', $message);
+    }
+
+    public function emptySync()
+    {
+        ScrapedProduct::truncate();
+        return back()->with('success', 'Semua data hasil scraping berhasil dikosongkan.');
     }
 }

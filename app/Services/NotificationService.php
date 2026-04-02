@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Setting;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class NotificationService
 {
@@ -37,5 +38,96 @@ class NotificationService
                 Log::warning('WhatsApp notification failed: ' . $e->getMessage());
             }
         }
+    }
+
+    /**
+     * Notify customer about their transaction.
+     * Sends email if customer_email is available.
+     */
+    public static function notifyCustomer(Transaction $transaction, string $event): void
+    {
+        if (!$transaction->relationLoaded('items')) {
+            $transaction->load('items');
+        }
+
+        $email = $transaction->customer_email;
+        if (empty($email)) return;
+
+        $siteName = Setting::get('site_name', 'PPOBKu');
+        $invoiceUrl = route('transaction.show', $transaction->invoice_number);
+        $item       = $transaction->items->first();
+        $productName = $item?->product_name ?? 'Produk';
+
+        $subject = match($event) {
+            'success' => "[{$siteName}] ✅ Transaksi Berhasil - #{$transaction->invoice_number}",
+            'failed'  => "[{$siteName}] ❌ Transaksi Gagal - #{$transaction->invoice_number}",
+            'paid'    => "[{$siteName}] 💳 Pembayaran Diterima - #{$transaction->invoice_number}",
+            default   => "[{$siteName}] Transaksi #{$transaction->invoice_number}",
+        };
+
+        $bodyHtml = self::buildCustomerEmailBody($transaction, $event, $siteName, $productName, $invoiceUrl);
+
+        try {
+            Mail::html($bodyHtml, function ($message) use ($email, $subject) {
+                $message->to($email)->subject($subject);
+            });
+            Log::info("Customer email sent [{$event}] to {$email} for #{$transaction->invoice_number}");
+        } catch (\Exception $e) {
+            Log::warning('Customer email notification failed: ' . $e->getMessage());
+        }
+    }
+
+    protected static function buildCustomerEmailBody(Transaction $tx, string $event, string $siteName, string $productName, string $invoiceUrl): string
+    {
+        $statusIcon  = $event === 'success' ? '✅' : ($event === 'failed' ? '❌' : '💳');
+        $statusText  = $event === 'success' ? 'Transaksi Berhasil!' : ($event === 'failed' ? 'Transaksi Gagal' : 'Pembayaran Diterima');
+        $formattedTotal = number_format((float) $tx->total_amount, 0, ',', '.');
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
+<table cellpadding="0" cellspacing="0" width="100%" style="background:#f5f5f5;padding:30px 0;">
+<tr><td align="center">
+<table cellpadding="0" cellspacing="0" width="540" style="background:#1c1c1c;border-radius:16px;overflow:hidden;">
+  <tr><td style="background:#121212;padding:24px 32px;text-align:center;border-bottom:1px solid #2d2d2d;">
+    <h1 style="color:#f97316;margin:0;font-size:22px;font-weight:900;">{$siteName}</h1>
+  </td></tr>
+  <tr><td style="padding:32px;text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">{$statusIcon}</div>
+    <h2 style="color:#fff;margin:0 0 8px;font-size:22px;">{$statusText}</h2>
+    <p style="color:#888;margin:0;font-size:14px;">Order ID: <strong style="color:#f97316;font-family:monospace;">{$tx->invoice_number}</strong></p>
+  </td></tr>
+  <tr><td style="padding:0 32px 24px;">
+    <table width="100%" style="background:#121212;border-radius:12px;overflow:hidden;border:1px solid #2d2d2d;">
+      <tr><td style="padding:12px 16px;border-bottom:1px solid #2d2d2d;">
+        <span style="color:#666;font-size:12px;">Produk</span><br>
+        <span style="color:#fff;font-weight:bold;font-size:14px;">{$productName}</span>
+      </td></tr>
+      <tr><td style="padding:12px 16px;border-bottom:1px solid #2d2d2d;">
+        <span style="color:#666;font-size:12px;">Target</span><br>
+        <span style="color:#fff;font-size:14px;font-family:monospace;">{$tx->target_input}</span>
+      </td></tr>
+      <tr><td style="padding:12px 16px;">
+        <span style="color:#666;font-size:12px;">Total</span><br>
+        <span style="color:#f97316;font-weight:900;font-size:20px;">Rp {$formattedTotal}</span>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 32px 32px;text-align:center;">
+    <a href="{$invoiceUrl}" style="display:inline-block;background:#f97316;color:#fff;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:12px;font-size:14px;">
+      Lihat Invoice Detail →
+    </a>
+  </td></tr>
+  <tr><td style="background:#0d0d0d;padding:16px 32px;text-align:center;border-top:1px solid #2d2d2d;">
+    <p style="color:#555;margin:0;font-size:11px;">Email ini dikirim otomatis oleh {$siteName}. Jangan balas email ini.</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>
+HTML;
     }
 }

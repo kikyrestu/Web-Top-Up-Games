@@ -54,6 +54,13 @@
             <span>Game Favorit</span>
         </a>
         
+        <!--
+        <a href="{{ route('member.commission') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('member.commission*') ? 'bg-[#f97316] text-white font-bold shadow-lg shadow-[#f97316]/20' : 'text-gray-400 hover:text-white hover:bg-[#2d3748]' }}">
+            <i class="fas fa-hand-holding-usd w-5 text-center"></i>
+            <span>Komisi & Referral</span>
+        </a>
+        -->
+        
         <a href="{{ route('member.profile') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('member.profile') ? 'bg-[#f97316] text-white font-bold shadow-lg shadow-[#f97316]/20' : 'text-gray-400 hover:text-white hover:bg-[#2d3748]' }}">
             <i class="fas fa-user-cog w-5 text-center"></i>
             <span>Pengaturan Profil</span>

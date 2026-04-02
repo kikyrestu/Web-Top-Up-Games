@@ -143,20 +143,105 @@ class ApiProviderController extends Controller
 
         try {
             if ($code === 'digiflazz') {
-                $service = app(\App\Services\DigiflazzService::class);
-                $creds = collect($apiProvider->credentials)->except('__hashes')->toArray();
-                $result = $service->getPriceList($creds, ['cmd' => 'prepaid']);
+                $creds    = collect($apiProvider->credentials)->except('__hashes')->toArray();
+                $username = $creds['username'] ?? '';
+                $apiKey   = $creds['api_key'] ?? '';
+                $baseUrl  = isset($creds['url']) && !empty($creds['url'])
+                    ? rtrim($creds['url'], '/') . '/'
+                    : 'https://api.digiflazz.com/v1/';
 
-                if (!empty($result)) {
+                if (empty($username) || empty($apiKey)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Credentials belum lengkap. Pastikan Username dan API Key sudah diisi.',
+                    ]);
+                }
+
+                $sign = md5($username . $apiKey . 'pricelist');
+
+                try {
+                    $response = \Illuminate\Support\Facades\Http::timeout(15)->post($baseUrl . 'price-list', [
+                        'cmd'      => 'prepaid',
+                        'username' => $username,
+                        'sign'     => $sign,
+                    ]);
+
+                    $result = $response->json();
+
+                    \Illuminate\Support\Facades\Log::info('Digiflazz testConnection raw', [
+                        'username' => $username,
+                        'sign'     => $sign,
+                        'status'   => $response->status(),
+                        'response' => $result,
+                    ]);
+
+                    if (isset($result['data']) && is_array($result['data']) && count($result['data']) > 0) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => '✅ Koneksi Digiflazz berhasil! ' . count($result['data']) . ' produk ditemukan.',
+                        ]);
+                    }
+
+                    // Show the actual API error message if available
+                    $apiMessage = $result['message'] ?? ($result['error'] ?? null);
+                    if ($apiMessage) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'API Digiflazz merespons: "' . $apiMessage . '". Periksa Username dan API Key.',
+                        ]);
+                    }
+
+                    // Empty data - might be a sandbox account with no products
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Koneksi OK tapi data produk kosong. Kemungkinan: (1) Username/API Key salah, (2) Akun belum aktif, atau (3) Coba gunakan API Key Production bukan Development.',
+                    ]);
+
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Koneksi gagal: ' . $e->getMessage(),
+                    ]);
+                }
+            }
+
+            if ($code === 'rajabiller') {
+                $service = app(\App\Services\RajabillerService::class);
+                $creds   = collect($apiProvider->credentials)->except('__hashes')->toArray();
+                $result  = $service->cekSaldo($creds);
+
+                // rc=00 means success in Rajabiller
+                if (isset($result['rc']) && $result['rc'] === '00') {
+                    $balance = isset($result['saldo']) ? 'Saldo: Rp ' . number_format((float) $result['saldo'], 0, ',', '.') : '';
                     return response()->json([
                         'success' => true,
-                        'message' => 'Koneksi Digiflazz berhasil! ' . count($result) . ' produk ditemukan.',
+                        'message' => 'Koneksi Rajabiller berhasil! ' . $balance,
+                    ]);
+                }
+
+                $errMsg = $result['status'] ?? $result['rc'] ?? 'Unknown error';
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Koneksi gagal. Rajabiller respons: ' . $errMsg . '. Periksa UID dan PIN.',
+                ]);
+            }
+
+            if ($code === 'orderkuota') {
+                $service = new \App\Services\OrderKuotaService();
+                $creds   = collect($apiProvider->credentials)->except('__hashes')->toArray();
+                $result  = $service->cekSaldo($creds);
+
+                if ($result['success']) {
+                    $balance = isset($result['saldo']) ? 'Saldo: Rp ' . number_format((float) $result['saldo'], 0, ',', '.') : '';
+                    return response()->json([
+                        'success' => true,
+                        'message' => '✅ Koneksi OrderKuota (OkeConnect) berhasil! ' . $balance,
                     ]);
                 }
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Koneksi gagal. API merespons tetapi tidak ada data produk. Periksa username dan API key.',
+                    'message' => 'Koneksi gagal: ' . ($result['message'] ?? 'Unknown error') . '. Periksa Member ID, PIN, dan Password.',
                 ]);
             }
 

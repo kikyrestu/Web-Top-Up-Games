@@ -17,15 +17,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-Route::middleware([
-    EncryptCookies::class,
-    AddQueuedCookiesToResponse::class,
-    StartSession::class,
-    ShareErrorsFromSession::class,
-    PreventRequestForgery::class,
-    SubstituteBindings::class,
-    'guest',
-])->group(function () {
+Route::middleware('guest')->group(function () {
     Route::get('register', [\App\Http\Controllers\Auth\OtpAuthController::class, 'showRegister'])
         ->name('register');
 
@@ -57,15 +49,7 @@ Route::middleware([
         ->name('password.store');
 });
 
-Route::middleware([
-    EncryptCookies::class,
-    AddQueuedCookiesToResponse::class,
-    StartSession::class,
-    ShareErrorsFromSession::class,
-    PreventRequestForgery::class,
-    SubstituteBindings::class,
-    'auth',
-])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 

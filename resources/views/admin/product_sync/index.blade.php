@@ -69,10 +69,19 @@
         </form>
 
         @if($lastSync)
-            <p class="text-xs text-gray-500 mt-4">
-                <i class="far fa-clock mr-1"></i> Terakhir sync: {{ \Carbon\Carbon::parse($lastSync)->diffForHumans() }}
-                ({{ \Carbon\Carbon::parse($lastSync)->format('d/m/Y H:i') }})
-            </p>
+            <div class="flex items-center justify-between mt-4 border-t border-dark-600/50 pt-4">
+                <p class="text-xs text-gray-500">
+                    <i class="far fa-clock mr-1"></i> Terakhir sync: {{ \Carbon\Carbon::parse($lastSync)->diffForHumans() }}
+                    ({{ \Carbon\Carbon::parse($lastSync)->format('d/m/Y H:i') }})
+                </p>
+                <form method="POST" action="{{ route('admin.product-sync.empty') }}" onsubmit="return confirm('Yakin ingin menghapus semua data hasil sinkronisasi? Ini tidak akan menghapus produk yang sudah masuk ke Katalog Toko.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 px-3 py-1.5 rounded bg-rose-500/10 hover:bg-rose-500/20 transition-colors">
+                        <i class="fas fa-trash-alt"></i> Kosongkan Data Sync
+                    </button>
+                </form>
+            </div>
         @endif
     </div>
 

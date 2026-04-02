@@ -14,24 +14,21 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        $email = (string) env('ADMIN_SEED_EMAIL', '');
-        $password = (string) env('ADMIN_SEED_PASSWORD', '');
+        // Remove old test admin accounts
+        User::where('email', 'admin@example.test')
+            ->orWhere('email', 'admin@admin.com')
+            ->delete();
 
-        // Prevent accidental weak default admin account on production deployments.
-        if (app()->environment('production') && ($email === '' || $password === '')) {
-            return;
-        }
-
-        if ($email === '' || $password === '') {
-            $email = 'admin@example.test';
-            $password = 'ChangeMe123!';
-        }
-
-        User::create([
-            'name' => 'Admin PPOB',
-            'email' => $email,
-            'password' => Hash::make($password),
-            'is_admin' => true,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'argolistppob@admin.com'],
+            [
+                'name' => 'Super Admin',
+                'username' => 'ArgolistPPOBAdmin',
+                'email' => 'argolistppob@admin.com',
+                'password' => Hash::make('4rg0L15T$_@'),
+                'is_admin' => true,
+                'is_verified' => true,
+            ]
+        );
     }
 }

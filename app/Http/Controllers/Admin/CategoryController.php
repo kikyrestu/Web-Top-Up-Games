@@ -3,15 +3,24 @@
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::orderBy('sort_order')->get();
+        $query = Category::orderBy('name');
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhere('type', 'like', "%{$search}%");
+        }
+
+        $categories = $query->get();
         return view('admin.categories.index', compact('categories'));
     }
 
@@ -35,7 +44,7 @@ class CategoryController extends Controller
 
         $thumbnailPath = null;
         if ($request->hasFile('thumbnail')) {
-            $thumbnailPath = $request->file('thumbnail')->store('categories', 'public');
+            $thumbnailPath = ImageOptimizer::optimizeAndSave($request->file('thumbnail'), 'categories', 500, 85);
         }
 
         Category::create([
@@ -50,7 +59,9 @@ class CategoryController extends Controller
             'is_popular' => $request->has('is_popular'),
             'is_new' => $request->has('is_new'),
             'sort_order' => $request->sort_order ?? 0,
-            'input_fields' => $request->input_fields ? json_decode($request->input_fields, true) : null,
+            'input_fields' => $request->input_fields
+                ? json_decode($request->input_fields, true)
+                : Category::detectInputFields($request->type, $request->name),
         ]);
 
         return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil ditambahkan.');    
@@ -79,7 +90,7 @@ class CategoryController extends Controller
             if ($thumbnailPath && Storage::disk('public')->exists($thumbnailPath)) {
                 Storage::disk('public')->delete($thumbnailPath);
             }
-            $thumbnailPath = $request->file('thumbnail')->store('categories', 'public');
+            $thumbnailPath = ImageOptimizer::optimizeAndSave($request->file('thumbnail'), 'categories', 500, 85);
         }
 
         $category->update([
@@ -94,7 +105,9 @@ class CategoryController extends Controller
             'is_popular' => $request->has('is_popular'),
             'is_new' => $request->has('is_new'),
             'sort_order' => $request->sort_order ?? 0,
-            'input_fields' => $request->input_fields ? json_decode($request->input_fields, true) : null,
+            'input_fields' => $request->input_fields
+                ? json_decode($request->input_fields, true)
+                : Category::detectInputFields($request->type, $request->name),
         ]);
 
         return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil diperbarui.');     
@@ -108,6 +121,25 @@ class CategoryController extends Controller
 
         $category->delete();
         return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil dihapus.');        
+    }
+
+    public function destroyBulk(Request $request)
+    {
+        $request->validate([
+            'selected_ids' => 'required|array',
+            'selected_ids.*' => 'exists:categories,id',
+        ]);
+
+        $categories = Category::whereIn('id', $request->selected_ids)->get();
+
+        foreach ($categories as $category) {
+            if ($category->thumbnail && Storage::disk('public')->exists($category->thumbnail)) {
+                Storage::disk('public')->delete($category->thumbnail);
+            }
+            $category->delete();
+        }
+
+        return redirect()->route('admin.categories.index')->with('success', count($categories) . ' kategori berhasil dihapus secara massal.');
     }
 
     public function reorder(Request $request)

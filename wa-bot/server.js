@@ -6,16 +6,30 @@ const app = express();
 app.use(express.json());
 
 const PORT = process.env.WA_BOT_PORT || 3001;
+const API_TOKEN = process.env.WA_BOT_TOKEN || '';
 
 let latestQr = null;
 let isConnected = false;
 let clientInfo = null;
+let isReconnecting = false;
+
+// Simple auth middleware — skip if no token configured
+function authMiddleware(req, res, next) {
+    if (!API_TOKEN) return next();
+    const token = req.headers['authorization']?.replace('Bearer ', '') || req.query.token;
+    if (token !== API_TOKEN) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    next();
+}
+app.use(authMiddleware);
 
 // Initialize WhatsApp Client with persistent auth
 const client = new Client({
     authStrategy: new LocalAuth({ dataPath: './wa-session' }),
     puppeteer: {
         headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -38,6 +52,7 @@ client.on('qr', async (qr) => {
 client.on('ready', () => {
     console.log('WhatsApp client is ready!');
     isConnected = true;
+    isReconnecting = false;
     latestQr = null;
     clientInfo = client.info;
 });
@@ -50,6 +65,7 @@ client.on('authenticated', () => {
 client.on('auth_failure', (msg) => {
     console.error('WhatsApp auth failure:', msg);
     isConnected = false;
+    isReconnecting = false;
 });
 
 client.on('disconnected', (reason) => {
@@ -57,6 +73,19 @@ client.on('disconnected', (reason) => {
     isConnected = false;
     latestQr = null;
     clientInfo = null;
+
+    // Auto-reconnect after 5 seconds
+    if (!isReconnecting) {
+        isReconnecting = true;
+        console.log('Auto-reconnecting in 5 seconds...');
+        setTimeout(() => {
+            console.log('Attempting reconnect...');
+            client.initialize().catch((err) => {
+                console.error('Reconnect failed:', err);
+                isReconnecting = false;
+            });
+        }, 5000);
+    }
 });
 
 // ---- Express Endpoints ----
@@ -76,6 +105,7 @@ app.get('/qr', (req, res) => {
 app.get('/status', (req, res) => {
     res.json({
         connected: isConnected,
+        reconnecting: isReconnecting,
         info: clientInfo ? {
             pushname: clientInfo.pushname,
             wid: clientInfo.wid?.user,
@@ -98,7 +128,7 @@ app.post('/send', async (req, res) => {
 
     try {
         // Format number to WhatsApp ID: 628xxx@c.us
-        let chatId = number.replace(/[^0-9]/g, '');
+        let chatId = String(number).replace(/[^0-9]/g, '');
         if (chatId.startsWith('0')) {
             chatId = '62' + chatId.substring(1);
         }
@@ -114,7 +144,7 @@ app.post('/send', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`WA Bot sidecar running on http://localhost:${PORT}`);
 });
 
@@ -122,3 +152,23 @@ app.listen(PORT, () => {
 client.initialize().catch((err) => {
     console.error('Failed to initialize WhatsApp client:', err);
 });
+
+// Graceful shutdown for PM2
+async function gracefulShutdown(signal) {
+    console.log(`Received ${signal}. Shutting down gracefully...`);
+    try {
+        await client.destroy();
+        console.log('WhatsApp client destroyed.');
+    } catch (e) {
+        console.error('Error destroying WA client:', e);
+    }
+    server.close(() => {
+        console.log('Express server closed.');
+        process.exit(0);
+    });
+    // Force exit after 10s if graceful shutdown hangs
+    setTimeout(() => process.exit(1), 10000);
+}
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

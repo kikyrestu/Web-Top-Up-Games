@@ -48,6 +48,18 @@
                             <span>Hapus logo saat ini</span>
                         </label>
                     </div>
+
+                    <div class="pt-2 border-t border-dark-700/50 mt-4">
+                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Favicon Web (Tab Browser)</label>
+                        <input type="file" name="site_favicon" accept="image/*" @change="onFaviconChange" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 block bg-dark-900 border border-dark-600 rounded-xl p-2 focus:outline-none">
+                        <p class="text-xs text-gray-500 mt-2">Tampil mungil di tab browser & hasil pencarian Google. Gambar akan di-resize otomatis 1:1.</p>
+                        @error('site_favicon')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
+
+                        <label class="inline-flex items-center gap-2 mt-3 text-sm text-gray-300 cursor-pointer block">
+                            <input type="checkbox" name="remove_site_favicon" value="1" x-model="removeFavicon" @change="onToggleRemoveFavicon" class="rounded border-dark-600 bg-dark-900 text-rose-500 focus:ring-rose-500/40">
+                            <span>Hapus favicon saat ini</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="bg-dark-900 border border-dark-700 rounded-2xl p-4">
@@ -58,9 +70,57 @@
                             <i class="fas fa-image"></i>
                         </div>
 
-                        <p class="text-white text-lg font-black tracking-tight" x-text="previewName || 'PPOBKu'"></p>
+                        <p class="text-white text-lg font-black tracking-tight flex items-center gap-2">
+                            <img x-show="previewFavicon" :src="previewFavicon" class="w-5 h-5 rounded object-cover shadow border border-dark-600">
+                            <span x-text="previewName || 'PPOBKu'"></span>
+                        </p>
                         <p class="text-gray-400 text-xs mt-1" x-text="previewDescription || 'Platform topup game dan PPOB termurah dan terpercaya.'"></p>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Auth Screen Branding -->
+            <h3 class="text-lg font-bold text-white mt-8 border-b border-dark-700 pb-2 mb-6">Tampilan Layar Login & Register</h3>
+            <p class="text-sm text-gray-400 mb-4">Sisi kiri dari form otentikasi dapat Anda modifikasi gambarnya dan teks promosinya.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Judul Teks (Utama)</label>
+                        <input type="text" name="auth_title" value="{{ old('auth_title', $settings['auth_title'] ?? '') }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3" placeholder="Contoh: Selamat Datang di PPOBKu">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Sub Judul Teks (Tagline)</label>
+                        <textarea name="auth_subtitle" rows="3" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3" placeholder="Platform unggulan terbaik...">{{ old('auth_subtitle', $settings['auth_subtitle'] ?? '') }}</textarea>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Gambar Background Latar</label>
+                    <input type="file" name="auth_cover_image" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-500/10 file:text-brand-400 hover:file:bg-brand-500/20 block bg-dark-900 border border-dark-600 rounded-xl p-2 focus:outline-none mb-3">
+                    <div class="mt-2 text-[11px] text-brand-300 bg-brand-500/10 border border-brand-500/20 p-3 rounded-xl leading-relaxed">
+                        <i class="fas fa-info-circle mr-1 text-brand-400"></i> <strong>GUIDE:</strong> Untuk hasil potret layar komputer (Desktop) terbaik, <strong>rasio ukuran yang ideal adalah 1080 x 1080px (Persegi 1:1) hingga 1080 x 1920px (Potret memanjang).</strong><br> Format gambar wajib berupa JPG, JPEG, PNG, atau WEBP dengan ukuran maksimum berkas 2 Megabytes. <span class="text-gray-400">Bila ingin menggunakan efek gradient menyala bawaan web, biarkan form ini kosong dan hapus centang di bawah.</span>
+                    </div>
+                    
+                    @if(!empty($settings['auth_cover_image']))
+                    <div class="mt-3 bg-dark-800 border border-dark-700 p-2 rounded-xl inline-block relative">
+                        <img src="{{ asset('storage/' . $settings['auth_cover_image']) }}" class="h-24 rounded object-cover shadow-lg">
+                    </div>
+                    @endif
+                    
+                    <label class="inline-flex items-center gap-2 mt-3 text-sm text-gray-300 cursor-pointer block">
+                        <input type="checkbox" name="remove_auth_cover" value="1" class="rounded border-dark-600 bg-dark-900 text-rose-500 focus:ring-rose-500/40">
+                        <span>Hapus Cover (Gunakan Polos)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Custom HTML Section -->
+            <div class="mt-6 border border-brand-500/20 bg-dark-800/50 p-5 rounded-2xl">
+                <label class="block text-brand-400 text-sm font-bold uppercase tracking-wider mb-3"><i class="fas fa-code mr-2"></i>Custom HTML Render (Lanjutan)</label>
+                <p class="text-xs text-gray-400 mb-3 block">Form khusus diletakkan di bawah Judul/Tagline. Gunakan blok p, div, span, b, iframe, dan style sepuasnya untuk menambah dekorasi ekstra di Auth Layout.</p>
+                <textarea name="auth_custom_html" rows="5" class="w-full bg-dark-900 font-mono text-emerald-400 border border-dark-600 text-sm rounded-xl p-4" placeholder="<div class='mt-5 p-4 bg-white/5 rounded-xl'><h3>Promo Spesial!</h3><p>Dapatkan diskon 50%...</p></div>">{{ old('auth_custom_html', $settings['auth_custom_html'] ?? '') }}</textarea>
+                <div class="mt-3 text-[11px] text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl leading-relaxed">
+                    <i class="fas fa-lightbulb mr-1 text-emerald-400"></i> <strong>GUIDE GAMBAR HTML:</strong> Apabila lu menyisipkan gambar promo/banner via tag HTML <code>&lt;img&gt;</code>, sangat disarankan menggunakan atribut class Tailwind seperti <code>class="w-full rounded-2xl shadow-lg"</code> atau inline css <code>style="width:100%; border-radius:1rem;"</code> agar gambar otomatis menyesuaikan lebar layar (Responsif Mobile & PC). <br><strong>Ukuran Rekomendasi:</strong> Lebar dimensi optimal <strong>600px hingga 800px</strong> bebas tinggi (Potret/Persegi/Landscape) agar terlihat elegan di Guest Panel.
                 </div>
             </div>
             
@@ -81,7 +141,7 @@
                 </div>
             </div>
 
-            <h3 class="text-lg font-bold text-white mt-8 border-b border-dark-700 pb-2 mb-6">Smart Pricing</h3>
+            <h3 class="text-lg font-bold text-white mt-8 border-b border-dark-700 pb-2 mb-6">Sistem Harga & Keuntungan (Markup)</h3>
 
             <div class="space-y-5" x-data="{ pricingMode: '{{ old('pricing_mode', $settings['pricing_mode'] ?? 'manual') }}' }">
                 {{-- Pricing Mode Toggle --}}
@@ -93,7 +153,7 @@
                             </div>
                             <span class="text-white font-bold">Normal / Manual</span>
                         </div>
-                        <p class="text-xs text-gray-400 ml-8">Admin set harga jual dan komisi sendiri per produk.</p>
+                        <p class="text-xs text-gray-400 ml-8">Admin atur harga jual secara manual per produk.</p>
                     </label>
                     <label @click="pricingMode = 'cheapest_auto'" :class="pricingMode === 'cheapest_auto' ? 'border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30' : 'border-dark-600 bg-dark-900 hover:border-dark-500'" class="cursor-pointer rounded-xl border p-4 transition-all">
                         <div class="flex items-center gap-3 mb-2">
@@ -102,39 +162,32 @@
                             </div>
                             <span class="text-white font-bold">⚡ Termurah Auto</span>
                         </div>
-                        <p class="text-xs text-gray-400 ml-8">Auto pilih provider termurah + markup%. Komisi = selisih harga otomatis tertinggi.</p>
+                        <p class="text-xs text-gray-400 ml-8">Harga jual = Harga Modal + Keuntungan Default di bawah.</p>
                     </label>
                 </div>
                 <input type="hidden" name="pricing_mode" :value="pricingMode">
-
-                <div>
-                    <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Markup Harga (%)</label>
-                    <div class="relative rounded-xl w-full md:w-1/3">
-                        <input type="number" step="0.01" name="markup_percentage" value="{{ old('markup_percentage', $settings['markup_percentage'] ?? '5') }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 pr-12">
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                            <span class="text-gray-400 sm:text-sm">%</span>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-1">Persentase keuntungan untuk setiap produk saat sinkronisasi API.</p>
-                </div>
             </div>
 
-            {{-- Commission --}}
-            <h3 class="text-lg font-bold text-white mt-8 border-b border-dark-700 pb-2 mb-6">Sistem Komisi</h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Tipe Komisi Default</label>
-                    <select name="default_commission_type" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3">
-                        <option value="percentage" {{ old('default_commission_type', $settings['default_commission_type'] ?? 'percentage') === 'percentage' ? 'selected' : '' }}>Persentase (%)</option>
-                        <option value="flat" {{ old('default_commission_type', $settings['default_commission_type'] ?? '') === 'flat' ? 'selected' : '' }}>Nominal Tetap (Rp)</option>
-                    </select>
-                    <p class="text-xs text-gray-400 mt-1">Bisa di-override per kategori & per produk.</p>
+            <div class="mt-6">
+                <h4 class="text-sm font-bold text-white mb-4">Pengaturan Keuntungan Default (Khusus Prabayar / Prepaid)</h4>
+                <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-5">
+                    <p class="text-xs text-amber-200/90 leading-relaxed">
+                        <i class="fas fa-info-circle mr-1"></i> <strong>Penting:</strong> Pengaturan keuntungan ini hanya berlaku untuk produk <strong>Prabayar (Pulsa, Game, E-Wallet)</strong>. <br>
+                        Untuk produk <strong>Pascabayar (Tagihan PPOB/Multifinance)</strong>, fee admin sudah ditentukan oleh pihak Provider API dan harga jual tidak akan di-markup.
+                    </p>
                 </div>
-                <div>
-                    <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Nilai Komisi Default</label>
-                    <input type="number" step="0.01" name="default_commission_value" value="{{ old('default_commission_value', $settings['default_commission_value'] ?? '0') }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3" placeholder="Contoh: 5 untuk 5% atau 500 untuk Rp 500">
-                    <p class="text-xs text-gray-400 mt-1">Kalau tipe Persentase, masukkan angka persen (misal 5). Kalau Nominal, masukkan Rupiah (misal 500).</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Tipe Keuntungan</label>
+                        <select name="default_commission_type" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3">
+                            <option value="percentage" {{ old('default_commission_type', $settings['default_commission_type'] ?? 'percentage') === 'percentage' ? 'selected' : '' }}>Persentase (% / Dari Harga Modal)</option>
+                            <option value="flat" {{ old('default_commission_type', $settings['default_commission_type'] ?? '') === 'flat' ? 'selected' : '' }}>Nominal Tetap (+ Rp)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Nilai Keuntungan</label>
+                        <input type="number" step="0.01" name="default_commission_value" value="{{ old('default_commission_value', $settings['default_commission_value'] ?? '0') }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3" placeholder="Contoh: 5 untuk 5% atau 500 untuk Rp 500">
+                    </div>
                 </div>
             </div>
 
@@ -188,7 +241,13 @@
                         <input type="text" name="wa_bot_url" value="{{ old('wa_bot_url', $settings['wa_bot_url'] ?? 'http://localhost:3001') }}" class="w-full bg-dark-800 border border-dark-600 text-white text-xs rounded-lg p-2.5" placeholder="http://localhost:3001">
                     </div>
 
-                    <div class="flex items-center gap-3 mb-4">
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
+                        <button type="button" @click="startBot" class="px-4 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-bold hover:bg-blue-500/30 transition">
+                            <i class="fas fa-play mr-1"></i> Start Bot
+                        </button>
+                        <button type="button" @click="stopBot" class="px-4 py-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold hover:bg-rose-500/30 transition">
+                            <i class="fas fa-stop mr-1"></i> Stop Bot
+                        </button>
                         <button type="button" @click="fetchQr" class="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500/30 transition">
                             <i class="fas fa-qrcode mr-1"></i> Tampilkan QR
                         </button>
@@ -206,6 +265,66 @@
                 </div>
             </div>
 
+            {{-- OTP & Wallet --}}
+            <h3 class="text-lg font-bold text-white mt-8 border-b border-dark-700 pb-2 mb-6">Sistem OTP & Saldo Wallet</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Label Saldo User</label>
+                    <input type="text" name="wallet_label" value="{{ old('wallet_label', $settings['wallet_label'] ?? 'Saldo') }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3">
+                    <p class="text-xs text-gray-400 mt-1">Penamaan saldo (Misal: Saldo, UC, Diamonds)</p>
+                    @error('wallet_label')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Panjang Kode OTP</label>
+                    <input type="number" name="otp_length" value="{{ old('otp_length', $settings['otp_length'] ?? '6') }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3" min="4" max="8">
+                    <p class="text-xs text-gray-400 mt-1">Direkomendasikan 6 digit</p>
+                    @error('otp_length')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Masa Aktif OTP (Menit)</label>
+                    <input type="number" name="otp_expiry_minutes" value="{{ old('otp_expiry_minutes', $settings['otp_expiry_minutes'] ?? '5') }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3" min="1" max="60">
+                    <p class="text-xs text-gray-400 mt-1">Direkomendasikan 3-5 menit</p>
+                    @error('otp_expiry_minutes')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+            </div>
+
+            <div class="mt-6" x-data="{ showGuide: false }">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider">Template Email OTP (HTML)</label>
+                    <button type="button" @click="showGuide = !showGuide" class="text-xs bg-dark-800/80 hover:bg-dark-700 text-brand-400 px-3 py-1.5 rounded-lg border border-dark-600 transition flex items-center gap-1.5 font-bold">
+                        <i class="fas fa-book-open"></i> <span x-text="showGuide ? 'Tutup Panduan' : 'Buka Panduan (Guide Book)'"></span>
+                    </button>
+                </div>
+                
+                <!-- Expanded Guide Book -->
+                <div x-show="showGuide" x-collapse x-cloak class="mb-4 bg-blue-900/10 border border-blue-500/20 rounded-xl p-4 sm:p-5">
+                    <h4 class="text-blue-400 font-bold mb-3 text-sm"><i class="fas fa-lightbulb text-yellow-400 mr-1.5"></i> Panduan Membuat Template Email (Guide Book)</h4>
+                    
+                    <ul class="text-xs text-gray-300 space-y-2 list-disc pl-5 mb-4">
+                        <li>Gunakan sintaks <strong>HTML tag biasa</strong> seperti <code class="bg-dark-900 px-1 py-0.5 rounded text-gray-400 text-[10px]">&lt;h1&gt;</code>, <code class="bg-dark-900 px-1 py-0.5 rounded text-gray-400 text-[10px]">&lt;p&gt;</code>, atau <code class="bg-dark-900 px-1 py-0.5 rounded text-gray-400 text-[10px]">&lt;div&gt;</code> untuk merangkai tampilan.</li>
+                        <li>Pastikan menggunakan <strong>CSS Inline</strong> di atribut <code class="bg-dark-900 px-1 py-0.5 rounded text-gray-400 text-[10px]">style="..."</code>. Jangan pakai referensi file CSS eksternal karena klien email (seperti Gmail/Yahoo) sering memblokirnya.</li>
+                        <li>Jangan gunakan <strong>JavaScript</strong> (<code class="bg-dark-900 px-1 py-0.5 rounded text-gray-400 text-[10px]">&lt;script&gt;</code>) kerena klien pembaca email manapun pasti akan memblokirnya secara otomatis atas alasan keamanan.</li>
+                        <li>Simpan gambar atau logo sistem ke server publik lain atau gunakan URL absolut (e.g. <code class="bg-dark-900 px-1 py-0.5 text-blue-300 text-[10px]">https://domain.com/logo.png</code>).</li>
+                    </ul>
+
+                    <h5 class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-blue-500/10 pb-1">Daftar Variabel Penampung Nilai</h5>
+                    <div class="flex flex-wrap gap-3">
+                        <div class="bg-dark-900/50 border border-dark-700 rounded-lg p-2 flex items-center gap-3">
+                            <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded font-mono font-bold border border-blue-500/30">{OTP}</span>
+                            <span class="text-xs text-gray-400">Dicetak menjadi 4-8 digit Angka Unik OTP.</span>
+                        </div>
+                        <div class="bg-dark-900/50 border border-dark-700 rounded-lg p-2 flex items-center gap-3">
+                            <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded font-mono font-bold border border-blue-500/30">{APP_NAME}</span>
+                            <span class="text-xs text-gray-400">Dicetak menjadi Nama Website (Brand) di atas.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <textarea name="email_otp_template" rows="8" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono" placeholder="Masukkan HTML template email...">{{ old('email_otp_template', $settings['email_otp_template'] ?? '<div style="font-family: sans-serif; padding: 20px; text-align: center; background: #f9f9f9; border-radius: 12px; max-width: 500px; margin: auto;">'."\n".'    <h2 style="color: #333;">Kode OTP Anda: {APP_NAME}</h2>'."\n".'    <h1 style="background: #eef; padding: 15px 25px; display: inline-block; letter-spacing: 5px; color: #1e40af; border-radius: 8px;">{OTP}</h1>'."\n".'    <p style="color: #666; font-size: 14px;">Jangan memberikan kode ini ke siapapun. Kode ini berlaku selama <strong style="color: #ef4444;">5 menit</strong>.</p>'."\n".'</div>') }}</textarea>
+                @error('email_otp_template')<p class="text-rose-500 text-xs mt-1">{{ $message }}</p>@enderror
+            </div>
+
         </div>
 
         <div class="bg-dark-900/40 px-6 py-4 rounded-b-2xl border-t border-dark-700/60 text-right">
@@ -221,9 +340,12 @@
         return {
             originalLogo: @json(!empty($settings['site_logo']) ? asset('storage/' . $settings['site_logo']) : null),
             previewLogo: @json(!empty($settings['site_logo']) ? asset('storage/' . $settings['site_logo']) : null),
+            originalFavicon: @json(!empty($settings['site_favicon']) ? asset('storage/' . $settings['site_favicon']) : null),
+            previewFavicon: @json(!empty($settings['site_favicon']) ? asset('storage/' . $settings['site_favicon']) : null),
             previewName: @json(old('site_name', $settings['site_name'] ?? 'PPOBKu')),
             previewDescription: @json(old('site_description', $settings['site_description'] ?? 'Platform topup game dan PPOB termurah dan terpercaya.')),
             removeLogo: false,
+            removeFavicon: false,
 
             onLogoChange(event) {
                 const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
@@ -241,6 +363,22 @@
                 reader.readAsDataURL(file);
             },
 
+            onFaviconChange(event) {
+                const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+                if (!file) {
+                    this.previewFavicon = this.removeFavicon ? null : this.originalFavicon;
+                    return;
+                }
+
+                this.removeFavicon = false;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.previewFavicon = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
             onToggleRemoveLogo() {
                 if (this.removeLogo) {
                     this.previewLogo = null;
@@ -248,6 +386,15 @@
                 }
 
                 this.previewLogo = this.originalLogo;
+            },
+
+            onToggleRemoveFavicon() {
+                if (this.removeFavicon) {
+                    this.previewFavicon = null;
+                    return;
+                }
+
+                this.previewFavicon = this.originalFavicon;
             }
         };
     }
@@ -283,6 +430,35 @@
                 } catch (e) {
                     this.connected = false;
                     this.statusText = '○ Tidak terhubung';
+                }
+            },
+
+            async startBot() {
+                this.statusText = '⏳ Memulai bot... (10s)';
+                try {
+                    const res = await fetch('{{ route("admin.whatsapp.start") }}', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                    });
+                    await res.json();
+                    // pm2 start takes a moment to boot the node app
+                    setTimeout(() => this.checkStatus(), 5000);
+                } catch (e) {
+                    this.statusText = '❌ Error memulai bot';
+                }
+            },
+
+            async stopBot() {
+                this.statusText = '⏳ Mematikan bot...';
+                try {
+                    const res = await fetch('{{ route("admin.whatsapp.stop") }}', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                    });
+                    await res.json();
+                    setTimeout(() => this.checkStatus(), 2000);
+                } catch (e) {
+                    this.statusText = '❌ Error mematikan bot';
                 }
             }
         };

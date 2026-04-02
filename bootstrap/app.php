@@ -40,8 +40,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             '/callback/*', // Bypass CSRF for all callbacks (like Tripay)
             '/webhook/pg/*',
+            '/webhook/provider/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File yang diupload terlalu besar melebihi batas maksimal server.'
+                ], 422);
+            }
+            return redirect()->back()->withInput()->withErrors([
+                'image' => 'File yang diupload terlalu besar melebihi batas maksimal server (PHP post_max_size).',
+                'video' => 'File yang diupload terlalu besar melebihi batas maksimal server (PHP post_max_size).'
+            ]);
+        });
     })->create();

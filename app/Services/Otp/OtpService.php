@@ -6,6 +6,7 @@ use App\Models\OtpProvider;
 use App\Models\OtpVerification;
 use App\Models\Setting;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class OtpService
@@ -57,10 +58,10 @@ class OtpService
         // Delete old unverified OTPs for this target
         OtpVerification::where('target', $target)->where('type', $type)->delete();
 
-        // Create new record
+        // Create new record (store hashed code)
         $verification = OtpVerification::create([
             'target' => $target,
-            'code' => $code,
+            'code' => Hash::make($code),
             'type' => $type,
             'otp_provider_id' => $provider->id,
             'expires_at' => Carbon::now()->addMinutes($expiryMins),
@@ -118,7 +119,7 @@ class OtpService
             return ['success' => false, 'message' => 'Terlalu banyak percobaan salah. Silakan minta kode baru.'];
         }
 
-        if ($verification->code !== (string) $code) {
+        if (!Hash::check((string) $code, $verification->code)) {
             $verification->increment('attempts');
             return ['success' => false, 'message' => 'Kode OTP salah. Coba lagi.'];
         }

@@ -44,17 +44,6 @@ class FonnteSms implements OtpProviderInterface
 
     public function validateCredentials(array $credentials): bool
     {
-        $token = $credentials['token'] ?? '';
-        
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => $token
-            ])->post('https://api.fonnte.com/device');
-            
-            $result = $response->json();
-            return isset($result['status']) && $result['status'] === true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return !empty($credentials['token']);
     }
 }

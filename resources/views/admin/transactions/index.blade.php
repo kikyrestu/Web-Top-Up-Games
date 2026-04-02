@@ -27,12 +27,11 @@
                 <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
                 <select name="status" class="rounded-md border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:ring-blue-500 bg-gray-900/50 text-gray-100 border px-3 py-2">
                     <option value="">Semua Status</option>
-                    <option value="PENDING" {{ request('status') == 'PENDING' ? 'selected' : '' }}>PENDING</option>
-                    <option value="PAID" {{ request('status') == 'PAID' ? 'selected' : '' }}>PAID</option>
-                    <option value="PROCESSING" {{ request('status') == 'PROCESSING' ? 'selected' : '' }}>PROCESSING</option>
-                    <option value="SUCCESS" {{ request('status') == 'SUCCESS' ? 'selected' : '' }}>SUCCESS</option>
-                    <option value="FAILED" {{ request('status') == 'FAILED' ? 'selected' : '' }}>FAILED</option>
-                    <option value="EXPIRED" {{ request('status') == 'EXPIRED' ? 'selected' : '' }}>EXPIRED</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>PENDING</option>
+                    <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>PROCESSING</option>
+                    <option value="success" {{ request('status') == 'success' ? 'selected' : '' }}>SUCCESS</option>
+                    <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>FAILED</option>
+                    <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>EXPIRED</option>
                 </select>
             </div>
             <div>
@@ -64,19 +63,19 @@
                         <td class="px-6 py-4 text-sm text-gray-100">{{ $trx->created_at->format('d M Y H:i') }}</td>
                         <td class="px-6 py-4 text-sm font-medium text-blue-600">{{ $trx->invoice_number }}</td>
                         <td class="px-6 py-4 text-sm text-gray-400">{{ $trx->customer_id ?? '-' }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-100">Rp {{ number_format($trx->grand_total, 0, ',', '.') }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-100">Rp {{ number_format($trx->total_amount, 0, ',', '.') }}</td>
                         <td class="px-6 py-4 text-sm">
                             @php
                                 $color = match($trx->transaction_status) {
-                                    'SUCCESS' => 'bg-emerald-900/30 text-emerald-400 border border-emerald-800',
-                                    'PENDING' => 'bg-amber-900/30 text-amber-400 border border-amber-800',
-                                    'PAID', 'PROCESSING' => 'bg-indigo-900/30 text-indigo-400 border border-indigo-800',
-                                    'FAILED', 'EXPIRED' => 'bg-rose-900/30 text-rose-400 border border-rose-800',
+                                    'success' => 'bg-emerald-900/30 text-emerald-400 border border-emerald-800',
+                                    'pending' => 'bg-amber-900/30 text-amber-400 border border-amber-800',
+                                    'processing' => 'bg-indigo-900/30 text-indigo-400 border border-indigo-800',
+                                    'failed', 'expired' => 'bg-rose-900/30 text-rose-400 border border-rose-800',
                                     default => 'bg-gray-900 text-white'
                                 };
                             @endphp
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $color }}">
-                                {{ $trx->transaction_status }}
+                                {{ strtoupper($trx->transaction_status) }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right text-sm font-medium">

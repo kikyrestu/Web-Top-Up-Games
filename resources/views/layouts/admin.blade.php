@@ -6,6 +6,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $global_site_name ?? 'PPOBKu' }} Admin - @yield('title', 'Control Panel')</title>
     
+    @php
+        $fav32 = !empty($global_site_favicon) ? asset('storage/' . $global_site_favicon) : asset('favicon.ico');
+        $fav192 = !empty($global_site_favicon_192) ? asset('storage/' . $global_site_favicon_192) : $fav32;
+        $fav180 = !empty($global_site_favicon_180) ? asset('storage/' . $global_site_favicon_180) : $fav32;
+    @endphp
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ $fav32 }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ $fav192 }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ $fav180 }}">
+    <meta name="msapplication-TileImage" content="{{ $fav192 }}">
+    
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -132,15 +142,13 @@
                     <i class="fas fa-plug w-5 text-lg transition-transform group-hover:scale-110 {{ request()->routeIs('admin.api-providers.*') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
                     <span class="font-medium text-sm" x-show="sidebarOpen">API Provider</span>
                 </a>
+
+                <a href="{{ route('admin.otp-providers.index') }}" class="flex items-center space-x-3 {{ request()->routeIs('admin.otp-providers.*') ? 'bg-brand-500/10 text-brand-400' : 'text-gray-400 hover:bg-dark-700/50 hover:text-white' }} px-4 py-3 rounded-xl transition duration-200 group">
+                    <i class="fas fa-comment-sms w-5 text-lg transition-transform group-hover:scale-110 {{ request()->routeIs('admin.otp-providers.*') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
+                    <span class="font-medium text-sm" x-show="sidebarOpen">Provider WA/OTP</span>
+                </a>
                 
-                <a href="{{ route('admin.articles.index') }}" class="flex items-center space-x-3 text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded transition">
-                    <i class="fas fa-newspaper w-5"></i>
-                    <span x-show="sidebarOpen">Artikel / Berita</span>
-                </a>
-                <a href="{{ route('admin.banners.index') }}" class="flex items-center space-x-3 text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded transition">
-                    <i class="fas fa-images w-5"></i>
-                    <span x-show="sidebarOpen">Banner Promo</span>
-                </a>
+
                 <a href="{{ route('admin.payment-gateways.index') }}" class="flex items-center space-x-3 {{ request()->routeIs('admin.payment-gateways.*') ? 'bg-brand-500/10 text-brand-400' : 'text-gray-400 hover:bg-dark-700/50 hover:text-white' }} px-4 py-3 rounded-xl transition duration-200 group">
                     <i class="fas fa-credit-card w-5 text-lg transition-transform group-hover:scale-110 {{ request()->routeIs('admin.payment-gateways.*') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
                     <span class="font-medium text-sm" x-show="sidebarOpen">Payment Gateway</span>
@@ -155,9 +163,24 @@
                     <span class="font-medium text-sm" x-show="sidebarOpen">CMS Artikel</span>
                 </a>
 
+                <a href="{{ route('admin.banners.index') }}" class="flex items-center space-x-3 {{ request()->routeIs('admin.banners.*') ? 'bg-brand-500/10 text-brand-400' : 'text-gray-400 hover:bg-dark-700/50 hover:text-white' }} px-4 py-3 rounded-xl transition duration-200 group">
+                    <i class="fas fa-images w-5 text-lg transition-transform group-hover:scale-110 {{ request()->routeIs('admin.banners.*') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
+                    <span class="font-medium text-sm" x-show="sidebarOpen">Banner Promo</span>
+                </a>
+
+                <a href="{{ route('admin.pages.index') }}" class="flex items-center space-x-3 {{ request()->routeIs('admin.pages.*') ? 'bg-brand-500/10 text-brand-400' : 'text-gray-400 hover:bg-dark-700/50 hover:text-white' }} px-4 py-3 rounded-xl transition duration-200 group">
+                    <i class="fas fa-file-alt w-5 text-lg transition-transform group-hover:scale-110 {{ request()->routeIs('admin.pages.*') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
+                    <span class="font-medium text-sm" x-show="sidebarOpen">Kelola Halaman</span>
+                </a>
+
                 <a href="{{ route('admin.settings.index') ?? '#' }}" class="flex items-center space-x-3 {{ request()->routeIs('admin.settings.*') ? 'bg-brand-500/10 text-brand-400' : 'text-gray-400 hover:bg-dark-700/50 hover:text-white' }} px-4 py-3 rounded-xl transition duration-200 group">
                     <i class="fas fa-cog w-5 text-lg transition-transform group-hover:scale-110 {{ request()->routeIs('admin.settings.*') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
                     <span class="font-medium text-sm" x-show="sidebarOpen">Pengaturan Web</span>
+                </a>
+
+                <a href="{{ route('admin.monitoring.index') }}" class="flex items-center space-x-3 {{ request()->routeIs('admin.monitoring.*') ? 'bg-brand-500/10 text-brand-400' : 'text-gray-400 hover:bg-dark-700/50 hover:text-white' }} px-4 py-3 rounded-xl transition duration-200 group relative">
+                    <i class="fas fa-satellite-dish w-5 text-lg transition-transform group-hover:scale-110 {{ request()->routeIs('admin.monitoring.*') ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300' }}"></i>
+                    <span class="font-medium text-sm" x-show="sidebarOpen">Monitoring API & Bot</span>
                 </a>
                 
                 <div class="h-6"></div>

@@ -6,15 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ApiProvider;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with(['category', 'providerMappings.apiProvider'])->latest()->paginate(15);
+        $query = Product::with(['category', 'providerMappings.apiProvider'])->latest();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('category', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+        }
+
+        $products = $query->paginate(15)->withQueryString();
         return view('admin.products.index', compact('products'));
     }
 
@@ -45,7 +56,7 @@ class ProductController extends Controller
         $data['is_active'] = $request->has('is_active');
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $data['image'] = ImageOptimizer::optimizeAndSave($request->file('image'), 'products', 500, 85);
         }
 
         DB::transaction(function () use ($data, $request) {
@@ -110,7 +121,7 @@ class ProductController extends Controller
                 if ($product->image) {
                     Storage::disk('public')->delete($product->image);
                 }
-                $data['image'] = $request->file('image')->store('products', 'public');
+                $data['image'] = ImageOptimizer::optimizeAndSave($request->file('image'), 'products', 500, 85);
             }
 
             $product->update($data);
@@ -151,6 +162,25 @@ class ProductController extends Controller
         }
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus.');
+    }
+
+    public function destroyBulk(Request $request)
+    {
+        $request->validate([
+            'selected_ids' => 'required|array',
+            'selected_ids.*' => 'exists:products,id',
+        ]);
+
+        $products = Product::whereIn('id', $request->selected_ids)->get();
+
+        foreach ($products as $product) {
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $product->delete();
+        }
+
+        return redirect()->route('admin.products.index')->with('success', count($products) . ' produk berhasil dihapus secara massal.');
     }
 }
 

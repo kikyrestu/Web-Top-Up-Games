@@ -13,6 +13,11 @@
                 $seoLogoUrl = !empty($global_site_logo) ? asset('storage/' . $global_site_logo) : asset('favicon.ico');
                 $seoImageUrl = preg_match('/^https?:\/\//i', $seoImage) ? $seoImage : url($seoImage);
 
+                // FAVICON
+                $fav32 = !empty($global_site_favicon) ? asset('storage/' . $global_site_favicon) : asset('favicon.ico');
+                $fav192 = !empty($global_site_favicon_192) ? asset('storage/' . $global_site_favicon_192) : $fav32;
+                $fav180 = !empty($global_site_favicon_180) ? asset('storage/' . $global_site_favicon_180) : $fav32;
+
                 $waDigits = preg_replace('/\D+/', '', (string) ($global_contact_whatsapp ?? ''));
                 $waDigits = ($waDigits !== '' && str_starts_with($waDigits, '0')) ? '62' . substr($waDigits, 1) : $waDigits;
                 $waLink = $waDigits !== '' ? 'https://wa.me/' . $waDigits : route('front.page', 'kontak');
@@ -43,6 +48,12 @@
         <link rel="alternate" href="{{ $seoCanonical }}" hreflang="id-ID">
         <link rel="alternate" href="{{ $seoCanonical }}" hreflang="x-default">
         <link rel="alternate" type="application/rss+xml" title="{{ $seoSiteName }} Feed" href="{{ route('front.feed') }}">
+
+        <!-- FAVICON TAGS -->
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ $fav32 }}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{{ $fav192 }}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ $fav180 }}">
+        <meta name="msapplication-TileImage" content="{{ $fav192 }}">
 
         <meta property="og:type" content="website">
         <meta property="og:locale" content="id_ID">
@@ -77,6 +88,8 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #11131c; }
         ::-webkit-scrollbar-thumb { background: #343b54; border-radius: 4px; }
+        @media (min-width: 1024px) { .mobile-bottom-nav { display: none !important; } }
+        @media (max-width: 767px) { .wa-floating { bottom: 6.5rem !important; } }
     </style>
 </head>
 <body class="antialiased flex flex-col min-h-screen">
@@ -90,7 +103,7 @@
     </div>
 
     <!-- Main Navbar -->
-    <header class="bg-up-nav sticky top-0 z-50 shadow-md border-b border-up-border/50">
+    <header class="bg-up-nav sticky top-0 z-50 shadow-md border-b border-up-border/50" x-data="{ mobileMenu: false }">
         <div class="max-w-[1280px] mx-auto px-4">
             <div class="flex items-center justify-between h-16">
                 
@@ -109,7 +122,9 @@
                         <a href="{{ route('front.index') }}" class="text-white hover:text-up-yellow transition"><i class="fas fa-home mr-1"></i> Beranda</a>
                         <a href="{{ route('front.cek-pesanan') }}" class="hover:text-white transition"><i class="fas fa-search-dollar mr-1"></i> Cek Pesanan</a>
                         <a href="{{ route('front.page', 'daftar-harga') }}" class="hover:text-white transition"><i class="fas fa-list-alt mr-1"></i> Daftar Harga</a>
-                        <a href="{{ route('front.article.index') }}" class="hover:text-white transition"><i class="fas fa-fire mr-1"></i> Promo & Acara</a>
+                        <a href="{{ route('front.article.index') }}" class="hover:text-white transition"><i class="fas fa-newspaper mr-1"></i> Artikel</a>
+                        <a href="{{ route('front.promo') }}" class="hover:text-[#f97316] transition"><i class="fas fa-tag mr-1 text-[#f97316]"></i> Promo</a>
+                        <a href="{{ route('front.calculator') }}" class="hover:text-white transition"><i class="fas fa-calculator mr-1"></i> Kalkulator</a>
                         
                         <!-- Dropdown Lainnya -->
                         <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
@@ -118,6 +133,7 @@
                             </button>
                             <!-- Dropdown Menu -->
                             <div x-show="open" x-transition.opacity class="absolute top-full left-0 mt-4 w-48 bg-up-card border border-up-border rounded-lg shadow-xl py-2 z-50">
+                                <a href="{{ route('front.calculator') }}" class="block px-4 py-2 text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-calculator w-5"></i> Kalkulator MLBB</a>
                                 <a href="{{ route('front.page', 'kontak') }}" class="block px-4 py-2 text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-headset w-5"></i> Hubungi CS</a>
                                 <a href="{{ route('front.page', 'syarat-ketentuan') }}" class="block px-4 py-2 text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-book-open w-5"></i> Syarat & Ketentuan</a>
                                 <a href="{{ route('front.page', 'kebijakan-privasi') }}" class="block px-4 py-2 text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-shield-alt w-5"></i> Kebijakan Privasi</a>
@@ -132,13 +148,54 @@
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
                         <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari produk, kategori, atau kode" class="bg-[#191d2c] border border-up-border text-white text-xs rounded-full pl-8 pr-4 py-2 w-64 focus:outline-none focus:border-up-yellow transition">
                     </form>
-                    <a href="{{ route('login') }}" class="bg-up-yellow hover:bg-up-yellowhover text-black text-xs font-bold px-6 py-2 rounded shadow-sm transition">
-                        MASUK
-                    </a>
+                    @auth
+                        <div class="relative group" x-data="{ userMenu: false }" @mouseenter="userMenu = true" @mouseleave="userMenu = false">
+                            <button class="flex items-center gap-2 focus:outline-none">
+                                <img src="{{ auth()->user()->avatar ? asset('storage/'.auth()->user()->avatar) : 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=f97316&color=fff' }}" alt="Avatar" class="w-8 h-8 rounded-full border border-up-border shadow-sm">
+                                <div class="hidden md:flex flex-col items-start px-1">
+                                    <span class="text-white text-xs font-bold">{{ auth()->user()->name }}</span>
+                                    <span class="text-[9px] text-gray-400">{{ \App\Models\Setting::get('wallet_label', 'Saldo') }}: Rp {{ number_format(auth()->user()->wallet_balance ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                                <i class="fas fa-caret-down text-gray-400 text-[10px] hidden md:block"></i>
+                            </button>
+                            <div x-show="userMenu" x-transition.opacity class="absolute right-0 mt-3 w-56 bg-up-card border border-up-border rounded-xl shadow-2xl overflow-hidden z-50">
+                                <div class="px-4 py-3 bg-[#191d2c] border-b border-up-border/50">
+                                    <p class="text-sm font-bold text-white truncate">{{ auth()->user()->name }}</p>
+                                    <p class="text-[10px] text-gray-400 font-mono mt-0.5 truncate">{{ auth()->user()->email ?? auth()->user()->phone ?? 'Guest' }}</p>
+                                </div>
+                                @if(auth()->user()->isAdmin())
+                                    <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-shield-alt w-5 text-center mr-1"></i> Admin Panel</a>
+                                    <div class="border-t border-up-border/50"></div>
+                                @endif
+                                <a href="{{ route('member.dashboard') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-home w-5 text-center mr-1"></i> Dashboard Member</a>
+                                <a href="{{ route('member.wallet') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-wallet w-5 text-center mr-1"></i> Deposit Saldo</a>
+                                {{-- <a href="{{ route('member.commission') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-[#f97316] hover:bg-black/20 transition"><i class="fas fa-coins w-5 text-center mr-1 text-[#f97316]"></i> Komisi & Referral</a> --}}
+                                <a href="{{ route('member.transactions') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-history w-5 text-center mr-1"></i> Riwayat Transaksi</a>
+                                <a href="{{ route('member.favorites') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-heart w-5 text-center mr-1 text-rose-500"></i> Game Favorit</a>
+                                <a href="{{ route('member.profile') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-user-cog w-5 text-center mr-1"></i> Pengaturan Akun</a>
+                                <form action="{{ route('logout') }}" method="POST" class="border-t border-up-border/50 mt-1">
+                                    @csrf
+                                    <button type="submit" class="w-full text-left block px-4 py-2.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-900/20 transition">
+                                        <i class="fas fa-sign-out-alt w-5 text-center mr-1"></i> Keluar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ route('login') }}" class="bg-up-yellow hover:bg-[#d9831c] text-black text-xs font-bold px-5 py-2 rounded-lg shadow-sm transition">
+                            MASUK
+                        </a>
+                        <a href="{{ route('register') }}" class="hidden md:inline-block border border-up-yellow text-up-yellow hover:bg-up-yellow hover:text-black text-xs font-bold px-5 py-2 rounded-lg transition shadow-sm">
+                            DAFTAR
+                        </a>
+                    @endauth
+
+                    <!-- Mobile Hamburger Dihapus -->
                 </div>
                 
             </div>
         </div>
+
     </header>
 
     <!-- Main Content -->
@@ -199,9 +256,36 @@
     </footer>
 
     <!-- Floating WhatsApp -->
-    <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 transition z-50">
+    <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer" class="wa-floating fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 transition z-50">
         <i class="fab fa-whatsapp text-3xl"></i>
     </a>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <div class="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-up-nav border-t border-up-border z-50 px-6 py-3 flex justify-between items-center text-[10px] font-bold text-gray-400" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); box-shadow: 0 -4px 10px rgba(0,0,0,0.4);">
+        <a href="{{ route('front.index') }}" class="flex flex-col items-center gap-1 min-w-[50px] {{ request()->routeIs('front.index') ? 'text-up-yellow' : 'hover:text-white' }}">
+            <i class="fas fa-home text-xl mb-0.5"></i>
+            <span>Beranda</span>
+        </a>
+        <a href="{{ route('front.cek-pesanan') }}" class="flex flex-col items-center gap-1 min-w-[50px] {{ request()->routeIs('front.cek-pesanan') ? 'text-up-yellow' : 'hover:text-white' }}">
+            <i class="fas fa-search-dollar text-xl mb-0.5"></i>
+            <span>Pesanan</span>
+        </a>
+        <a href="{{ route('front.page', 'daftar-harga') }}" class="flex flex-col items-center gap-1 min-w-[50px] {{ request()->routeIs('front.page', 'daftar-harga') ? 'text-up-yellow' : 'hover:text-white' }}">
+            <i class="fas fa-list-alt text-xl mb-0.5"></i>
+            <span>Harga</span>
+        </a>
+        @auth
+        <a href="{{ route('member.dashboard') }}" class="flex flex-col items-center gap-1 min-w-[50px] {{ request()->is('member*') ? 'text-up-yellow' : 'hover:text-white' }}">
+            <i class="fas fa-user-circle text-xl mb-0.5"></i>
+            <span>Akun</span>
+        </a>
+        @else
+        <a href="{{ route('login') }}" class="flex flex-col items-center gap-1 min-w-[50px] hover:text-white">
+            <i class="fas fa-sign-in-alt text-xl mb-0.5"></i>
+            <span>Masuk</span>
+        </a>
+        @endauth
+    </div>
 
     @stack('scripts')
 </body>

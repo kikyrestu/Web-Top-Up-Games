@@ -9,10 +9,24 @@ use Illuminate\Support\Facades\Log;
 class WhatsAppService
 {
     protected string $sidecarUrl;
+    protected string $sidecarToken;
 
     public function __construct()
     {
         $this->sidecarUrl = rtrim(Setting::get('wa_bot_url', 'http://localhost:3001'), '/');
+        $this->sidecarToken = Setting::get('wa_bot_token', '');
+    }
+
+    /**
+     * Build HTTP client with optional auth token.
+     */
+    protected function http(int $timeout = 5)
+    {
+        $client = Http::timeout($timeout);
+        if ($this->sidecarToken) {
+            $client = $client->withHeaders(['Authorization' => 'Bearer ' . $this->sidecarToken]);
+        }
+        return $client;
     }
 
     /**
@@ -21,7 +35,7 @@ class WhatsAppService
     public function getQrCode(): ?string
     {
         try {
-            $response = Http::timeout(10)->get($this->sidecarUrl . '/qr');
+            $response = $this->http(10)->get($this->sidecarUrl . '/qr');
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -41,7 +55,7 @@ class WhatsAppService
     public function getStatus(): array
     {
         try {
-            $response = Http::timeout(5)->get($this->sidecarUrl . '/status');
+            $response = $this->http(5)->get($this->sidecarUrl . '/status');
 
             if ($response->successful()) {
                 return $response->json();
@@ -63,7 +77,7 @@ class WhatsAppService
             $number = preg_replace('/^0/', '62', $number);
             $number = preg_replace('/^\+/', '', $number);
 
-            $response = Http::timeout(15)->post($this->sidecarUrl . '/send', [
+            $response = $this->http(15)->post($this->sidecarUrl . '/send', [
                 'number'  => $number,
                 'message' => $text,
             ]);
@@ -87,6 +101,7 @@ class WhatsAppService
         }
 
         $statusLabel = match ($event) {
+            'new'        => '🆕 ORDER BARU',
             'paid'       => '💰 PAID',
             'success'    => '✅ SUKSES',
             'failed'     => '❌ GAGAL',

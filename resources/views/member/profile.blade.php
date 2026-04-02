@@ -77,27 +77,42 @@
                         
                         <div class="space-y-6">
                             <!-- Current Password -->
-                            <div>
+                            <div x-data="{ show: false }">
                                 <label for="current_password" class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Password Saat Ini</label>
-                                <input type="password" name="current_password" id="current_password" required
-                                    class="w-full md:w-1/2 bg-[#0f1118] border border-[#2d3748] text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition">
+                                <div class="relative md:w-1/2">
+                                    <input :type="show ? 'text' : 'password'" name="current_password" id="current_password" required
+                                        class="w-full bg-[#0f1118] border border-[#2d3748] text-white text-sm rounded-xl px-4 py-3 pr-10 focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition">
+                                    <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-[#f97316] transition-colors focus:outline-none">
+                                        <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
                                 @error('current_password') <p class="text-red-400 text-xs mt-1.5">{{ $message }}</p> @enderror
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- New Password -->
-                                <div>
+                                <div x-data="{ show: false }">
                                     <label for="password" class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Password Baru</label>
-                                    <input type="password" name="password" id="password" required
-                                        class="w-full bg-[#0f1118] border border-[#2d3748] text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition">
+                                    <div class="relative">
+                                        <input :type="show ? 'text' : 'password'" name="password" id="password" required
+                                            class="w-full bg-[#0f1118] border border-[#2d3748] text-white text-sm rounded-xl px-4 py-3 pr-10 focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition">
+                                        <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-[#f97316] transition-colors focus:outline-none">
+                                            <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                        </button>
+                                    </div>
                                     @error('password') <p class="text-red-400 text-xs mt-1.5">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Confirm Password -->
-                                <div>
+                                <div x-data="{ show: false }">
                                     <label for="password_confirmation" class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Konfirmasi Password</label>
-                                    <input type="password" name="password_confirmation" id="password_confirmation" required
-                                        class="w-full bg-[#0f1118] border border-[#2d3748] text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition">
+                                    <div class="relative">
+                                        <input :type="show ? 'text' : 'password'" name="password_confirmation" id="password_confirmation" required
+                                            class="w-full bg-[#0f1118] border border-[#2d3748] text-white text-sm rounded-xl px-4 py-3 pr-10 focus:outline-none focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] transition">
+                                        <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-[#f97316] transition-colors focus:outline-none">
+                                            <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

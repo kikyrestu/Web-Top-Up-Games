@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -26,18 +27,19 @@ class BannerController extends Controller
             'title' => 'nullable|string|max:255',
             'link' => 'nullable|url',
             'media_type' => 'required|in:image,video,embed,html',
-            'image' => 'required_if:media_type,image|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'image' => 'required_if:media_type,image|mimes:jpeg,png,jpg,webp,svg,gif|max:10240',
             'video' => 'required_if:media_type,video|mimes:mp4,webm|max:20480',
             'media_content' => 'required_if:media_type,embed,html',
-            'order' => 'nullable|integer'
+            'order' => 'nullable|integer',
+            'position' => 'nullable|string|max:50',
         ]);
 
-        $data = $request->only(['title', 'link', 'media_type', 'order']);
+        $data = $request->only(['title', 'link', 'media_type', 'order', 'position']);
         $data['is_active'] = $request->has('is_active');
         $data['order'] = $request->order ?? 0;
 
         if ($request->media_type === 'image' && $request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('banners', 'public');
+            $data['image'] = ImageOptimizer::optimizeAndSave($request->file('image'), 'banners', 1200, 85);
             $data['media_content'] = null;
         } elseif ($request->media_type === 'video' && $request->hasFile('video')) {
             $data['media_content'] = $request->file('video')->store('banners/videos', 'public');
@@ -66,18 +68,20 @@ class BannerController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'video' => 'nullable|mimes:mp4,webm|max:20480',
             'media_content' => 'required_if:media_type,embed,html',
-            'order' => 'nullable|integer'
+            'order' => 'nullable|integer',
+            'position' => 'nullable|string|max:50',
         ]);
 
-        $data = $request->only(['title', 'link', 'media_type', 'order']);
+        $data = $request->only(['title', 'link', 'media_type', 'order', 'position']);
         $data['is_active'] = $request->has('is_active');
         $data['order'] = $request->order ?? 0;
 
         if ($request->media_type === 'image') {
             if ($request->hasFile('image')) {
-                if ($banner->image) Storage::disk('public')->delete($banner->image);
-                if ($banner->media_type === 'video' && $banner->media_content) Storage::disk('public')->delete($banner->media_content);
-                $data['image'] = $request->file('image')->store('banners', 'public');
+                if ($banner->image && Storage::disk('public')->exists($banner->image)) {
+                    Storage::disk('public')->delete($banner->image);
+                }
+                $data['image'] = ImageOptimizer::optimizeAndSave($request->file('image'), 'banners', 1200, 85);
                 $data['media_content'] = null;
             } else {
                 $data['image'] = $banner->image;

@@ -58,46 +58,101 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-show="provider === 'rajabiller'">
                         <div>
-                            <label class="block text-gray-400 text-xs mb-1">Username</label>
-                            <input type="text" name="credentials[username]" value="{{ $maskedCredentials['username'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
+                            <label class="block text-gray-400 text-xs mb-1 font-bold">UID / User ID Outlet <span class="text-rose-500">*</span></label>
+                            <input type="text" name="credentials[uid]" value="{{ $maskedCredentials['uid'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
+                            <p class="text-gray-600 text-[10px] mt-1">User ID outlet dari dashboard Rajabiller</p>
                         </div>
                         <div>
-                            <label class="block text-gray-400 text-xs mb-1">API Key</label>
-                            <input type="text" name="credentials[api_key]" value="{{ $maskedCredentials['api_key'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
+                            <label class="block text-gray-400 text-xs mb-1 font-bold">PIN Transaksi <span class="text-rose-500">*</span></label>
+                            <input type="password" name="credentials[pin]" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="Isi untuk mengganti PIN">
+                            <p class="text-gray-600 text-[10px] mt-1">Kosongkan jika tidak ingin mengubah PIN</p>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-gray-400 text-xs mb-1">Secret / Sign Key</label>
-                            <input type="text" name="credentials[secret_key]" value="{{ $maskedCredentials['secret_key'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
+                            <label class="block text-gray-400 text-xs mb-1 font-bold">Environment</label>
+                            <select name="credentials[env]" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3">
+                                <option value="production" {{ ($maskedCredentials['env'] ?? 'production') === 'production' ? 'selected' : '' }}>🟢 Production – api.rajabiller.com</option>
+                                <option value="sandbox"    {{ ($maskedCredentials['env'] ?? '') === 'sandbox' ? 'selected' : '' }}>🟡 Sandbox / Dev – c-dev-api.rajabiller.com</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-show="provider === 'digiflazz'" style="display:none;">
-                        <div>
-                            <label class="block text-gray-400 text-xs mb-1">Username</label>
-                            <input type="text" name="credentials[username]" value="{{ $maskedCredentials['username'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
+                    <div x-show="provider === 'digiflazz'" style="display:none;">
+
+                        {{-- Guide Box --}}
+                        <div class="mb-4 p-4 bg-blue-950/30 border border-blue-700/30 rounded-xl text-xs text-blue-300 space-y-1">
+                            <p class="font-bold text-blue-200 flex items-center gap-2"><i class="fas fa-info-circle"></i> Cara Mendapatkan Credentials Digiflazz</p>
+                            <ol class="list-decimal list-inside space-y-1 text-blue-300/80 mt-2">
+                                <li>Login ke <span class="font-mono text-blue-200">member.digiflazz.com</span></li>
+                                <li>Klik menu <strong>Pengaturan Koneksi API</strong></li>
+                                <li>Salin <strong>Username</strong> dan <strong>API Key</strong></li>
+                                <li>Tambahkan Whitelist IP jika diperlukan oleh penyedia</li>
+                            </ol>
+                            <div class="mt-3 pt-3 border-t border-blue-700/30">
+                                <p class="font-bold text-blue-200 flex items-center gap-2"><i class="fas fa-webhook"></i> Webhook URL untuk Digiflazz</p>
+                                <p class="mt-1">Daftarkan URL ini di tab <strong>Webhook</strong> pada dashboard Digiflazz:</p>
+                                <code class="block mt-1 bg-dark-900 px-3 py-2 rounded text-emerald-400 font-mono break-all select-all">{{ url('/api/webhook/digiflazz') }}</code>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-gray-400 text-xs mb-1">API Key</label>
-                            <input type="text" name="credentials[api_key]" value="{{ $maskedCredentials['api_key'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-gray-400 text-xs mb-1">Custom Base URL (Opsional)</label>
-                            <input type="text" name="credentials[url]" value="{{ $maskedCredentials['url'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="***** atau URL baru">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-400 text-xs mb-1 font-bold">Username Digiflazz <span class="text-rose-500">*</span></label>
+                                <input type="text" name="credentials[username]" value="{{ $maskedCredentials['username'] ?? '' }}"
+                                    class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs"
+                                    placeholder="username dari dashboard Digiflazz">
+                                <p class="text-gray-600 text-[10px] mt-1">Username akun member Digiflazz (bukan email)</p>
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 text-xs mb-1 font-bold">API Key (Production) <span class="text-rose-500">*</span></label>
+                                <input type="password" name="credentials[api_key]" value=""
+                                    class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs"
+                                    placeholder="Isi untuk mengganti API Key">
+                                <p class="text-gray-600 text-[10px] mt-1">Kosongkan jika tidak ingin mengubah API Key</p>
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 text-xs mb-1 font-bold">Environment</label>
+                                <select name="credentials[env]" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3">
+                                    <option value="production" {{ ($maskedCredentials['env'] ?? 'production') === 'production' ? 'selected' : '' }}>🟢 Production – api.digiflazz.com</option>
+                                    <option value="sandbox" {{ ($maskedCredentials['env'] ?? '') === 'sandbox' ? 'selected' : '' }}>🟡 Sandbox – Development Mode</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 text-xs mb-1 font-bold">Custom Base URL <span class="text-gray-600 font-normal">(Opsional)</span></label>
+                                <input type="text" name="credentials[url]" value="{{ $maskedCredentials['url'] ?? '' }}"
+                                    class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs"
+                                    placeholder="https://api.digiflazz.com/v1/">
+                                <p class="text-gray-600 text-[10px] mt-1">Kosongkan untuk pakai URL default Digiflazz</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-show="provider === 'orderkuota'" style="display:none;">
-                        <div>
-                            <label class="block text-gray-400 text-xs mb-1">API Key</label>
-                            <input type="text" name="credentials[api_key]" value="{{ $maskedCredentials['api_key'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
+
+                    <div x-show="provider === 'orderkuota'" style="display:none;">
+                        <div class="mb-4 p-4 bg-green-950/30 border border-green-700/30 rounded-xl text-xs text-green-300 space-y-1">
+                            <p class="font-bold text-green-200 flex items-center gap-2"><i class="fas fa-info-circle"></i> OkeConnect H2H (OrderKuota)</p>
+                            <p class="text-green-300/80">Center Utama: <code>h2h.okeconnect.com</code> | Backup: <code>b2b.okeconnect.com</code></p>
+                            <div class="mt-2 pt-2 border-t border-green-700/30">
+                                <p class="font-bold text-green-200">URL Callback:</p>
+                                <code class="block mt-1 bg-dark-900 px-3 py-2 rounded text-emerald-400 font-mono break-all select-all">{{ url('/webhook/provider/orderkuota') }}</code>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-gray-400 text-xs mb-1">Merchant ID / Partner ID</label>
-                            <input type="text" name="credentials[merchant_id]" value="{{ $maskedCredentials['merchant_id'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-gray-400 text-xs mb-1">Secret Key</label>
-                            <input type="text" name="credentials[secret_key]" value="{{ $maskedCredentials['secret_key'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-400 text-xs mb-1 font-bold">Member ID <span class="text-rose-500">*</span></label>
+                                <input type="text" name="credentials[member_id]" value="{{ $maskedCredentials['member_id'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="OK00123">
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 text-xs mb-1 font-bold">PIN Transaksi (4 digit) <span class="text-rose-500">*</span></label>
+                                <input type="password" name="credentials[pin]" value="{{ $maskedCredentials['pin'] ?? '' }}" inputmode="numeric" maxlength="4" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 text-xs mb-1 font-bold">Password H2H <span class="text-rose-500">*</span></label>
+                                <input type="password" name="credentials[password]" value="{{ $maskedCredentials['password'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="*****">
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 text-xs mb-1 font-bold">Custom Base URL <span class="text-gray-600 font-normal">(Opsional)</span></label>
+                                <input type="text" name="credentials[url]" value="{{ $maskedCredentials['url'] ?? '' }}" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs" placeholder="https://h2h.okeconnect.com/trx/">
+                            </div>
                         </div>
                     </div>
                 </div>

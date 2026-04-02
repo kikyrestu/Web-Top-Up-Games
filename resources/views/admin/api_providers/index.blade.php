@@ -11,9 +11,12 @@
             'code' => 'rajabiller',
             'name' => 'Rajabiller',
             'credentials' => [
-                ['key' => 'username', 'label' => 'Username', 'placeholder' => 'username_raja'],
-                ['key' => 'api_key', 'label' => 'API Key', 'placeholder' => 'api_key_raja'],
-                ['key' => 'secret_key', 'label' => 'Secret / Sign Key', 'placeholder' => 'secret_key_raja'],
+                ['key' => 'uid', 'label' => 'UID / User ID Outlet', 'placeholder' => 'Contoh: SP300203', 'type' => 'text', 'hint' => 'User ID outlet dari dashboard Rajabiller'],
+                ['key' => 'pin', 'label' => 'PIN Transaksi', 'placeholder' => 'PIN numerik', 'type' => 'password', 'hint' => 'Kosongkan jika tidak ingin mengubah'],
+                ['key' => 'env', 'label' => 'Environment', 'placeholder' => '', 'type' => 'select', 'options' => [
+                    'production' => '🟢 Production – api.rajabiller.com',
+                    'sandbox'    => '🟡 Sandbox / Dev – c-dev-api.rajabiller.com',
+                ]],
             ],
         ],
         [
@@ -21,19 +24,19 @@
             'code' => 'digiflazz',
             'name' => 'Digiflazz',
             'credentials' => [
-                ['key' => 'username', 'label' => 'Username', 'placeholder' => 'username_digiflazz'],
-                ['key' => 'api_key', 'label' => 'API Key', 'placeholder' => 'api_key_digiflazz'],
-                ['key' => 'url', 'label' => 'Custom Base URL (Opsional)', 'placeholder' => 'https://api.digiflazz.com/v1/'],
+                ['key' => 'username', 'label' => 'Username', 'placeholder' => 'username_digiflazz', 'type' => 'text'],
+                ['key' => 'api_key', 'label' => 'API Key', 'placeholder' => 'api_key_digiflazz', 'type' => 'text'],
+                ['key' => 'url', 'label' => 'Custom Base URL (Opsional)', 'placeholder' => 'https://api.digiflazz.com/v1/', 'type' => 'text'],
             ],
         ],
         [
             'provider' => 'orderkuota',
             'code' => 'orderkuota',
-            'name' => 'OrderKuota',
+            'name' => 'OrderKuota (OkeConnect H2H)',
             'credentials' => [
-                ['key' => 'api_key', 'label' => 'API Key', 'placeholder' => 'api_key_orderkuota'],
-                ['key' => 'merchant_id', 'label' => 'Merchant ID / Partner ID', 'placeholder' => 'merchant_id_orderkuota'],
-                ['key' => 'secret_key', 'label' => 'Secret Key', 'placeholder' => 'secret_orderkuota'],
+                ['key' => 'member_id', 'label' => 'Member ID', 'placeholder' => 'OK00123', 'type' => 'text'],
+                ['key' => 'pin', 'label' => 'PIN Transaksi (4 digit)', 'placeholder' => '1234', 'type' => 'password'],
+                ['key' => 'password', 'label' => 'Password H2H', 'placeholder' => 'password_h2h', 'type' => 'password'],
             ],
         ],
     ];
@@ -114,15 +117,29 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @foreach($preset['credentials'] as $field)
+                            @php $fieldType = $field['type'] ?? 'text'; @endphp
                             <div class="{{ $loop->last && count($preset['credentials']) % 2 === 1 ? 'md:col-span-2' : '' }}">
-                                <label class="block text-gray-400 text-xs mb-1">{{ $field['label'] }}</label>
-                                <input
-                                    type="text"
-                                    name="credentials[{{ $field['key'] }}]"
-                                    value="{{ array_key_exists($field['key'], $existingCredentials) ? '*****' : '' }}"
-                                    placeholder="{{ array_key_exists($field['key'], $existingCredentials) ? '*****' : $field['placeholder'] }}"
-                                    class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs"
-                                >
+                                <label class="block text-gray-400 text-xs mb-1 font-bold">{{ $field['label'] }}</label>
+
+                                @if($fieldType === 'select')
+                                    <select name="credentials[{{ $field['key'] }}]" class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3">
+                                        @foreach($field['options'] as $optVal => $optLabel)
+                                            <option value="{{ $optVal }}" {{ (($existingCredentials[$field['key']] ?? 'production') === $optVal) ? 'selected' : '' }}>{{ $optLabel }}</option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <input
+                                        type="{{ $fieldType }}"
+                                        name="credentials[{{ $field['key'] }}]"
+                                        value="{{ ($fieldType !== 'password' && array_key_exists($field['key'], $existingCredentials)) ? '*****' : '' }}"
+                                        placeholder="{{ array_key_exists($field['key'], $existingCredentials) ? ($fieldType === 'password' ? 'Isi untuk ganti' : '*****') : $field['placeholder'] }}"
+                                        class="w-full bg-dark-900 border border-dark-600 text-white text-sm rounded-xl p-3 font-mono text-xs"
+                                    >
+                                @endif
+
+                                @if(!empty($field['hint']))
+                                    <p class="text-gray-600 text-[10px] mt-1">{{ $field['hint'] }}</p>
+                                @endif
                             </div>
                         @endforeach
                     </div>

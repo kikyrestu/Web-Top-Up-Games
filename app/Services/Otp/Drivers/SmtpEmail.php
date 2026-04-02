@@ -16,10 +16,25 @@ class SmtpEmail implements OtpProviderInterface
                 $this->temporarilyOverrideConfig($credentials);
             }
 
-            $siteName = config('app.name');
-            $message = "Kode OTP registrasi Anda adalah: {$code}. Jangan memberikan kode ini ke siapapun. Berlaku selama 5 menit.";
+            $siteName = \App\Models\Setting::get('site_name', config('app.name'));
+            $template = \App\Models\Setting::get('email_otp_template');
+            
+            if (empty($template)) {
+                $template = "Kode OTP registrasi Anda adalah: {OTP}. Jangan memberikan kode ini ke siapapun. Berlaku selama 5 menit.";
+            }
 
-            Mail::raw($message, function ($mail) use ($target, $siteName) {
+            // Replace vars
+            $htmlMessage = str_replace(
+                ['{OTP}', '{APP_NAME}'],
+                [$code, $siteName],
+                $template
+            );
+
+            // Purge the cached smtp mailer instance so it picks up the dynamic config changes
+            app('mail.manager')->purge('smtp');
+
+            // Force usage of the 'smtp' mailer, overriding any .env setting like 'log'
+            Mail::mailer('smtp')->html($htmlMessage, function ($mail) use ($target, $siteName) {
                 $mail->to($target)->subject("Kode OTP Anda - {$siteName}");
             });
 
@@ -53,8 +68,8 @@ class SmtpEmail implements OtpProviderInterface
         if (!empty($credentials['from_address'])) {
             Config::set('mail.from.address', $credentials['from_address']);
         }
-        if (!empty($credentials['from_name'])) {
-            Config::set('mail.from.name', $credentials['from_name']);
-        }
+        
+        $siteName = \App\Models\Setting::get('site_name', config('app.name'));
+        Config::set('mail.from.name', $credentials['from_name'] ?? $siteName);
     }
 }

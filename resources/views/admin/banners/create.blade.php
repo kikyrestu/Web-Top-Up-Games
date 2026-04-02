@@ -56,33 +56,52 @@
             <form action="{{ route('admin.banners.store') }}" method="POST" enctype="multipart/form-data" class="relative z-10 space-y-6">
                 @csrf
 
+                <!-- RAW DEBUG BLOCK -->
+                <div class="bg-gray-900 border border-yellow-500/50 p-4 rounded-xl overflow-auto text-[10px] font-mono whitespace-pre-wrap text-yellow-300">
+                    <strong>[RAW DEBUG SESSION & ERRORS]</strong>
+                    {{ print_r(session()->all(), true) }}
+                    <strong>[RAW ERRORS]</strong>
+                    {{ print_r($errors->all(), true) }}
+                </div>
+
+                @if ($errors->any())
+                <div class="bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-xl shadow-sm text-sm">
+                    <p class="font-bold flex items-center mb-2"><i class="fas fa-exclamation-triangle mr-2"></i>Terdapat kesalahan pada input:</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
                 <!-- Type Selection -->
                 <div class="bg-dark-800/50 p-5 rounded-xl border border-dark-700">
                     <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">Tipe Media Banner</label>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         <label class="relative cursor-pointer">
-                            <input type="radio" name="media_type" value="image" x-model="mediaType" class="peer sr-only">
+                            <input type="radio" name="media_type" value="image" x-model="mediaType" class="peer sr-only" {{ old('media_type', 'image') == 'image' ? 'checked' : '' }}>
                             <div class="p-3 text-center rounded-xl bg-dark-900 border border-dark-600 peer-checked:border-brand-500 peer-checked:bg-brand-500/10 peer-checked:text-brand-400 text-gray-400 transition-all hover:bg-dark-800 shadow-sm">
                                 <i class="fas fa-image mb-2 text-lg block"></i>
                                 <span class="text-xs font-bold">Gambar</span>
                             </div>
                         </label>
                         <label class="relative cursor-pointer">
-                            <input type="radio" name="media_type" value="video" x-model="mediaType" class="peer sr-only">
+                            <input type="radio" name="media_type" value="video" x-model="mediaType" class="peer sr-only" {{ old('media_type') == 'video' ? 'checked' : '' }}>
                             <div class="p-3 text-center rounded-xl bg-dark-900 border border-dark-600 peer-checked:border-brand-500 peer-checked:bg-brand-500/10 peer-checked:text-brand-400 text-gray-400 transition-all hover:bg-dark-800 shadow-sm">
                                 <i class="fas fa-video mb-2 text-lg block"></i>
                                 <span class="text-xs font-bold">Video MP4</span>
                             </div>
                         </label>
                         <label class="relative cursor-pointer">
-                            <input type="radio" name="media_type" value="embed" x-model="mediaType" class="peer sr-only">
+                            <input type="radio" name="media_type" value="embed" x-model="mediaType" class="peer sr-only" {{ old('media_type') == 'embed' ? 'checked' : '' }}>
                             <div class="p-3 text-center rounded-xl bg-dark-900 border border-dark-600 peer-checked:border-accent-500 peer-checked:bg-accent-500/10 peer-checked:text-accent-500 text-gray-400 transition-all hover:bg-dark-800 shadow-sm">
                                 <i class="fab fa-youtube mb-2 text-lg block"></i>
                                 <span class="text-xs font-bold">Embed (YT)</span>
                             </div>
                         </label>
                         <label class="relative cursor-pointer">
-                            <input type="radio" name="media_type" value="html" x-model="mediaType" class="peer sr-only">
+                            <input type="radio" name="media_type" value="html" x-model="mediaType" class="peer sr-only" {{ old('media_type') == 'html' ? 'checked' : '' }}>
                             <div class="p-3 text-center rounded-xl bg-dark-900 border border-dark-600 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 peer-checked:text-emerald-500 text-gray-400 transition-all hover:bg-dark-800 shadow-sm">
                                 <i class="fas fa-code mb-2 text-lg block"></i>
                                 <span class="text-xs font-bold">HTML + CSS</span>
@@ -94,12 +113,27 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label for="title" class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Judul Banner <span class="text-red-500">*</span></label>
-                        <input type="text" name="title" id="title" value="{{ old('title') }}" class="w-full px-4 py-2.5 bg-dark-800 border border-dark-600 text-white rounded-xl focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" required>
+                        <input type="text" name="title" id="title" value="{{ old('title') }}" class="w-full px-4 py-2.5 bg-dark-800 border border-dark-600 text-white rounded-xl focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+                        @error('title')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label for="link" class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">URL Tujuan (Pilihan)</label>
                         <input type="url" name="link" id="link" value="{{ old('link') }}" class="w-full px-4 py-2.5 bg-dark-800 border border-dark-600 text-white rounded-xl focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" placeholder="https://...">
+                        @error('link')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                     </div>
+                </div>
+
+                <div class="mb-5">
+                    <label for="position" class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Posisi Penempatan Banner <span class="text-red-500">*</span></label>
+                    <select name="position" id="position" class="w-full px-4 py-2.5 bg-dark-800 border border-dark-600 text-white rounded-xl focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all appearance-none">
+                        <option value="hero" {{ old('position') == 'hero' ? 'selected' : '' }}>🖼️ Hero Utama (Slider Banner Besar)</option>
+                        <option value="ppob_promo" {{ old('position') == 'ppob_promo' ? 'selected' : '' }}>💳 Banner PPOB (Section Bayar & Tagihan)</option>
+                        <option value="game_promo" {{ old('position') == 'game_promo' ? 'selected' : '' }}>🎮 Banner Game Promo</option>
+                        <option value="popup" {{ old('position') == 'popup' ? 'selected' : '' }}>📢 Popup / Notifikasi</option>
+                        <option value="sidebar" {{ old('position') == 'sidebar' ? 'selected' : '' }}>📌 Sidebar</option>
+                    </select>
+                    <p class="text-gray-500 text-[11px] mt-1.5"><i class="fas fa-info-circle mr-1"></i>Pilih <strong class="text-green-400">Banner PPOB</strong> agar muncul di section "Bayar & Tagihan" halaman utama.</p>
+                    @error('position')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -174,7 +208,7 @@
 <script>
     function bannerForm() {
         return {
-            mediaType: 'image',
+            mediaType: '{{ old('media_type', 'image') }}',
             imageUrl: '',
             videoUrl: '',
             mediaContent: '',

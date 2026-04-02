@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libwebp-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     zip \
     unzip \
     nodejs \
@@ -16,6 +19,7 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
+RUN docker-php-ext-configure gd --with-webp --with-jpeg --with-freetype
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
 # Enable Apache rewrite and point document root to Laravel public folder
@@ -35,7 +39,22 @@ COPY . /var/www
 # Install dependencies
 RUN composer install --optimize-autoloader --no-dev --no-scripts
 RUN npm install && npm run build
+RUN npm install -g pm2
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
+# Install Chromium dependencies for Puppeteer (wa-bot)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install wa-bot dependencies
+RUN cd /var/www/wa-bot && npm install && cd /var/www
+
+# Set Puppeteer to use system Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 EXPOSE 80
-CMD ["apache2-foreground"]
+CMD ["/usr/local/bin/docker-entrypoint.sh"]
