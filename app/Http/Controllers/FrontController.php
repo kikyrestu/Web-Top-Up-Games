@@ -117,7 +117,7 @@ class FrontController extends Controller
         // Promo / Artikel terbaru
         $latestArticles = Article::where('is_published', true)->orderBy('created_at', 'desc')->take(3)->get();
 
-        // Produk Terlaris — top categories by transaction count (real-time)
+        // Top 5 Terlaris Gabungan (Game + PPOB)
         try {
             $topSellingCategories = \Illuminate\Support\Facades\DB::table('categories')
                 ->leftJoin('products', 'products.category_id', '=', 'categories.id')
@@ -128,9 +128,9 @@ class FrontController extends Controller
                 })
                 ->where('categories.is_active', true)
                 ->groupBy('categories.id', 'categories.name', 'categories.slug', 'categories.type', 'categories.thumbnail', 'categories.icon')
-                ->selectRaw('categories.id, categories.name, categories.slug, categories.type, categories.thumbnail, categories.icon, COUNT(transactions.id) as transaction_count')
+                ->selectRaw("categories.id, categories.name, categories.slug, categories.type, categories.thumbnail, categories.icon, COUNT(transaction_items.id) as transaction_count, CASE WHEN categories.type IN ('game', 'pc', 'voucher') THEN 'game' ELSE 'ppob' END as segment")
                 ->orderByDesc('transaction_count')
-                ->limit(10)
+                ->limit(5)
                 ->get();
         } catch (\Exception $e) {
             $topSellingCategories = collect();

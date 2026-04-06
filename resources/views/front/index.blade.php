@@ -427,6 +427,42 @@
         </div>
     </section>
     @endif
+
+    {{-- ═══════ TOP 5 TERLARIS GABUNGAN (GAME + PPOB) ═══════ --}}
+    @if($topSellingCategories->count() > 0)
+    <section class="mb-8">
+        <div class="flex items-center mb-4 px-1">
+            <div class="flex items-center gap-2.5">
+                <i class="fas fa-fire-alt text-orange-400 text-lg"></i>
+                <h2 class="text-white text-base md:text-lg font-bold">Kategori Terlaris</h2>
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+            @foreach($topSellingCategories as $topCat)
+            <a href="{{ route('front.category', $topCat->slug ?? $topCat->id) }}" class="relative block rounded-xl border border-up-border bg-gradient-to-br from-up-card to-up-card p-3.5 md:p-4 hover:-translate-y-1 transition-transform duration-200 group">
+                <div class="flex items-center gap-3">
+                    <img src="{{ $topCat->thumbnail ? asset('storage/'.$topCat->thumbnail) : 'https://ui-avatars.com/api/?name='.urlencode($topCat->name).'&size=120&background=242a40&color=fff' }}"
+                         class="w-12 h-12 rounded-lg object-cover ring-1 ring-white/10" alt="{{ $topCat->name }}" loading="lazy" decoding="async">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-white text-sm font-semibold truncate">{{ $topCat->name }}</p>
+                        <div class="mt-1.5 flex items-center gap-2">
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold {{ ($topCat->segment ?? '') === 'game' ? 'bg-cyan-500/20 text-cyan-300' : 'bg-emerald-500/20 text-emerald-300' }}">
+                                {{ ($topCat->segment ?? '') === 'game' ? 'GAME' : 'PPOB' }}
+                            </span>
+                            <span class="text-orange-300 text-[11px] font-medium">{{ number_format($topCat->transaction_count) }} trx</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            @endforeach
+        </div>
+    </section>
+    @endif
     {{-- ================================================================== --}}
 
 
@@ -529,66 +565,6 @@
             @endforelse
         </div>
     </section>
-
-    {{-- ═══════ PRODUK TERLARIS — MARQUEE + GLOW ═══════ --}}
-    @if($topSellingCategories->count() > 0)
-    <section class="mb-8">
-        <div class="flex items-center justify-between mb-4 px-1">
-            <div class="flex items-center gap-2.5">
-                <i class="fas fa-fire-alt text-orange-400 text-lg"></i>
-                <h2 class="text-white text-base md:text-lg font-bold">Terlaris</h2>
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
-                </span>
-            </div>
-        </div>
-
-        <div class="overflow-hidden -mx-3 px-3 py-2">
-        <div class="flex gap-3 md:gap-4" id="terlaris-marquee">
-            @php $terlarisItems = $topSellingCategories->concat($topSellingCategories); @endphp
-            @foreach($terlarisItems as $topCat)
-            <a href="{{ route('front.category', $topCat->slug ?? $topCat->id) }}" class="flex-shrink-0 flex items-center gap-3 bg-[#1e2235] rounded-xl px-4 py-3 md:px-5 md:py-3.5 border border-transparent hover:border-orange-400/40 transition-all group {{ $loop->index % $topSellingCategories->count() < 3 ? 'border-orange-400/20' : '' }}">
-                {{-- Ranking badge --}}
-                <div class="relative flex-shrink-0">
-                    <img src="{{ $topCat->thumbnail ? asset('storage/'.$topCat->thumbnail) : 'https://ui-avatars.com/api/?name='.urlencode($topCat->name).'&size=120&background=242a40&color=fff' }}"
-                         class="w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover" alt="{{ $topCat->name }}" loading="lazy">
-                    @if($loop->index % $topSellingCategories->count() < 3)
-                    @php $rank = $loop->index % $topSellingCategories->count(); @endphp
-                    <div class="absolute -top-2 -left-2 w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center text-[10px] md:text-xs font-black terlaris-badge
-                        {{ $rank === 0 ? 'bg-yellow-400 text-black terlaris-glow-gold' : ($rank === 1 ? 'bg-gray-300 text-black terlaris-glow-silver' : 'bg-orange-500 text-white terlaris-glow-bronze') }}">
-                        {{ $rank + 1 }}
-                    </div>
-                    @endif
-                </div>
-                <div class="min-w-0">
-                    <p class="text-white text-xs md:text-sm font-semibold truncate max-w-[120px] md:max-w-[150px]">{{ $topCat->name }}</p>
-                    <p class="text-orange-400 text-[11px] md:text-xs font-medium mt-0.5">{{ number_format($topCat->transaction_count) }} trx</p>
-                </div>
-            </a>
-            @endforeach
-        </div>
-        </div>
-    </section>
-    <style>
-        @keyframes terlaris-glow-pulse-gold {
-            0%, 100% { box-shadow: 0 0 4px 1px rgba(250, 204, 21, 0.4); }
-            50%      { box-shadow: 0 0 8px 3px rgba(250, 204, 21, 0.7); }
-        }
-        @keyframes terlaris-glow-pulse-silver {
-            0%, 100% { box-shadow: 0 0 4px 1px rgba(209, 213, 219, 0.35); }
-            50%      { box-shadow: 0 0 8px 3px rgba(209, 213, 219, 0.6); }
-        }
-        @keyframes terlaris-glow-pulse-bronze {
-            0%, 100% { box-shadow: 0 0 4px 1px rgba(249, 115, 22, 0.35); }
-            50%      { box-shadow: 0 0 8px 3px rgba(249, 115, 22, 0.65); }
-        }
-        .terlaris-glow-gold   { animation: terlaris-glow-pulse-gold 2s ease-in-out infinite; }
-        .terlaris-glow-silver { animation: terlaris-glow-pulse-silver 2.4s ease-in-out infinite; }
-        .terlaris-glow-bronze { animation: terlaris-glow-pulse-bronze 2.8s ease-in-out infinite; }
-    </style>
-    @endif
-
 
     @php $gameCategories = $allGames; @endphp
 
@@ -915,41 +891,6 @@ document.addEventListener('alpine:init', () => {
         track.addEventListener('touchend',   () => track.style.animationPlayState = 'running');
     })();
 
-    // ---- Produk Terlaris Marquee Scroll ----
-    (function() {
-        const track = document.getElementById('terlaris-marquee');
-        if (!track) return;
-
-        const totalCards = track.children.length;
-        const halfCards  = totalCards / 2;
-
-        // Measure actual first-half width (card width varies with text)
-        let totalW = 0;
-        const gap = 10; // gap-2.5 = 10px
-        for (let i = 0; i < halfCards; i++) {
-            totalW += track.children[i].offsetWidth + gap;
-        }
-
-        const duration = Math.max(20, halfCards * 4); // ~4s per card
-
-        const style = document.createElement('style');
-        style.textContent = `
-            #terlaris-marquee {
-                animation: terlaris-scroll ${duration}s linear infinite;
-            }
-            #terlaris-marquee:hover {
-                animation-play-state: paused;
-            }
-            @keyframes terlaris-scroll {
-                0%   { transform: translateX(0); }
-                100% { transform: translateX(-${totalW}px); }
-            }
-        `;
-        document.head.appendChild(style);
-
-        track.addEventListener('touchstart', () => track.style.animationPlayState = 'paused');
-        track.addEventListener('touchend',   () => track.style.animationPlayState = 'running');
-    })();
 </script>
 @endpush
 @endsection
