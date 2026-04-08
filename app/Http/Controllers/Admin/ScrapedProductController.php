@@ -284,10 +284,12 @@ class ScrapedProductController extends Controller
             return null;
         }
 
-        // === GAMES ===
-        $gameBrands = ['mobile legends', 'free fire', 'pubg mobile', 'pubg', 'genshin', 'valorant', 'undawn'];
-        if (in_array($brandStr, $gameBrands) || str_contains($brandStr, 'game') || str_contains($brandStr, 'diamond')) {
-            // Use existing product_group as the type (ML Indonesia, ML Malaysia, FF Global, etc.)
+        // === GAMES — all game brands use product_group as the type ===
+        $gameBrands = $this->getKnownGameBrands();
+        if (in_array($brandStr, $gameBrands)
+            || str_contains($brandStr, 'game')
+            || str_contains($brandStr, 'diamond')
+            || in_array($categoryName ? strtolower($categoryName) : '', ['game', 'games', 'game online', 'voucher game', 'diamond'])) {
             if ($productGroup) {
                 return $productGroup;
             }
@@ -417,29 +419,177 @@ class ScrapedProductController extends Controller
         }
 
         if ($brandStr === 'mobile legends') {
-            if (str_contains($nameStr, 'malaysia')) return 'ML Malaysia';
-            if (str_contains($nameStr, 'global')) return 'ML Global';
-            if (str_contains($nameStr, 'philippines') || str_contains($nameStr, 'filipina')) return 'ML Philippines';
             if (str_contains($nameStr, 'starlight')) return 'ML Starlight';
             if (str_contains($nameStr, 'twilight')) return 'ML Twilight';
             if (str_contains($nameStr, 'weekly')) return 'ML Weekly Pass';
-            return 'ML Indonesia';
+            $region = $this->detectGameRegion($productName);
+            return 'ML ' . ($region ?? 'Indonesia');
         }
 
-        if ($brandStr === 'free fire') {
-            if (str_contains($nameStr, 'global')) return 'FF Global';
+        if ($brandStr === 'free fire' || $brandStr === 'free fire max') {
             if (str_contains($nameStr, 'member')) return 'FF Membership';
-            return 'FF Indonesia';
+            $region = $this->detectGameRegion($productName);
+            return 'FF ' . ($region ?? 'Indonesia');
         }
 
-        if ($brandStr === 'pubg mobile' || $brandStr === 'pubg') {
-            if (str_contains($nameStr, 'global')) return 'PUBG Global';
-            if (str_contains($nameStr, 'korea')) return 'PUBG Korea';
-            if (str_contains($nameStr, 'taiwan')) return 'PUBG Taiwan';
-            return 'PUBG Indonesia';
+        if ($brandStr === 'pubg mobile' || $brandStr === 'pubg' || $brandStr === 'pubg mobile lite') {
+            if (str_contains($nameStr, 'royale pass') || str_contains($nameStr, 'elite pass')) return 'PUBG Pass';
+            $region = $this->detectGameRegion($productName);
+            return 'PUBG ' . ($region ?? 'Indonesia');
+        }
+
+        // === GENERIC GAME GROUPING ===
+        // For all other game brands, detect region/server and special product types
+        if (in_array($categoryName ? strtolower($categoryName) : '', ['game', 'games', 'game online', 'voucher game', 'diamond'])
+            || in_array($brandStr, $this->getKnownGameBrands())) {
+
+            $special = $this->detectGameSpecialCategory($nameStr);
+            if ($special) return $special;
+
+            $region = $this->detectGameRegion($productName);
+            if ($region) return $region;
+
+            // Check for Garena in name (common game publisher)
+            if (str_contains($nameStr, 'garena')) {
+                if (preg_match('/garena\s*\((my)\)/i', $productName)) return 'Garena MY';
+                return 'Garena';
+            }
+
+            return 'Indonesia';
         }
 
         // Default: No grouping
         return null;
+    }
+
+    /**
+     * Detect server region from game product name.
+     */
+    private function detectGameRegion(string $productName): ?string
+    {
+        // Parenthesized country codes: (ID), (MY), (PH), (SG), (TH), (TW), (USA), etc.
+        $codeMap = [
+            'id' => 'Indonesia', 'indonesia' => 'Indonesia',
+            'my' => 'Malaysia', 'malaysia' => 'Malaysia',
+            'ph' => 'Philippines', 'filipina' => 'Philippines', 'philippines' => 'Philippines',
+            'sg' => 'Singapore', 'singapore' => 'Singapore', 'singapura' => 'Singapore',
+            'th' => 'Thailand', 'thailand' => 'Thailand',
+            'tw' => 'Taiwan', 'taiwan' => 'Taiwan',
+            'us' => 'USA', 'usa' => 'USA', 'america' => 'USA',
+            'br' => 'Brazil', 'brazil' => 'Brazil',
+            'ru' => 'Russia', 'russia' => 'Russia',
+            'tr' => 'Turkey', 'turkey' => 'Turkey',
+            'vn' => 'Vietnam', 'vietnam' => 'Vietnam',
+            'jp' => 'Japan', 'japan' => 'Japan',
+            'kr' => 'Korea', 'korea' => 'Korea',
+            'cn' => 'China', 'china' => 'China',
+            'in' => 'India', 'india' => 'India',
+            'global' => 'Global',
+            'sea' => 'SEA',
+        ];
+
+        // Match (CODE) pattern at end or within name
+        if (preg_match('/\(([a-z]+)\)\s*$/i', $productName, $m)) {
+            $code = strtolower($m[1]);
+            if (isset($codeMap[$code])) return $codeMap[$code];
+        }
+
+        // Match region keywords in name (without parentheses)
+        $name = strtolower($productName);
+        $regionKeywords = [
+            'global' => 'Global',
+            'malaysia' => 'Malaysia',
+            'philippines' => 'Philippines', 'filipina' => 'Philippines',
+            'singapore' => 'Singapore', 'singapura' => 'Singapore',
+            'thailand' => 'Thailand',
+            'taiwan' => 'Taiwan',
+            'brazil' => 'Brazil',
+            'russia' => 'Russia',
+            'turkey' => 'Turkey',
+            'vietnam' => 'Vietnam',
+            'bangladesh' => 'Bangladesh',
+            'japan' => 'Japan',
+            'korea' => 'Korea',
+            'latin america' => 'Latin America',
+            'garena (my)' => 'Garena MY',
+        ];
+
+        foreach ($regionKeywords as $keyword => $region) {
+            if (str_contains($name, $keyword)) return $region;
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect special product category for games (membership, pass, etc.)
+     */
+    private function detectGameSpecialCategory(string $nameLower): ?string
+    {
+        $specials = [
+            'weekly diamond pass' => 'Weekly Pass',
+            'weekly pass' => 'Weekly Pass',
+            'weekly elite bundle' => 'Weekly Pass',
+            'weekly deal pack' => 'Weekly Pack',
+            'weekly membership' => 'Membership',
+            'monthly card' => 'Monthly Card',
+            'monthly membership' => 'Membership',
+            'membership bulanan' => 'Membership',
+            'membership mingguan' => 'Membership',
+            'member' => 'Membership',
+            'starlight' => 'Starlight',
+            'twilight' => 'Twilight',
+            'elite pass' => 'Elite Pass',
+            'royale pass' => 'Royale Pass',
+            'battle pass' => 'Battle Pass',
+            'express supply pass' => 'Express Supply Pass',
+            'adventure pack' => 'Special Pack',
+            'genesis supplies' => 'Special Pack',
+            'first recharge' => 'First Recharge',
+            'cek username' => 'Cek Username',
+        ];
+
+        foreach ($specials as $keyword => $category) {
+            if (str_contains($nameLower, $keyword)) return $category;
+        }
+
+        return null;
+    }
+
+    /**
+     * Known game brand names (lowercase) for generic game detection.
+     */
+    private function getKnownGameBrands(): array
+    {
+        return [
+            'mobile legends', 'free fire', 'free fire max', 'pubg mobile', 'pubg', 'pubg mobile lite',
+            'genshin impact', 'honkai star rail', 'honkai impact 3', 'honkai impact',
+            'valorant', 'league of legends', 'league of legends wild rift',
+            'call of duty mobile', 'call of duty', 'arena of valor',
+            'tower of fantasy', 'zenless zone zero',
+            'delta force', 'crossfire', 'crossfire legends', 'point blank',
+            'magic chess', 'marvel rivals', 'stumble guys',
+            'ragnarok m', 'ragnarok origin', 'ragnarok',
+            'undawn', 'identity v', 'onmyoji arena',
+            'afk journey', 'age of empires mobile',
+            'arena breakout', 'aether gazer', 'asphalt 9',
+            'blood strike', 'captain tsubasa ace', 'culinary tour',
+            'destiny m', 'draconia saga', 'dragonheir silent gods',
+            'eggy party', 'fc mobile', 'garena',
+            'ghost story', 'growtopia', 'guns of glory',
+            'harry potter', 'heaven burns red', 'heroes evolved',
+            'honor of kings', 'isekai feast', 'kings choice',
+            'laplace m', 'lifeafter', 'lords mobile',
+            'melojam', 'metal slug', 'mob rush',
+            'mobile legends adventure', 'moonlight blade',
+            'mu origin', 'naruto', 'nba infinite',
+            'octopath traveler', 'one punch man', 'pixel gun',
+            'pokemon unite', 'punishing gray raven',
+            'sausage man', 'seal m', 'smash legends',
+            'snowbreak', 'soul land', 'speed drifters',
+            'state of survival', 'super sus', 'teamfight tactics',
+            'the ants', 'tom and jerry', 'watcher of realms',
+            'werewolf', 'whiteout survival', 'world war heroes', 'zepeto',
+        ];
     }
 }
