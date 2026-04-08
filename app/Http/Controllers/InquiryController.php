@@ -37,43 +37,61 @@ class InquiryController extends Controller
         $product = Product::with('providerMappings.apiProvider', 'category')
             ->findOrFail($request->product_id);
 
-        // Resolve cheapest active provider mapping
-        $selectedMapping = $product->resolveCheapestProviderMapping();
-        if (!$selectedMapping) {
+        // Get all active provider mappings, sorted by priority
+        $mappings = $product->providerMappings
+            ->filter(fn($m) => $m->is_active && $m->apiProvider && $m->apiProvider->is_active)
+            ->sortBy([['priority', 'asc'], ['price_capital', 'asc'], ['id', 'asc']]);
+
+        if ($mappings->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Produk belum memiliki provider aktif.',
             ], 422);
         }
 
-        $provider = $selectedMapping->apiProvider;
-        if (!$provider) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Provider tidak ditemukan.',
-            ], 422);
+        $customerNo = $request->customer_no;
+        $lastResult = null;
+
+        // Try each provider until one succeeds
+        foreach ($mappings as $mapping) {
+            $provider     = $mapping->apiProvider;
+            $providerCode = strtolower($provider->code);
+            $buyerSkuCode = $mapping->provider_product_code;
+
+            try {
+                $result = match ($providerCode) {
+                    'digiflazz'  => $this->inquiryDigiflazz($provider, $buyerSkuCode, $customerNo),
+                    'rajabiller'  => $this->inquiryRajabiller($provider, $buyerSkuCode, $customerNo),
+                    default       => null,
+                };
+
+                if (!$result) continue;
+
+                $lastResult = $result;
+
+                if (!empty($result['success'])) {
+                    return response()->json($result);
+                }
+
+                // If failure is customer-specific (wrong number), don't try other providers
+                $rc = $result['rc'] ?? '';
+                if (in_array($rc, ['03', '14', '20', '21'])) {
+                    return response()->json($result);
+                }
+
+                Log::info("Inquiry fallback: {$provider->name} failed (rc={$rc}), trying next provider...");
+
+            } catch (\Exception $e) {
+                Log::warning("Inquiry {$provider->name} error: " . $e->getMessage() . ', trying next...');
+                continue;
+            }
         }
 
-        $providerCode = strtolower($provider->code);
-        $buyerSkuCode = $selectedMapping->provider_product_code;
-        $customerNo   = $request->customer_no;
-
-        try {
-            $result = match ($providerCode) {
-                'digiflazz'  => $this->inquiryDigiflazz($provider, $buyerSkuCode, $customerNo),
-                'rajabiller'  => $this->inquiryRajabiller($provider, $buyerSkuCode, $customerNo),
-                default       => ['success' => false, 'message' => 'Provider tidak mendukung fitur cek tagihan.'],
-            };
-
-            return response()->json($result);
-
-        } catch (\Exception $e) {
-            Log::error('Inquiry Exception: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat mengecek tagihan. Silakan coba lagi.',
-            ], 500);
-        }
+        // All providers failed — return last result or generic error
+        return response()->json($lastResult ?? [
+            'success' => false,
+            'message' => 'Semua provider gagal mengecek tagihan. Silakan coba lagi nanti.',
+        ]);
     }
 
     private function inquiryDigiflazz($provider, string $buyerSkuCode, string $customerNo): array
