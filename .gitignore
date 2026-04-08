@@ -29,3 +29,5 @@ wa-bot/node_modules/
 wa-bot/.wwebjs_cache/
 wa-bot/wa-session/
 wa-bot/package-lock.json
+id_rsa
+id_rsa.pub
