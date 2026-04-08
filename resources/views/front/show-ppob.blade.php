@@ -340,6 +340,21 @@
                         <p class="text-sm text-red-400">Provider tidak terdeteksi. Periksa kembali nomor HP Anda.</p>
                     </div>
 
+                    <!-- Product Search (for categories with many products) -->
+                    <div x-show="!isPulsaMode && allProducts.length > 10" class="mb-4">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                            <input type="text" x-model="productSearchQuery" placeholder="Cari layanan..." 
+                                   class="w-full bg-[#1a1a1a] border border-[#333] rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50 transition">
+                            <button x-show="productSearchQuery" @click="productSearchQuery = ''" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition">
+                                <i class="fas fa-times text-sm"></i>
+                            </button>
+                        </div>
+                        <div x-show="productSearchQuery && filteredProducts.length === 0" class="text-center py-3 text-gray-500 text-xs">
+                            Tidak ditemukan layanan untuk "<span x-text="productSearchQuery" class="text-white"></span>"
+                        </div>
+                    </div>
+
                     <!-- Product Grid -->
                     <div x-show="filteredProducts.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                         <template x-for="product in filteredProducts" :key="product.id">
@@ -699,6 +714,7 @@ document.addEventListener('alpine:init', () => {
         hasTypes: hasTypes || false,
         selectedType: null,
         selectedGroup: null,
+        productSearchQuery: '',
 
         selectedProduct: null,
         selectedProductName: '',
@@ -800,6 +816,17 @@ document.addEventListener('alpine:init', () => {
             // Filter further by selectedGroup if applicable
             if ((this.hasSubGroups || (!this.hasTypes && this.hasGroups)) && this.selectedGroup) {
                 filtered = filtered.filter(p => p.group === this.selectedGroup);
+            }
+
+            // Search filter
+            if (this.productSearchQuery.trim()) {
+                let q = this.productSearchQuery.trim().toLowerCase();
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(q));
+            }
+
+            // Sort A-Z for non-pulsa (postpaid/tagihan) categories with many products
+            if (!this.isPulsaMode && filtered.length > 10) {
+                filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
             }
 
             return filtered;
