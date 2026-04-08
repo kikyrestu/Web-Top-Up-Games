@@ -44,8 +44,18 @@ class SyncProviderProducts extends Command
             try {
                 $service     = ProviderSyncFactory::resolve($provider);
                 $credentials = $provider->credentials ?? [];
-                $products    = $service->getPriceList($credentials);
-                $count       = 0;
+
+                // Fetch prepaid products
+                $products = $service->getPriceList($credentials);
+
+                // For Digiflazz, also fetch pasca (postpaid) products
+                if (strtolower($provider->code) === 'digiflazz') {
+                    $pascaProducts = $service->getPriceList($credentials, ['cmd' => 'pasca']);
+                    $this->info("      📋 Prepaid: " . count($products) . ", Pasca: " . count($pascaProducts));
+                    $products = array_merge($products, $pascaProducts);
+                }
+
+                $count = 0;
 
                 foreach ($products as $item) {
                     $sellSuggestion = \App\Models\Product::calculateSuggestedPrice($item['price'], $item['type'] ?? 'prepaid');
