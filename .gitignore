@@ -28,6 +28,12 @@ Thumbs.db
 wa-bot/node_modules/
 wa-bot/.wwebjs_cache/
 wa-bot/wa-session/
+
+# Data files
+*.xls
+*.xlsx
+storage/okeconnect_products.json
+convert_okeconnect_xls.py
 wa-bot/package-lock.json
 id_rsa
 id_rsa.pub
