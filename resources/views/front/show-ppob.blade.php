@@ -323,7 +323,7 @@
                         <i class="fas fa-exclamation-triangle text-2xl mb-2 text-yellow-500"></i>
                         <p class="text-sm text-yellow-400 font-medium">Nomor ini terdeteksi sebagai <span x-text="detectedProvider" class="font-bold"></span>.</p>
                         <p class="text-xs text-gray-400 mt-1">Anda sedang di halaman <span class="font-bold text-white">{{ $category->name }}</span>.</p>
-                        <a :href="'/kategori/' + (PROVIDER_SLUGS[detectedProvider] || detectedProvider.toLowerCase())" class="inline-block mt-3 px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">
+                        <a :href="'/kategori/' + (PROVIDER_SLUGS[detectedProvider] || (detectedProvider ? detectedProvider.toLowerCase() : ''))" class="inline-block mt-3 px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">
                             <i class="fas fa-arrow-right mr-1"></i> Ke Halaman <span x-text="detectedProvider"></span>
                         </a>
                     </div>
