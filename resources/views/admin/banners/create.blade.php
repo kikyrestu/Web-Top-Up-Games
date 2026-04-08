@@ -56,14 +56,6 @@
             <form action="{{ route('admin.banners.store') }}" method="POST" enctype="multipart/form-data" class="relative z-10 space-y-6">
                 @csrf
 
-                <!-- RAW DEBUG BLOCK -->
-                <div class="bg-gray-900 border border-yellow-500/50 p-4 rounded-xl overflow-auto text-[10px] font-mono whitespace-pre-wrap text-yellow-300">
-                    <strong>[RAW DEBUG SESSION & ERRORS]</strong>
-                    {{ print_r(session()->all(), true) }}
-                    <strong>[RAW ERRORS]</strong>
-                    {{ print_r($errors->all(), true) }}
-                </div>
-
                 @if ($errors->any())
                 <div class="bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-xl shadow-sm text-sm">
                     <p class="font-bold flex items-center mb-2"><i class="fas fa-exclamation-triangle mr-2"></i>Terdapat kesalahan pada input:</p>
