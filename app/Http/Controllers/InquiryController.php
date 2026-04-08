@@ -77,7 +77,14 @@ class InquiryController extends Controller
 
                 // If failure is customer-specific (wrong number), don't try other providers
                 $rc = $result['rc'] ?? '';
-                if (in_array($rc, ['03', '14', '20', '21'])) {
+                $msg = strtolower($result['message'] ?? '');
+                $isCustomerError = in_array($rc, ['03', '14', '20', '21'])
+                    || str_contains($msg, 'invalid number')
+                    || str_contains($msg, 'nomor tujuan salah')
+                    || str_contains($msg, 'id pelanggan tidak ditemukan')
+                    || str_contains($msg, 'nomor tidak ditemukan');
+
+                if ($isCustomerError) {
                     return response()->json($result);
                 }
 

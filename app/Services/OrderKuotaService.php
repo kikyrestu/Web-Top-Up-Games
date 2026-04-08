@@ -369,6 +369,11 @@ class OrderKuotaService implements ProviderSyncInterface
             $message = 'Pengecekan tagihan sedang diproses, coba lagi dalam beberapa saat.';
         }
 
+        // Detect customer-specific error (invalid number)
+        $isInvalidNumber = str_contains(strtolower($message), 'invalid number')
+            || str_contains(strtolower($message), 'nomor tujuan salah')
+            || str_contains(strtolower($message), 'id pelanggan tidak ditemukan');
+
         return [
             'success'       => $success,
             'ref_id'        => $refId,
@@ -380,6 +385,7 @@ class OrderKuotaService implements ProviderSyncInterface
             'periode'       => $periode,
             'message'       => $success ? 'Tagihan ditemukan' : $message,
             'status'        => $success ? 'Sukses' : ($processing ? 'Proses' : 'Gagal'),
+            'rc'            => $success ? '00' : ($isInvalidNumber ? '14' : ($processing ? '68' : '99')),
             'provider'      => 'orderkuota',
             'raw'           => $body,
         ];
