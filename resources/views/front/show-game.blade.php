@@ -326,7 +326,7 @@
                 <div class="p-4 md:p-6 bg-[#1a1a1a]">
                     <div class="flex items-center justify-between bg-[#121212] border border-[#333] rounded-lg p-1 max-w-sm">
                         <button @click="if(quantity > 1) quantity--" class="w-10 h-10 flex items-center justify-center text-[#f97316] hover:bg-[#222] rounded-md transition font-bold" type="button"><i class="fas fa-minus"></i></button>
-                        <input type="number" x-model="quantity" readonly class="w-16 bg-transparent text-center text-white font-bold text-lg border-none outline-none ring-0 focus:outline-none focus:ring-0 pointer-events-none appearance-none">
+                        <input type="number" x-model="quantity" readonly style="border:none;outline:none;box-shadow:none;" class="w-16 bg-transparent text-center text-white font-bold text-lg pointer-events-none appearance-none">
                         <button @click="quantity++" class="w-10 h-10 flex items-center justify-center text-[#f97316] hover:bg-[#222] rounded-md transition font-bold" type="button"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
