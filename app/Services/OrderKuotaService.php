@@ -116,7 +116,7 @@ class OrderKuotaService implements ProviderSyncInterface
             'refID'   => $refId,
         ]);
 
-        $body = $this->sendRequest($credentials, 'trx', $params);
+        $body = $this->sendRequest($credentials, '', $params);
 
         Log::info('OrderKuota Transaction Response', [
             'invoice'  => $refId,
@@ -179,7 +179,7 @@ class OrderKuotaService implements ProviderSyncInterface
             'check'   => '1',
         ]);
 
-        $body = $this->sendRequest($credentials, 'trx', $params);
+        $body = $this->sendRequest($credentials, '', $params);
 
         if ($body === null) {
             return $transaction->transaction_status;
@@ -276,9 +276,9 @@ class OrderKuotaService implements ProviderSyncInterface
             'refID'   => $refId,
         ]);
 
-        $body = $this->sendRequest($credentials, 'trx', $params);
+        $body = $this->sendRequest($credentials, '', $params);
 
-        Log::info('OrderKuota Inquiry', [
+        Log::info('OrderKuota Inquiry Initial', [
             'product'      => $productCode,
             'cek_code'     => $cekCode,
             'dest'         => $dest,
@@ -290,6 +290,21 @@ class OrderKuotaService implements ProviderSyncInterface
                 'success' => false,
                 'message' => 'Tidak dapat terhubung ke server OrderKuota.',
             ];
+        }
+
+        // OkeConnect processes async — poll with check=1 if still processing
+        $checkParams = array_merge($params, ['check' => '1']);
+        for ($i = 0; $i < 3; $i++) {
+            if (!str_contains(strtoupper($body), 'AKAN DIPROSES') &&
+                !str_contains(strtoupper($body), 'MENUNGGU')) {
+                break; // Got final result
+            }
+            sleep(3);
+            $retryBody = $this->sendRequest($credentials, '', $checkParams);
+            if ($retryBody !== null) {
+                $body = $retryBody;
+                Log::info("OrderKuota Inquiry Poll #{$i}", ['response' => $body]);
+            }
         }
 
         return $this->parseInquiryResponse($body, $refId, $dest);
@@ -306,8 +321,9 @@ class OrderKuotaService implements ProviderSyncInterface
     protected function parseInquiryResponse(string $body, string $refId, string $dest): array
     {
         $bodyUpper = strtoupper($body);
-        $success   = str_contains($bodyUpper, 'SUKSES');
-        $failed    = str_contains($bodyUpper, 'GAGAL');
+        $success    = str_contains($bodyUpper, 'SUKSES');
+        $failed     = str_contains($bodyUpper, 'GAGAL');
+        $processing = str_contains($bodyUpper, 'AKAN DIPROSES') || str_contains($bodyUpper, 'MENUNGGU');
 
         // Extract customer name
         $customerName = '';
@@ -349,6 +365,8 @@ class OrderKuotaService implements ProviderSyncInterface
             if (preg_match('/GAGAL\.?\s*(.+?)(?:\.?\s*Saldo|\s*$)/i', $body, $m)) {
                 $message = trim($m[1]);
             }
+        } elseif ($processing) {
+            $message = 'Pengecekan tagihan sedang diproses, coba lagi dalam beberapa saat.';
         }
 
         return [
@@ -361,7 +379,7 @@ class OrderKuotaService implements ProviderSyncInterface
             'tagihan'       => $tagihan,
             'periode'       => $periode,
             'message'       => $success ? 'Tagihan ditemukan' : $message,
-            'status'        => $success ? 'Sukses' : 'Gagal',
+            'status'        => $success ? 'Sukses' : ($processing ? 'Proses' : 'Gagal'),
             'provider'      => 'orderkuota',
             'raw'           => $body,
         ];
