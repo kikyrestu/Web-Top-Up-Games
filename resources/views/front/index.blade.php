@@ -290,6 +290,17 @@
 
                                         <!-- Step 3: List Produk Final (Level 3) -->
                                         <div x-show="modalStep === 'products'" class="flex flex-col pb-6">
+                                            <!-- Search bar -->
+                                            <div class="sticky top-0 z-10 bg-[#161a29] px-4 pt-3 pb-2" x-show="products.length > 10">
+                                                <div class="relative">
+                                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                                                    <input type="text" x-model="productSearch" placeholder="Cari produk..." 
+                                                           class="w-full bg-[#111620] border border-up-border rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-up-yellow/50 transition">
+                                                    <button x-show="productSearch" @click="productSearch = ''" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                                                        <i class="fas fa-times text-xs"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                             <template x-for="product in currentList" :key="product.id">
                                                 <button type="button" @click="selectedProduct = product.id; showProductModal = false"
                                                         class="w-full text-left px-5 py-4 transition-all duration-200 flex flex-row items-center justify-between cursor-pointer border-b border-up-border/30 last:border-0 group"
@@ -298,7 +309,7 @@
                                                     <div class="text-gray-200 font-medium text-sm leading-tight group-hover:text-white transition-colors flex-1 pr-3" x-text="product.name"></div>
                                                     
                                                     <div class="flex items-center gap-3">
-                                                        <div class="text-up-yellow font-bold text-sm whitespace-nowrap" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(product.price_sell ?? product.price)"></div>
+                                                        <div class="font-bold text-sm whitespace-nowrap" :class="(product.product_type === 'postpaid' && (product.price_sell ?? product.price) <= 0) ? 'text-green-400' : 'text-up-yellow'" x-text="(product.product_type === 'postpaid' && (product.price_sell ?? product.price) <= 0) ? 'Cek Tagihan' : 'Rp ' + new Intl.NumberFormat('id-ID').format(product.price_sell ?? product.price)"></div>
                                                         <template x-if="selectedProduct === product.id">
                                                             <i class="fas fa-check-circle text-up-yellow text-sm"></i>
                                                         </template>
@@ -661,6 +672,7 @@ document.addEventListener('alpine:init', () => {
         selectedProduct: '',
         products: [],
         showProductModal: false,
+        productSearch: '',
 
         expandedType: '',
 
@@ -693,6 +705,7 @@ document.addEventListener('alpine:init', () => {
             this.selectedProduct = '';
             this.selectedType = '';
             this.selectedGroup = '';
+            this.productSearch = '';
             this.showProductModal = false;
             this.fetchProducts(brandId);
         },
@@ -772,6 +785,15 @@ document.addEventListener('alpine:init', () => {
                 if (!this.selectedGroup) return [];
                 list = list.filter(p => p.product_group === this.selectedGroup);
             }
+
+            // Search filter
+            if (this.productSearch.trim()) {
+                let q = this.productSearch.trim().toLowerCase();
+                list = list.filter(p => p.name.toLowerCase().includes(q));
+            }
+
+            // Sort A-Z
+            list = [...list].sort((a, b) => a.name.localeCompare(b.name));
 
             return list;
         },
