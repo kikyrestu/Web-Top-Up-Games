@@ -78,7 +78,7 @@
 </div>
 
 <div class="container mx-auto px-4 pb-20" x-data="ppobCheckout(
-    {{ json_encode($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'price' => $p->price_sell, 'type' => $p->product_type, 'group' => $p->product_group, 'status' => $p->status_provider ?? 'available'])) }}, 
+    {{ json_encode($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'price' => $p->price_sell, 'type' => $p->product_type, 'group' => $p->product_group, 'status' => $p->status_provider ?? 'available', 'postpaid' => in_array(strtolower($p->product_type ?? ''), ['pascabayar', 'postpaid', 'pasca']) || str_contains(strtolower($p->name), 'pascabayar')])) }}, 
     {{ json_encode($paymentGateways->map(fn($pg) => ['id' => $pg->id, 'name' => $pg->display_name ?? $pg->name, 'provider' => $pg->name, 'methods' => $pg->customer_methods ?? []])) }},
     {{ json_encode($productGroups ?? []) }},
     {{ isset($hasGroups) && $hasGroups ? 'true' : 'false' }},
@@ -681,7 +681,15 @@ document.addEventListener('alpine:init', () => {
         providerColor: '',
         providerLogo: '',
         isPulsaMode: PULSA_TYPES.includes(CATEGORY_TYPE),
-        isPostpaidMode: isPostpaid || false,
+        _categoryPostpaid: isPostpaid || false,
+        get isPostpaidMode() {
+            if (this._categoryPostpaid) return true;
+            if (this.selectedProduct) {
+                const p = this.allProducts.find(x => x.id === this.selectedProduct);
+                if (p && p.postpaid) return true;
+            }
+            return false;
+        },
         categoryName: '{{ $category->name ?? '' }}',
         allProducts: allProducts,
         allPaymentGateways: allPGs,
@@ -931,9 +939,15 @@ document.addEventListener('alpine:init', () => {
         },
 
         selectProduct(id, name, price) {
+            const prevPostpaid = this.isPostpaidMode;
             this.selectedProduct = id;
             this.selectedProductName = name;
             this.selectedProductPrice = price;
+            // Reset inquiry state when switching between postpaid and prepaid products
+            if (prevPostpaid !== this.isPostpaidMode) {
+                this.inquiryResult = null;
+                this.inquiryRefId = null;
+            }
         },
 
         selectPayment(id, name) {
