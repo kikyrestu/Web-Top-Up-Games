@@ -59,42 +59,82 @@ class Category extends Model
 
     /**
      * Game brands yang butuh User ID + Server/Zone ID.
+     * Format kirim ke provider: "{user_id}({zone_id})" atau "{user_id}|{zone_id}"
      */
     public const GAMES_WITH_SERVER = [
-        'mobile legends', 'genshin impact', 'honkai star rail', 'honkai impact',
-        'arena of valor', 'ragnarok', 'dragon nest', 'laplace',
-        'light of thel', 'perfect world', 'sausage man', 'lords mobile',
-        'aether gazer', 'saint seiya', 'mole\'s world', 'slam dunk',
-        'ace racer', 'love and deepspace', 'identity v',
+        // Moonton Games (User ID + Zone ID)
+        'mobile legends', 'magic chess', 'mobile legends adventure',
+        // HoYoverse Games (UID + Server)
+        'genshin impact', 'honkai star rail', 'honkai impact',
+        // NetEase Games (User ID + Server)
+        'identity v', 'onmyoji arena', 'naruto shippuden',
+        'tom and jerry', 'harry potter magic awakened',
+        'captain tsubasa ace', 'eggy party',
+        // RPG/MMORPG (User ID + Server)
+        'ragnarok', 'laplace', 'dragon nest', 'perfect world',
+        'mu origin', 'seal m', 'moonlight blade', 'destiny m',
+        'draconia saga', 'lifeafter', 'soul land',
+        'astra knights', 'ghost story', 'isekai feast',
+        'culinary tour', 'heaven burns red', 'octopath traveler',
+        'au2 mobile', 'heroic uncle kim',
+        // MOBA/Strategy with Server
+        'arena of valor', 'honor of kings', 'lords mobile',
+        'sausage man', 'aether gazer', 'punishing gray raven',
+        // Others
+        'saint seiya', 'mole\'s world', 'slam dunk',
+        'ace racer', 'love and deepspace', 'light of thel',
     ];
 
     /**
-     * Game brands yang cuma butuh Player ID (tanpa server).
+     * Game brands yang cuma butuh Player ID / UID (tanpa server).
+     * Format: "{player_id}"
      */
     public const GAMES_ID_ONLY = [
-        'free fire', 'pubg', 'call of duty', 'stumble guys',
-        'point blank', 'higgs domino', 'super sus', 'blood strike',
-        'tower of fantasy', 'clash of clans', 'clash royale',
-        'brawl stars', 'undawn', 'eggy party', 'south park',
-        'zenless zone zero', 'wuthering waves', 'metal slug',
-        'one punch man', 'street fighter', 'the king of fighters',
+        // Battle Royale / FPS
+        'free fire', 'pubg', 'call of duty', 'blood strike',
+        'crossfire', 'point blank', 'delta force', 'arena breakout',
+        'world war heroes',
+        // Casual / Party
+        'stumble guys', 'super sus', 'speed drifters',
+        'smash legends', 'melojam', 'mob rush', 'werewolf',
+        // Strategy / Kingdom
+        'clash of clans', 'clash royale', 'brawl stars',
+        'state of survival', 'guns of glory', 'king of avalon',
+        'the ants', 'be the king', 'watcher of realms',
+        'whiteout survival',
+        // Sports / Racing
+        'fc mobile', 'nba infinite', 'football master', 'asphalt',
+        // Action / RPG (single server)
+        'undawn', 'tower of fantasy', 'zenless zone zero',
+        'metal slug', 'one punch man', 'marvel rivals',
+        'snowbreak', 'dragonheir', 'pokemon unite',
+        'afk journey', 'age of empires mobile',
+        // Others
+        'higgs domino', 'south park', 'wuthering waves',
+        'street fighter', 'the king of fighters',
         'never after', 'night crows', 'goddess of victory',
+        'heroes evolved', 'pixel gun', 'growtopia', 'zepeto',
+        'teamfight tactics',
     ];
 
     /**
-     * Game brands yang butuh Username (bukan ID angka).
+     * Game brands yang butuh Username / Riot ID (bukan ID angka).
      */
     public const GAMES_USERNAME = [
-        'roblox', 'minecraft', 'fortnite', 'valorant', 'league of legends',
+        'roblox', 'minecraft', 'fortnite', 'valorant',
+        'league of legends',
     ];
 
     /**
      * Game/brand yang merupakan voucher (tanpa input customer).
+     * Langsung kirim = dapat kode voucher.
      */
     public const GAMES_VOUCHER = [
-        'steam', 'psn', 'xbox', 'nintendo', 'garena shell',
-        'google play', 'itunes', 'spotify', 'netflix', 'vidio',
+        'steam', 'psn', 'playstation', 'xbox', 'nintendo',
+        'garena shell', 'garena', 'google play', 'itunes',
+        'spotify', 'netflix', 'vidio', 'genflix',
         'apple', 'razer gold', 'unipin', 'cherry credits',
+        'go pay', 'gopay',
     ];
 
     protected $fillable = [
@@ -168,6 +208,15 @@ class Category extends Model
                 }
             }
 
+            // Games with Username (check before ID types)
+            foreach (self::GAMES_USERNAME as $brand) {
+                if (str_contains($nameLower, $brand)) {
+                    return [
+                        ['name' => 'target', 'label' => 'Username', 'type' => 'text', 'placeholder' => 'Masukkan username kamu', 'required' => true],
+                    ];
+                }
+            }
+
             // Games with User ID + Server/Zone
             foreach (self::GAMES_WITH_SERVER as $brand) {
                 if (str_contains($nameLower, $brand)) {
@@ -187,19 +236,26 @@ class Category extends Model
                 }
             }
 
-            // Games with Username
-            foreach (self::GAMES_USERNAME as $brand) {
-                if (str_contains($nameLower, $brand)) {
-                    return [
-                        ['name' => 'target', 'label' => 'Username', 'type' => 'text', 'placeholder' => 'Masukkan username kamu', 'required' => true],
-                    ];
-                }
-            }
-
             // Voucher type default = no input
             if ($type === 'voucher') {
                 return [];
             }
+
+            // Fallback game: default User ID saja (tanpa server/zone)
+            // Admin bisa override manual lewat input_fields jika butuh zone
+            return [
+                ['name' => 'target', 'label' => 'User ID', 'type' => 'text', 'placeholder' => 'Masukkan User ID / Player ID', 'required' => true],
+            ];
+        }
+
+        // E-money brands yang salah masuk game
+        if (str_contains($nameLower, 'dana') || str_contains($nameLower, 'ovo') ||
+            str_contains($nameLower, 'shopee') || str_contains($nameLower, 'linkaja') ||
+            str_contains($nameLower, 'maxim') || str_contains($nameLower, 'e-toll') ||
+            str_contains($nameLower, 'mandiri') || str_contains($nameLower, 'grab')) {
+            return [
+                ['name' => 'target', 'label' => 'Nomor HP / E-Money', 'type' => 'tel', 'placeholder' => 'Contoh: 08123456789', 'required' => true],
+            ];
         }
 
         // Non-game: return preset by type
