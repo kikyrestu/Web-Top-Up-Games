@@ -60,7 +60,7 @@ class RajabillerService implements ProviderSyncInterface
         ], $extra));
 
         try {
-            $response = Http::timeout(30)->post($url, $payload);
+            $response = Http::timeout(30)->withOptions(['force_ip_resolve' => 'v4'])->post($url, $payload);
             return $response->json() ?? [];
         } catch (\Exception $e) {
             Log::error('RajabillerService::sendTransaction error: ' . $e->getMessage(), compact('method', 'produk'));
@@ -147,7 +147,7 @@ class RajabillerService implements ProviderSyncInterface
         ]);
 
         try {
-            $response = Http::timeout(15)->post($url, $payload);
+            $response = Http::timeout(15)->withOptions(['force_ip_resolve' => 'v4'])->post($url, $payload);
             return $response->json() ?? [];
         } catch (\Exception $e) {
             Log::error('RajabillerService::apiCheckStatus error: ' . $e->getMessage());
@@ -256,7 +256,7 @@ class RajabillerService implements ProviderSyncInterface
         ]);
 
         try {
-            $response = Http::timeout(10)->post($url, $payload);
+            $response = Http::timeout(10)->withOptions(['force_ip_resolve' => 'v4'])->post($url, $payload);
             $json = $response->json() ?? [];
             return [
                 'rc' => $json['rc'] ?? '99',
@@ -292,7 +292,7 @@ class RajabillerService implements ProviderSyncInterface
             ]);
 
             try {
-                $response = Http::timeout(25)->post($url, $payload);
+                $response = Http::timeout(25)->withOptions(['force_ip_resolve' => 'v4'])->post($url, $payload);
                 $json = $response->json();
 
                 // Expecting array of products inside 'data' or directly in response
