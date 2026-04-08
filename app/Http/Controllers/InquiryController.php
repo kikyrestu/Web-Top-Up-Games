@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Services\DigiflazzService;
 use App\Services\RajabillerService;
 use App\Services\Provider\ProviderSyncFactory;
+use App\Services\OrderKuotaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -60,8 +61,9 @@ class InquiryController extends Controller
 
             try {
                 $result = match ($providerCode) {
-                    'digiflazz'  => $this->inquiryDigiflazz($provider, $buyerSkuCode, $customerNo),
+                    'digiflazz'   => $this->inquiryDigiflazz($provider, $buyerSkuCode, $customerNo),
                     'rajabiller'  => $this->inquiryRajabiller($provider, $buyerSkuCode, $customerNo),
+                    'orderkuota'  => $this->inquiryOkeConnect($provider, $buyerSkuCode, $customerNo),
                     default       => null,
                 };
 
@@ -128,5 +130,17 @@ class InquiryController extends Controller
             'desc'          => $result['desc'] ?? [],
             'provider'      => 'rajabiller',
         ];
+    }
+
+    private function inquiryOkeConnect($provider, string $productCode, string $customerNo): array
+    {
+        $service     = app(OrderKuotaService::class);
+        $credentials = $provider->credentials ?? [];
+
+        $result = $service->inquiry($credentials, $productCode, $customerNo);
+
+        Log::info('OkeConnect Inquiry Response', ['response' => $result]);
+
+        return $result;
     }
 }
