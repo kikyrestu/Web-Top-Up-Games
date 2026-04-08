@@ -41,7 +41,7 @@ class OrderKuotaService implements ProviderSyncInterface
 
         // Try primary center
         try {
-            $response = Http::timeout(30)->get($baseUrl . $endpoint, $params);
+            $response = Http::timeout(30)->withOptions(['force_ip_resolve' => 'v4'])->get($baseUrl . $endpoint, $params);
             if ($response->successful()) {
                 return $response->body();
             }
@@ -52,7 +52,7 @@ class OrderKuotaService implements ProviderSyncInterface
         // Try backup center
         try {
             $backupUrl = rtrim($credentials['backup_url'] ?? self::CENTER_BACKUP, '/') . '/';
-            $response = Http::timeout(30)->get($backupUrl . $endpoint, $params);
+            $response = Http::timeout(30)->withOptions(['force_ip_resolve' => 'v4'])->get($backupUrl . $endpoint, $params);
             if ($response->successful()) {
                 return $response->body();
             }
