@@ -333,7 +333,7 @@ class RajabillerService implements ProviderSyncInterface
                             'product_name' => $name,
                             'brand' => $group,
                             'category_name' => $this->parseCategory($group),
-                            'type' => $this->parseType($group), // prepaid or postpaid
+                            'type' => $this->parseProductType($group, $code),
                             'price' => (float) $price,
                             'status_provider' => $isActive ? 'available' : 'unavailable',
                         ];
@@ -375,6 +375,23 @@ class RajabillerService implements ProviderSyncInterface
         }
         if ($group === 'PLN') return 'prepaid';
         return 'prepaid';
+    }
+
+    /**
+     * Per-product type detection — needed for groups like PLN that have both prepaid and postpaid codes.
+     */
+    private function parseProductType(string $group, string $code): string
+    {
+        // PLN has mixed products: PLNPRAH = prepaid, PLNPASCH/PLNNONH = postpaid
+        if (strtoupper($group) === 'PLN') {
+            $codeUpper = strtoupper($code);
+            if (in_array($codeUpper, ['PLNPASCH', 'PLNNONH'])) {
+                return 'postpaid';
+            }
+            return 'prepaid';
+        }
+
+        return $this->parseType($group);
     }
 
     /**
