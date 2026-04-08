@@ -17,6 +17,12 @@ class FonnteSms implements OtpProviderInterface
             return false;
         }
 
+        // Normalize phone: 0812xxx → 62812xxx, +62812xxx → 62812xxx
+        $target = preg_replace('/^\+/', '', $target);
+        if (str_starts_with($target, '0')) {
+            $target = '62' . substr($target, 1);
+        }
+
         $message = "Kode OTP Anda adalah: {$code}. Jangan berikan kode ini kepada siapapun.";
 
         try {
