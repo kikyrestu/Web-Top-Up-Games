@@ -309,7 +309,7 @@
                                                     <div class="text-gray-200 font-medium text-sm leading-tight group-hover:text-white transition-colors flex-1 pr-3" x-text="product.name"></div>
                                                     
                                                     <div class="flex items-center gap-3">
-                                                        <div class="font-bold text-sm whitespace-nowrap" :class="(product.product_type === 'postpaid' && (product.price_sell ?? product.price) <= 0) ? 'text-green-400' : 'text-up-yellow'" x-text="(product.product_type === 'postpaid' && (product.price_sell ?? product.price) <= 0) ? 'Cek Tagihan' : 'Rp ' + new Intl.NumberFormat('id-ID').format(product.price_sell ?? product.price)"></div>
+                                                        <div class="font-bold text-sm whitespace-nowrap" :class="(activeType === 'tagihan' || activeType === 'pln' || product.product_type === 'postpaid') ? 'text-green-400' : 'text-up-yellow'" x-text="(activeType === 'tagihan' || activeType === 'pln' || product.product_type === 'postpaid') ? 'Cek Tagihan' : 'Rp ' + new Intl.NumberFormat('id-ID').format(product.price_sell ?? product.price)"></div>
                                                         <template x-if="selectedProduct === product.id">
                                                             <i class="fas fa-check-circle text-up-yellow text-sm"></i>
                                                         </template>
