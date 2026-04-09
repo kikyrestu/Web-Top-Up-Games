@@ -142,12 +142,65 @@
                     </div>
                     @endforeach
 
+                    <!-- Postpaid: Searchable Product Selector -->
+                    <template x-if="isPostpaidMode">
+                        <div class="mb-4">
+                            <label class="block text-gray-400 text-xs mb-1.5 font-medium">Pilih Layanan</label>
+                            <div class="relative" x-data="{ open: false, search: '' }" @click.away="open = false">
+                                <!-- Selected display / trigger -->
+                                <button type="button" @click="open = !open"
+                                        class="w-full bg-[#121212] border border-[#333] px-4 py-3 rounded-lg text-left text-sm transition flex items-center justify-between"
+                                        :class="open ? 'border-green-500 ring-1 ring-green-500' : 'hover:border-[#555]'">
+                                    <span :class="selectedProduct ? 'text-white' : 'text-gray-500'"
+                                          x-text="selectedProduct ? selectedProductName : 'Pilih layanan...'"></span>
+                                    <i class="fas fa-chevron-down text-gray-500 text-xs transition-transform" :class="open && 'rotate-180'"></i>
+                                </button>
+
+                                <!-- Dropdown -->
+                                <div x-show="open" x-transition:enter="transition ease-out duration-150"
+                                     x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                                     class="absolute z-50 w-full mt-1 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl overflow-hidden"
+                                     style="max-height: 320px; display: none;">
+                                    <!-- Search inside dropdown -->
+                                    <div class="sticky top-0 bg-[#1a1a1a] p-2 border-b border-[#333]">
+                                        <div class="relative">
+                                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                                            <input type="text" x-model="search" @click.stop placeholder="Cari layanan..." x-ref="dropdownSearch"
+                                                   x-init="$watch('open', v => { if(v) $nextTick(() => $refs.dropdownSearch.focus()) })"
+                                                   class="w-full bg-[#121212] border border-[#333] rounded-lg pl-9 pr-8 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50">
+                                            <button x-show="search" @click.stop="search = ''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- Options list -->
+                                    <div class="overflow-y-auto" style="max-height: 256px;">
+                                        <template x-for="product in allProducts.filter(p => p.status === 'available' && (!search.trim() || p.name.toLowerCase().includes(search.trim().toLowerCase()))).sort((a,b) => a.name.localeCompare(b.name))" :key="product.id">
+                                            <button type="button" @click="selectProduct(product.id, product.name, product.price); open = false; search = '';"
+                                                    class="w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between border-b border-[#222] last:border-0"
+                                                    :class="selectedProduct === product.id ? 'bg-green-500/10 text-green-400' : 'text-gray-300 hover:bg-white/5 hover:text-white'">
+                                                <span x-text="product.name" class="pr-2"></span>
+                                                <i x-show="selectedProduct === product.id" class="fas fa-check text-green-400 text-xs shrink-0"></i>
+                                            </button>
+                                        </template>
+                                        <!-- Empty state -->
+                                        <div x-show="allProducts.filter(p => p.status === 'available' && (!search.trim() || p.name.toLowerCase().includes(search.trim().toLowerCase()))).length === 0"
+                                             class="text-center py-6 text-gray-500 text-sm">
+                                            <i class="fas fa-search text-2xl mb-2 block text-gray-600"></i>
+                                            Layanan tidak ditemukan
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
                     <!-- Cek Tagihan Button (postpaid only) -->
                     <template x-if="isPostpaidMode">
                         <div class="mt-4">
                             <button @click="cekTagihan()"
-                                    :disabled="!target || target.length < 4 || isInquiryLoading"
-                                    :class="(!target || target.length < 4 || isInquiryLoading)
+                                    :disabled="!target || target.length < 4 || !selectedProduct || isInquiryLoading"
+                                    :class="(!target || target.length < 4 || !selectedProduct || isInquiryLoading)
                                         ? 'bg-[#333] text-gray-500 cursor-not-allowed'
                                         : 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white'"
                                     class="w-full py-3 rounded-lg font-bold text-sm transition shadow-lg">
@@ -251,9 +304,9 @@
                 </div>
             </template>
 
-            <!-- Step 2: Pilih Produk (Filtered by Provider) — for postpaid, only after inquiry -->
+            <!-- Step 2: Pilih Produk (Filtered by Provider) — hidden for postpaid (dropdown in Step 1) -->
             <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden"
-                 x-show="!isPostpaidMode || (isPostpaidMode && inquiryResult && inquiryResult.success)">
+                 x-show="!isPostpaidMode">
                 <div class="bg-[#151515] px-4 py-3 md:p-4 border-b border-[#2d2d2d] flex items-center gap-3">
                     <span class="bg-green-500 text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">2</span>
                     <h2 class="text-base md:text-lg font-bold text-white">Pilih Layanan</h2>
@@ -866,17 +919,8 @@ document.addEventListener('alpine:init', () => {
         cekTagihan() {
             if (!this.target || this.target.length < 4 || this.isInquiryLoading) return;
 
-            // Auto-select first product if only one available (common for postpaid)
-            let productId = this.selectedProduct;
-            if (!productId) {
-                const available = this.allProducts.filter(p => p.status === 'available');
-                if (available.length >= 1) {
-                    productId = available[0].id;
-                    this.selectProduct(available[0].id, available[0].name, available[0].price);
-                }
-            }
-            if (!productId) {
-                showToast('warning', 'Pilih Produk', 'Pilih produk/layanan terlebih dahulu.');
+            if (!this.selectedProduct) {
+                showToast('warning', 'Pilih Layanan', 'Pilih layanan terlebih dahulu dari dropdown.');
                 return;
             }
 
@@ -892,7 +936,7 @@ document.addEventListener('alpine:init', () => {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 },
                 body: JSON.stringify({
-                    product_id: productId,
+                    product_id: this.selectedProduct,
                     customer_no: String(this.target),
                 })
             })
