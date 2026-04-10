@@ -150,10 +150,10 @@
                 <!-- Right: Search + Auth -->
                 <div class="flex items-center gap-3 shrink-0">
                     <form action="{{ route('front.index') }}" method="GET" class="hidden lg:block relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                             <i class="fas fa-search text-gray-400 text-sm"></i>
                         </div>
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="bg-[#111620] border border-up-border text-white text-sm rounded-lg block w-[240px] pl-9 pr-4 py-2.5 focus:outline-none focus:border-up-yellow focus:ring-1 focus:ring-up-yellow transition-colors placeholder-gray-500 shadow-sm">
+                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="bg-[#111620] border border-up-border text-white text-sm rounded-lg block w-[240px] pl-11 pr-4 py-2.5 focus:outline-none focus:border-up-yellow focus:ring-1 focus:ring-up-yellow transition-colors placeholder-gray-500 shadow-sm">
                     </form>
 
                     @auth
