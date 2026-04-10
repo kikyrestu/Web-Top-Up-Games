@@ -96,18 +96,18 @@
 
     <!-- Topbar -->
     <div class="bg-up-darkest border-b border-up-border/30 hidden sm:block">
-        <div class="max-w-[1280px] mx-auto text-[#8a94ad] text-[10px] font-semibold py-1.5 px-4 flex justify-between items-center tracking-wider">
+        <div class="max-w-[1280px] mx-auto text-[#8a94ad] text-[11px] font-semibold py-2.5 px-4 flex justify-between items-center tracking-wider">
             <div>INSTANT TOP UP! INSTANT PLAY!</div>
             <div class="flex items-center space-x-3">
-                <span class="flex items-center"><img src="https://flagcdn.com/w20/id.png" alt="Bendera Indonesia" width="20" height="15" loading="lazy" decoding="async" class="w-4 h-3 mr-1"> Indonesia - IDR</span>
+                <span class="flex items-center"><img src="https://flagcdn.com/w20/id.png" alt="Bendera Indonesia" width="20" height="15" loading="lazy" decoding="async" class="w-4 h-3 mr-1.5 rounded-sm"> Indonesia - IDR</span>
             </div>
         </div>
     </div>
 
     <!-- Main Navbar -->
     <header class="bg-up-nav sticky top-0 z-50 shadow-lg border-b border-up-border/30">
-        <div class="max-w-[1280px] mx-auto px-4">
-            <div class="flex items-center justify-between h-[88px] gap-4">
+        <div class="max-w-[1280px] mx-auto px-4 py-4 sm:py-5">
+            <div class="flex items-center justify-between gap-4">
                 
                 <!-- Left: Logo -->
                 <a href="{{ route('front.index') }}" class="flex items-center gap-2.5 shrink-0">
