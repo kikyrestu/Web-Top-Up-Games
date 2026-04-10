@@ -105,7 +105,7 @@
     <!-- Main Navbar -->
     <header class="bg-up-nav sticky top-0 z-50 shadow-lg border-b border-up-border/30">
         <div class="max-w-[1280px] mx-auto px-4">
-            <div class="flex items-center justify-between h-[60px]">
+            <div class="flex items-center justify-between h-[60px] gap-4">
                 
                 <!-- Left: Logo -->
                 <a href="{{ route('front.index') }}" class="flex items-center gap-2.5 shrink-0">
@@ -115,45 +115,42 @@
                     <span class="text-white text-lg font-black tracking-tight hidden sm:block">{{ $global_site_name ?? 'PPOBKu' }}</span>
                 </a>
 
-                <!-- Center: Search Bar -->
-                <form action="{{ route('front.index') }}" method="GET" class="hidden md:flex flex-1 max-w-md mx-6 lg:mx-10">
-                    <div class="relative w-full">
-                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="w-full bg-[#111620] border border-up-border/60 text-white text-sm rounded-full pl-10 pr-4 py-2.5 focus:outline-none focus:border-up-yellow/70 focus:ring-1 focus:ring-up-yellow/30 transition placeholder-gray-500">
-                    </div>
-                </form>
-                
-                <!-- Right: Nav + Auth -->
-                <div class="flex items-center gap-1 lg:gap-2">
-                    <!-- Desktop Nav Links -->
-                    <nav class="hidden lg:flex items-center gap-1 mr-2" x-data="{ moreOpen: false }">
-                        <a href="{{ route('front.cek-pesanan') }}" class="px-3 py-2 rounded-lg text-[13px] font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition">
-                            <i class="fas fa-receipt mr-1.5 text-[11px]"></i>Cek Pesanan
-                        </a>
-                        <a href="{{ route('front.promo') }}" class="px-3 py-2 rounded-lg text-[13px] font-semibold text-[#f97316] hover:bg-[#f97316]/10 transition">
-                            <i class="fas fa-tag mr-1.5 text-[11px]"></i>Promo
-                        </a>
-                        
-                        <!-- More Dropdown -->
-                        <div class="relative" @mouseenter="moreOpen = true" @mouseleave="moreOpen = false">
-                            <button class="px-3 py-2 rounded-lg text-[13px] font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition flex items-center gap-1 focus:outline-none">
-                                <i class="fas fa-ellipsis-h text-[11px]"></i>
-                                <i class="fas fa-caret-down text-[9px] transition-transform" :class="moreOpen ? 'rotate-180' : ''"></i>
-                            </button>
-                            <div x-show="moreOpen" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0 -translate-y-1" class="absolute right-0 top-full mt-2 w-52 bg-up-card border border-up-border rounded-xl shadow-2xl py-1.5 z-50" style="display: none;">
-                                <a href="{{ route('front.page', 'daftar-harga') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-list-alt w-4 text-center text-gray-500"></i> Daftar Harga</a>
-                                <a href="{{ route('front.article.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-newspaper w-4 text-center text-gray-500"></i> Artikel</a>
-                                <a href="{{ route('front.calculator') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-calculator w-4 text-center text-gray-500"></i> Kalkulator</a>
-                                <div class="border-t border-up-border/40 my-1.5"></div>
-                                <a href="{{ route('front.page', 'kontak') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-headset w-4 text-center text-gray-500"></i> Hubungi CS</a>
-                                <a href="{{ route('front.page', 'syarat-ketentuan') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-book-open w-4 text-center text-gray-500"></i> Syarat & Ketentuan</a>
-                                <a href="{{ route('front.page', 'kebijakan-privasi') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-shield-alt w-4 text-center text-gray-500"></i> Kebijakan Privasi</a>
-                            </div>
+                <!-- Center: Nav Links (desktop) -->
+                <nav class="hidden lg:flex items-center gap-1 flex-1 justify-center" x-data="{ moreOpen: false }">
+                    <a href="{{ route('front.cek-pesanan') }}" class="px-3 py-2 rounded-lg text-[13px] font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+                        <i class="fas fa-receipt mr-1.5 text-[11px]"></i>Cek Pesanan
+                    </a>
+                    <a href="{{ route('front.page', 'daftar-harga') }}" class="px-3 py-2 rounded-lg text-[13px] font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+                        <i class="fas fa-list-alt mr-1.5 text-[11px]"></i>Daftar Harga
+                    </a>
+                    <a href="{{ route('front.article.index') }}" class="px-3 py-2 rounded-lg text-[13px] font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+                        <i class="fas fa-newspaper mr-1.5 text-[11px]"></i>Artikel
+                    </a>
+                    <a href="{{ route('front.promo') }}" class="px-3 py-2 rounded-lg text-[13px] font-semibold text-[#f97316] hover:bg-[#f97316]/10 transition whitespace-nowrap">
+                        <i class="fas fa-tag mr-1.5 text-[11px]"></i>Promo
+                    </a>
+                    
+                    <!-- Lainnya Dropdown -->
+                    <div class="relative" @mouseenter="moreOpen = true" @mouseleave="moreOpen = false">
+                        <button class="px-3 py-2 rounded-lg text-[13px] font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5 focus:outline-none whitespace-nowrap">
+                            Lainnya <i class="fas fa-caret-down text-[9px] transition-transform" :class="moreOpen ? 'rotate-180' : ''"></i>
+                        </button>
+                        <div x-show="moreOpen" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0 -translate-y-1" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-52 bg-up-card border border-up-border rounded-xl shadow-2xl py-1.5 z-50" style="display: none;">
+                            <a href="{{ route('front.calculator') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-calculator w-4 text-center text-gray-500"></i> Kalkulator</a>
+                            <a href="{{ route('front.page', 'kontak') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-headset w-4 text-center text-gray-500"></i> Hubungi CS</a>
+                            <div class="border-t border-up-border/40 my-1.5"></div>
+                            <a href="{{ route('front.page', 'syarat-ketentuan') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-book-open w-4 text-center text-gray-500"></i> Syarat & Ketentuan</a>
+                            <a href="{{ route('front.page', 'kebijakan-privasi') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-shield-alt w-4 text-center text-gray-500"></i> Kebijakan Privasi</a>
                         </div>
-                    </nav>
+                    </div>
+                </nav>
 
-                    <!-- Divider -->
-                    <div class="hidden lg:block w-px h-6 bg-up-border/50 mx-1"></div>
+                <!-- Right: Search + Auth -->
+                <div class="flex items-center gap-3 shrink-0">
+                    <form action="{{ route('front.index') }}" method="GET" class="hidden md:block relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="bg-[#111620] border border-up-border/60 text-white text-sm rounded-full pl-9 pr-4 py-2 w-52 focus:outline-none focus:border-up-yellow/70 focus:ring-1 focus:ring-up-yellow/30 focus:w-64 transition-all placeholder-gray-500">
+                    </form>
 
                     @auth
                         <div class="relative" x-data="{ userMenu: false }" @mouseenter="userMenu = true" @mouseleave="userMenu = false">
