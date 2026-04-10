@@ -264,7 +264,7 @@
                                     </template>
 
                                     <!-- Extra desc info (tarif, daya, alamat, angsuran, tenor, etc) -->
-                                    <template x-if="inquiryResult.desc && (inquiryResult.desc.tarif || inquiryResult.desc.daya || inquiryResult.desc.alamat || inquiryResult.desc.angsuran || inquiryResult.desc.tenor)">
+                                    <template x-if="inquiryResult.desc && (inquiryResult.desc.tarif || inquiryResult.desc.daya || inquiryResult.desc.alamat || inquiryResult.desc.angsuran || inquiryResult.desc.tenor || inquiryResult.desc.no_polisi || inquiryResult.desc.merk_type)">
                                         <div class="bg-[#121212] rounded-lg p-4">
                                             <p class="text-gray-400 text-xs font-medium mb-2">Info Tambahan</p>
                                             <div class="space-y-1 text-xs">
@@ -285,6 +285,12 @@
                                                 </template>
                                                 <template x-if="inquiryResult.desc.tenor">
                                                     <div class="flex justify-between"><span class="text-gray-400">Tenor</span><span class="text-gray-300" x-text="inquiryResult.desc.tenor"></span></div>
+                                                </template>
+                                                <template x-if="inquiryResult.desc.no_polisi">
+                                                    <div class="flex justify-between"><span class="text-gray-400">No. Polisi</span><span class="text-gray-300" x-text="inquiryResult.desc.no_polisi"></span></div>
+                                                </template>
+                                                <template x-if="inquiryResult.desc.merk_type">
+                                                    <div class="flex justify-between"><span class="text-gray-400">Merk/Type</span><span class="text-gray-300" x-text="inquiryResult.desc.merk_type"></span></div>
                                                 </template>
                                             </div>
                                         </div>

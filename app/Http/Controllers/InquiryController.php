@@ -122,6 +122,9 @@ class InquiryController extends Controller
         $rc = $result['rc'] ?? '99';
         $success = $rc === '00';
 
+        // Build desc from Rajabiller's structured fields
+        $desc = $this->buildRajabillerDesc($result);
+
         return [
             'success'       => $success,
             'ref_id'        => $ref1,
@@ -129,14 +132,49 @@ class InquiryController extends Controller
             'customer_name' => $result['nama'] ?? $result['customer_name'] ?? '',
             'buyer_sku_code'=> $produk,
             'price'         => (int) ($result['tagihan'] ?? $result['nominal'] ?? $result['price'] ?? 0),
-            'admin'         => (int) ($result['admin'] ?? 0),
-            'periode'       => $result['periode'] ?? '',
+            'admin'         => (int) ($result['adm'] ?? $result['admin'] ?? 0),
+            'periode'       => $result['periode'] ?? $result['blth'] ?? '',
             'message'       => $result['status'] ?? $result['message'] ?? '',
             'status'        => $success ? 'Sukses' : 'Gagal',
             'rc'            => $rc,
-            'desc'          => $result['desc'] ?? [],
+            'desc'          => $desc,
             'provider'      => 'rajabiller',
         ];
+    }
+
+    private function buildRajabillerDesc(array $result): array
+    {
+        $desc = [];
+
+        // PLN fields
+        if (!empty($result['tarif'])) $desc['tarif'] = $result['tarif'];
+        if (!empty($result['daya'])) $desc['daya'] = $result['daya'];
+        if (!empty($result['alamat'])) $desc['alamat'] = $result['alamat'];
+        if (!empty($result['lembar_tagihan'])) $desc['lembar_tagihan'] = $result['lembar_tagihan'];
+
+        // Multi Finance fields
+        if (!empty($result['angsuran_ke'])) {
+            $desc['angsuran'] = 'Ke-' . ltrim($result['angsuran_ke'], '0');
+        }
+        if (!empty($result['tenor'])) {
+            $desc['tenor'] = ltrim($result['tenor'], '0') . ' bulan';
+        }
+        if (!empty($result['no_polisi'])) {
+            $desc['no_polisi'] = $result['no_polisi'];
+        }
+        if (!empty($result['merk_type'])) {
+            $desc['merk_type'] = $result['merk_type'];
+        }
+
+        // PLN detail tagihan (multi-period)
+        if (!empty($result['detail_tagihan']) && is_array($result['detail_tagihan'])) {
+            $desc['detail'] = array_map(fn($d) => [
+                'periode'        => $d['blth'] ?? $d['periode'] ?? '-',
+                'nilai_tagihan'  => (int) ($d['tagihan'] ?? $d['nilai_tagihan'] ?? 0),
+            ], $result['detail_tagihan']);
+        }
+
+        return $desc;
     }
 
     private function inquiryOkeConnect($provider, string $productCode, string $customerNo): array
