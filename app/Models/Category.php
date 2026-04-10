@@ -183,7 +183,7 @@ class Category extends Model
 
     public static function isPostpaidType(?string $type): bool
     {
-        return in_array(strtolower((string) $type), ['tagihan', 'postpaid', 'pasca'], true);
+        return in_array(strtolower((string) $type), ['tagihan', 'postpaid', 'pasca', 'pln'], true);
     }
 
     /**
