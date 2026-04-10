@@ -427,7 +427,7 @@
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <div class="text-xs md:text-sm font-bold leading-tight" :class="product.status !== 'available' ? 'text-gray-500' : 'text-gray-200 group-hover:text-white'" x-text="product.name"></div>
-                                        <div class="font-black text-sm md:text-base mt-1" :class="product.status !== 'available' ? 'text-gray-600' : (product.postpaid ? 'text-yellow-400' : 'text-green-400')" x-text="product.postpaid ? 'Cek Tagihan' : 'Rp ' + new Intl.NumberFormat('id-ID').format(product.price)"></div>
+                                        <div class="font-black text-sm md:text-base mt-1" :class="product.status !== 'available' ? 'text-gray-600' : (isPostpaidMode || product.postpaid ? 'text-yellow-400' : 'text-green-400')" x-text="(isPostpaidMode || product.postpaid) ? 'Cek Tagihan' : (product.price <= 0 ? 'Input Nominal' : 'Rp ' + new Intl.NumberFormat('id-ID').format(product.price))"></div>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <!-- Gangguan Badge -->
@@ -901,6 +901,9 @@ document.addEventListener('alpine:init', () => {
         get displayPrice() {
             if (this.isPostpaidMode && this.inquiryResult && this.inquiryResult.success) {
                 return this.inquiryResult.price;
+            }
+            if (this.isPostpaidMode) {
+                return 0; // Don't show admin fee as price for tagihan
             }
             return this.selectedProductPrice;
         },
