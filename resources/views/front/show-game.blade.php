@@ -315,28 +315,11 @@
                 </div>
             </div>
 
-            <!-- 3. Masukkan Jumlah Pembelian -->
-            <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden">
-                <div class="bg-[#151515] px-4 py-3 md:p-4 border-b border-[#2d2d2d] flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">3</span>
-                        <h2 class="text-base md:text-lg font-bold text-white">Masukkan Jumlah Pembelian</h2>
-                    </div>
-                </div>
-                <div class="p-4 md:p-6 bg-[#1a1a1a]">
-                    <div class="flex items-center justify-between bg-[#121212] border border-[#333] rounded-lg p-1 max-w-sm">
-                        <button @click="if(quantity > 1) quantity--" class="w-10 h-10 flex items-center justify-center text-[#f97316] hover:bg-[#222] rounded-md transition font-bold" type="button"><i class="fas fa-minus"></i></button>
-                        <input type="number" x-model="quantity" readonly style="border:none;outline:none;box-shadow:none;" class="w-16 bg-transparent text-center text-white font-bold text-lg pointer-events-none appearance-none">
-                        <button @click="quantity++" class="w-10 h-10 flex items-center justify-center text-[#f97316] hover:bg-[#222] rounded-md transition font-bold" type="button"><i class="fas fa-plus"></i></button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. Pilih Pembayaran -->
+            <!-- 3. Pilih Pembayaran -->
             <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden">
                 <div class="bg-[#151515] px-4 py-3 md:p-4 border-b border-[#2d2d2d] flex items-center gap-3">
-                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">4</span>
-                    <h2 class="text-base md:text-lg font-bold text-white">Pilih Saluran Pembayaran</h2>
+                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">3</span>
+                    <h2 class="text-base md:text-lg font-bold text-white">Pilih Pembayaran</h2>
                 </div>
                 @php
                     $groupedChannels = collect($paymentChannels ?? [])->groupBy('group_key');
@@ -366,7 +349,7 @@
                                         class="w-full text-left px-4 py-3 border-b border-[#2a2a2a] last:border-b-0 transition"
                                         :class="activePayGroup === '{{ $groupKey }}' ? 'bg-[#f97316]/15 border-l-4 border-l-[#f97316]' : 'hover:bg-[#222]'">
                                     <div class="text-white font-bold text-sm">{{ $channels->first()['group_label'] ?? 'Metode' }}</div>
-                                    <div class="text-[#f97316] text-xs font-semibold mt-1">Rp <span x-text="formatRupiah(selectedPrice * quantity)"></span></div>
+                                    <div class="text-[#f97316] text-xs font-semibold mt-1">Rp <span x-text="formatRupiah(selectedPrice)"></span></div>
                                 </button>
                                 @endforeach
                             </div>
@@ -376,7 +359,7 @@
                                     <button type="button"
                                             class="text-left border border-[#333] hover:border-[#f97316] bg-[#222] rounded-xl p-3 transition-all flex justify-between items-center"
                                             :class="(selectedPayment === 'wallet') ? 'border-[#f97316] bg-[#f97316]/10' : ''"
-                                            @click="selectPayment('wallet', '{{ \App\Models\Setting::get('wallet_label', 'Saldo') }}')">
+                                            @click="selectPayment('wallet', '{{ \App\Models\Setting::get('wallet_label', 'Saldo') }}', 0, 0)">
                                         <div class="flex items-center gap-3">
                                             <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center text-xl font-bold">
                                                 <i class="fas fa-wallet"></i>
@@ -384,7 +367,7 @@
                                             <div>
                                                 <p class="text-white font-bold text-sm leading-tight">{{ \App\Models\Setting::get('wallet_label', 'Saldo') }}</p>
                                                 <p class="text-gray-500 text-[11px]">Sisa: Rp <span x-text="formatRupiah({{ auth()->user()->wallet_balance ?? 0 }})"></span></p>
-                                                <p class="text-[#f97316] text-sm font-black mt-1">Rp <span x-text="formatRupiah(selectedPrice * quantity)"></span></p>
+                                                <p class="text-[#f97316] text-sm font-black mt-1">Rp <span x-text="formatRupiah(selectedPrice)"></span></p>
                                             </div>
                                         </div>
                                         <div class="text-[#f97316] scale-0 transition-transform duration-200" :class="{'scale-100': selectedPayment === 'wallet'}">
@@ -400,14 +383,14 @@
                                     <button type="button"
                                             class="text-left border border-[#333] hover:border-[#f97316] bg-[#222] rounded-xl p-3 transition-all"
                                             :class="(selectedPayment === {{ $channel['gateway_id'] }} && selectedPaymentName === @js($channelDisplay)) ? 'border-[#f97316] bg-[#f97316]/10' : ''"
-                                            @click="selectPayment({{ $channel['gateway_id'] }}, @js($channelDisplay))">
+                                            @click="selectPayment({{ $channel['gateway_id'] }}, @js($channelDisplay), {{ $channel['fee_flat'] }}, {{ $channel['fee_percent'] }})">
                                         <div class="flex items-center gap-3">
                                             <div class="w-12 h-12 rounded-lg bg-white text-gray-800 flex items-center justify-center text-[10px] font-bold px-1 text-center">
                                                 {{ strtoupper(substr($channel['name'], 0, 7)) }}
                                             </div>
                                             <div>
                                                 <p class="text-white font-bold text-sm leading-tight">{{ $channel['name'] }}</p>
-                                                <p class="text-[#f97316] text-sm font-black mt-1">Rp <span x-text="formatRupiah(selectedPrice * quantity)"></span></p>
+                                                <p class="text-[#f97316] text-sm font-black mt-1">Rp <span x-text="formatRupiah(calcTotal(selectedPrice, {{ $channel['fee_flat'] }}, {{ $channel['fee_percent'] }}))"></span></p>
                                             </div>
                                         </div>
                                     </button>
@@ -420,10 +403,10 @@
                 </div>
             </div>
 
-            <!-- 5. Detail Kontak -->
+            <!-- 4. Detail Kontak -->
             <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden">
                 <div class="bg-[#151515] px-4 py-3 md:p-4 border-b border-[#2d2d2d] flex items-center gap-3">
-                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">5</span>
+                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">4</span>
                     <h2 class="text-base md:text-lg font-bold text-white">Detail Kontak</h2>
                 </div>
                 <div class="p-4 md:p-6 space-y-4">
@@ -460,12 +443,10 @@
                     @else
                         <p>Cara top up {{ $category->name }} proses cepat instan dengan pembayaran 100% aman terlengkap:</p>
                         <ol class="list-decimal pl-5 space-y-1 mt-2 mb-4 text-gray-400">
-                            <li>Pilih nominal</li>
                             <li>Masukkan data akun</li>
-                            <li>Masukkan jumlah pembelian</li>
+                            <li>Pilih nominal</li>
                             <li>Pilih pembayaran</li>
                             <li>Isi detail kontak</li>
-                            <li>Masukkan kode promo (jika ada)</li>
                             <li>Klik order dan lakukan pembayaran</li>
                             <li>Selesai</li>
                         </ol>
@@ -568,7 +549,7 @@
                             <img src="{{ $category->thumbnail ? asset('storage/'.$category->thumbnail) : 'https://placehold.co/150' }}" class="w-12 h-12 rounded object-cover border border-[#444]">
                             <div>
                                 <p class="text-white text-sm font-bold" x-text="selectedProductName">Product Name</p>
-                                <p class="text-xs text-gray-400" x-text="'Jumlah: ' + quantity + 'x'">Jumlah: 1x</p>
+                                <p class="text-xs text-gray-400">{{ $category->name }}</p>
                             </div>
                         </div>
 
@@ -582,12 +563,12 @@
                                 <span class="text-gray-300 font-semibold text-right" x-text="selectedPaymentName">-</span>
                             </div>
                             <div class="flex justify-between text-gray-400">
-                                <span>Harga per item</span>
+                                <span>Harga</span>
                                 <span class="text-gray-300">Rp <span x-text="formatRupiah(selectedPrice)"></span></span>
                             </div>
-                            <div class="flex justify-between text-gray-400">
-                                <span>Kuantitas</span>
-                                <span class="text-gray-300">x<span x-text="quantity"></span></span>
+                            <div x-show="selectedFeeFlat > 0 || selectedFeePercent > 0" class="flex justify-between text-gray-400">
+                                <span>Biaya Layanan</span>
+                                <span class="text-gray-300">Rp <span x-text="formatRupiah(feeAmount)"></span></span>
                             </div>
                         </div>
                     </div>
@@ -595,7 +576,7 @@
                     <div class="p-5 bg-[#151515]">
                         <div class="flex justify-between items-end mb-4">
                             <span class="text-gray-400 uppercase text-xs font-bold tracking-wider">Total Pembayaran</span>
-                            <span class="text-[#f97316] font-black text-2xl">Rp <span x-text="formatRupiah(selectedPrice * quantity)"></span></span>
+                            <span class="text-[#f97316] font-black text-2xl">Rp <span x-text="formatRupiah(totalAmount)"></span></span>
                         </div>
                         
                         <button 
@@ -753,7 +734,6 @@
             supportsIdValidation: {{ ($supportsIdValidation ?? false) ? 'true' : 'false' }},
             categoryName: @js($category->name),
             
-            quantity: 1,
             selectedProduct: null,
             selectedProductName: '',
             selectedPrice: 0,
@@ -764,6 +744,20 @@
             
             selectedPayment: null,
             selectedPaymentName: '',
+            selectedFeeFlat: 0,
+            selectedFeePercent: 0,
+
+            get feeAmount() {
+                return this.selectedFeeFlat + Math.ceil(this.selectedPrice * this.selectedFeePercent / 100);
+            },
+
+            get totalAmount() {
+                return this.selectedPrice + this.feeAmount;
+            },
+
+            calcTotal(price, feeFlat, feePercent) {
+                return price + feeFlat + Math.ceil(price * feePercent / 100);
+            },
 
             allProducts: {!! json_encode($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'price' => $p->price_sell, 'type' => $p->product_type, 'group' => $p->product_group, 'status' => $p->status_provider ?? 'available'])->values()) !!},
             productGroups: @json($productGroups ?? []),
@@ -885,9 +879,11 @@
                 // Scroll if mobile to make it smooth, omitted for simplicity
             },
 
-            selectPayment(id, name) {
+            selectPayment(id, name, feeFlat, feePercent) {
                 this.selectedPayment = id;
                 this.selectedPaymentName = name;
+                this.selectedFeeFlat = feeFlat || 0;
+                this.selectedFeePercent = feePercent || 0;
             },
 
             toggleFavorite() {
@@ -984,7 +980,7 @@
                         target_zone: this.targetZone,
                         product_id: this.selectedProduct,
                         payment_method: this.selectedPayment,
-                        quantity: this.quantity
+                        quantity: 1
                     })
                 })
                 .then(response => {

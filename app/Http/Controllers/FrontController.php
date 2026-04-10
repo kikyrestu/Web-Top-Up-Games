@@ -454,6 +454,8 @@ class FrontController extends Controller
                         'name' => (string) $channelName,
                         'gateway_id' => (int) $gateway->id,
                         'provider' => (string) $gateway->name,
+                        'fee_flat' => (float) ($gateway->fee_flat ?? 0),
+                        'fee_percent' => (float) ($gateway->fee_percent ?? 0),
                     ];
                 }
             }
