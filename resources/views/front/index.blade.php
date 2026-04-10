@@ -55,7 +55,15 @@
                     <a href="{{ route('front.category', $product->category->slug ?? $product->category->id) }}?product={{ $product->id }}" class="block border border-up-border bg-up-card rounded-lg p-3 hover:border-up-yellow transition">
                         <div class="text-white text-sm font-semibold truncate">{{ $product->name }}</div>
                         <div class="text-up-textmuted text-[11px] mt-1 truncate">{{ $product->category->name ?? '-' }}</div>
-                        <div class="text-up-yellow text-xs font-bold mt-2">Rp {{ number_format($product->price_sell, 0, ',', '.') }}</div>
+                        <div class="text-up-yellow text-xs font-bold mt-2">
+                            @if(in_array($product->category->type ?? '', ['tagihan', 'pln']) || $product->product_type === 'postpaid')
+                                Cek Tagihan
+                            @elseif(($product->price_sell ?? 0) <= 0)
+                                Input Nominal
+                            @else
+                                Rp {{ number_format($product->price_sell, 0, ',', '.') }}
+                            @endif
+                        </div>
                     </a>
                     @endforeach
                 </div>
@@ -863,8 +871,14 @@ document.addEventListener('alpine:init', () => {
         getProductName(id) {
             let p = this.products.find(x => parseInt(x.id) === parseInt(id));
             if (p) {
-                let formattedPrice = new Intl.NumberFormat('id-ID').format(p.price_sell ?? p.price);
-                return p.name + ' · Rp' + formattedPrice;
+                if (this.activeType === 'tagihan' || this.activeType === 'pln' || p.product_type === 'postpaid') {
+                    return p.name + ' · Cek Tagihan';
+                }
+                let price = p.price_sell ?? p.price;
+                if (price <= 0) {
+                    return p.name + ' · Input Nominal';
+                }
+                return p.name + ' · Rp' + new Intl.NumberFormat('id-ID').format(price);
             }
             return '';
         },
