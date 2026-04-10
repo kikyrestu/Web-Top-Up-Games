@@ -299,17 +299,18 @@ class FrontController extends Controller
             : 'front.show-ppob';
 
         $isPostpaid = Category::isPostpaidType($category->type);
+        $isVoucher = empty($formFields);
 
         // Check if this game supports ID validation (nickname check)
         $supportsIdValidation = false;
         $gameValidatorInfo = null;
-        if (Category::isGameType($category->type)) {
+        if (Category::isGameType($category->type) && !$isVoucher) {
             $validator = new \App\Services\GameIdValidatorService();
             $gameValidatorInfo = $validator->detectGameFromCategory($category->name);
             $supportsIdValidation = $gameValidatorInfo !== null;
         }
 
-        return view($viewName, compact('category', 'products', 'paymentGateways', 'paymentChannels', 'formFields', 'preselectedProductId', 'productGroups', 'hasGroups', 'productTypes', 'hasTypes', 'reviews', 'isPostpaid', 'supportsIdValidation', 'gameValidatorInfo'));
+        return view($viewName, compact('category', 'products', 'paymentGateways', 'paymentChannels', 'formFields', 'preselectedProductId', 'productGroups', 'hasGroups', 'productTypes', 'hasTypes', 'reviews', 'isPostpaid', 'isVoucher', 'supportsIdValidation', 'gameValidatorInfo'));
     }
 
     public function checkout(Request $request)

@@ -22,7 +22,7 @@ class TransactionController extends Controller
         $request->validate([
             'customer_email' => 'nullable|email',
             'customer_whatsapp' => 'required|string',
-            'target_id' => 'required|string',
+            'target_id' => 'nullable|string',
             'target_zone' => 'nullable|string',
             'product_id' => 'required|exists:products,id',
             'payment_method' => 'required|string', // can be 'wallet' or payment gateway ID
@@ -81,7 +81,7 @@ class TransactionController extends Controller
             return back()->with('error', 'Saldo tidak mencukupi untuk transaksi ini.');
         }
 
-        $targetInput = $request->target_id;
+        $targetInput = $request->target_id ?: 'VOUCHER';
         if ($request->filled('target_zone')) {
             $targetInput .= '(' . $request->target_zone . ')';
         }

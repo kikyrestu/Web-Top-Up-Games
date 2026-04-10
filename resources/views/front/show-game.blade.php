@@ -127,10 +127,13 @@
         <!-- Left Col (Form) -->
         <div class="lg:col-span-8 flex flex-col gap-5 md:gap-6">
            
-            <!-- 1. Masukkan Data Akun -->
+            @php $step = 1; @endphp
+
+            @if(!($isVoucher ?? false))
+            <!-- {{ $step }}. Masukkan Data Akun -->
             <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden">
                 <div class="bg-[#151515] px-4 py-3 md:p-4 border-b border-[#2d2d2d] flex items-center gap-3">
-                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">1</span>
+                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">{{ $step }}</span>
                     <h2 class="text-base md:text-lg font-bold text-white">Masukkan Data Akun</h2>
                 </div>
                 <div class="p-4 md:p-6">
@@ -206,11 +209,13 @@
                     @endif
                 </div>
             </div>
+            @php $step++; @endphp
+            @endif
 
-            <!-- 2. Pilih Nominal -->
+            <!-- {{ $step }}. Pilih Nominal -->
             <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden">
                 <div class="bg-[#151515] px-4 py-3 md:p-4 border-b border-[#2d2d2d] flex items-center gap-3">
-                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">2</span>
+                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">{{ $step++ }}</span>
                     <h2 class="text-base md:text-lg font-bold text-white">Pilih Nominal</h2>
                 </div>
                 <div class="p-4 md:p-6">
@@ -315,10 +320,10 @@
                 </div>
             </div>
 
-            <!-- 3. Pilih Pembayaran -->
+            <!-- {{ $step }}. Pilih Pembayaran -->
             <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden">
                 <div class="bg-[#151515] px-4 py-3 md:p-4 border-b border-[#2d2d2d] flex items-center gap-3">
-                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">3</span>
+                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">{{ $step++ }}</span>
                     <h2 class="text-base md:text-lg font-bold text-white">Pilih Pembayaran</h2>
                 </div>
                 @php
@@ -403,10 +408,10 @@
                 </div>
             </div>
 
-            <!-- 4. Detail Kontak -->
+            <!-- {{ $step }}. Detail Kontak -->
             <div class="bg-[#1c1c1c] rounded-xl border border-[#2d2d2d] overflow-hidden">
                 <div class="bg-[#151515] px-4 py-3 md:p-4 border-b border-[#2d2d2d] flex items-center gap-3">
-                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">4</span>
+                    <span class="bg-[#f97316] text-white w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">{{ $step++ }}</span>
                     <h2 class="text-base md:text-lg font-bold text-white">Detail Kontak</h2>
                 </div>
                 <div class="p-4 md:p-6 space-y-4">
@@ -443,7 +448,9 @@
                     @else
                         <p>Cara top up {{ $category->name }} proses cepat instan dengan pembayaran 100% aman terlengkap:</p>
                         <ol class="list-decimal pl-5 space-y-1 mt-2 mb-4 text-gray-400">
+                            @if(!($isVoucher ?? false))
                             <li>Masukkan data akun</li>
+                            @endif
                             <li>Pilih nominal</li>
                             <li>Pilih pembayaran</li>
                             <li>Isi detail kontak</li>
@@ -582,8 +589,8 @@
                         <button 
                             @click="submitCheckout"
                             class="w-full bg-[#f97316] hover:bg-[#ea580c] text-white font-bold py-3.5 px-4 rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_25px_rgba(249,115,22,0.5)] flex items-center justify-center transform hover:-translate-y-0.5"
-                            :disabled="!target || !wa || isSubmitting"
-                            :class="{'opacity-70 cursor-not-allowed': !target || !wa || isSubmitting}">
+                            :disabled="(!isVoucher && !target) || !wa || isSubmitting"
+                            :class="{'opacity-70 cursor-not-allowed': (!isVoucher && !target) || !wa || isSubmitting}">
                             <template x-if="!isSubmitting">
                                 <span class="flex items-center">
                                     <i class="fas fa-shopping-bag mr-2"></i> Pesan Sekarang!
@@ -598,7 +605,7 @@
                         </button>
                         
                         <!-- Validation warning inside checkout -->
-                        <p x-show="!target || !wa" class="text-[10px] text-red-400 mt-2 text-center" x-transition>Harap isi Data Akun dan Whatsapp</p>
+                        <p x-show="(!isVoucher && !target) || !wa" class="text-[10px] text-red-400 mt-2 text-center" x-transition>Harap isi <span x-show="!isVoucher">Data Akun dan </span>Whatsapp</p>
                     </div>
                 </div>
 
@@ -720,13 +727,14 @@
 
     document.addEventListener('alpine:init', () => {
         Alpine.data('checkoutPage', () => ({
-            target: '',
+            target: '{{ ($isVoucher ?? false) ? 'VOUCHER' : '' }}',
             targetZone: '',
             email: '{{ auth()->user()->email ?? '' }}',
             wa: '{{ auth()->user()->whatsapp ?? '' }}',
             promo: '',
             isFavorite: {{ $isFav ? 'true' : 'false' }},
             isSubmitting: false,
+            isVoucher: {{ ($isVoucher ?? false) ? 'true' : 'false' }},
 
             // Game ID Validation
             isValidating: false,
@@ -950,7 +958,7 @@
             },
 
             submitCheckout() {
-                if (!this.target) {
+                if (!this.isVoucher && !this.target) {
                     showToast('warning', 'Data Akun Wajib Diisi', 'Mohon isi ID / Nomor Tujuan terlebih dahulu.');
                     return;
                 }
