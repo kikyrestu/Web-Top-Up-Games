@@ -107,14 +107,14 @@
     <!-- Main Navbar -->
     <header class="bg-up-nav sticky top-0 z-50 shadow-lg border-b border-up-border/30">
         <div class="max-w-[1280px] mx-auto px-4">
-            <div class="flex items-center justify-between h-[72px] gap-4">
+            <div class="flex items-center justify-between h-[88px] gap-4">
                 
                 <!-- Left: Logo -->
                 <a href="{{ route('front.index') }}" class="flex items-center gap-2.5 shrink-0">
                     @if(!empty($global_site_logo))
-                        <img src="{{ asset('storage/' . $global_site_logo) }}" alt="{{ $global_site_name ?? 'Logo' }}" width="144" height="36" fetchpriority="high" decoding="async" class="h-8 w-auto object-contain">
+                        <img src="{{ asset('storage/' . $global_site_logo) }}" alt="{{ $global_site_name ?? 'Logo' }}" width="144" height="36" fetchpriority="high" decoding="async" class="h-10 w-auto object-contain">
                     @endif
-                    <span class="text-white text-lg font-black tracking-tight hidden sm:block">{{ $global_site_name ?? 'PPOBKu' }}</span>
+                    <span class="text-white text-xl font-black tracking-tight hidden sm:block">{{ $global_site_name ?? 'PPOBKu' }}</span>
                 </a>
 
                 <!-- Center: Nav Links (desktop) -->
@@ -150,19 +150,19 @@
                 <!-- Right: Search + Auth -->
                 <div class="flex items-center gap-3 shrink-0">
                     <form action="{{ route('front.index') }}" method="GET" class="hidden md:block relative group">
-                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs group-focus-within:text-up-yellow transition-colors"></i>
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="bg-[#111620] border border-up-border/60 text-white text-sm rounded-full pl-10 pr-4 py-2 w-60 focus:outline-none focus:border-up-yellow/70 focus:ring-1 focus:ring-up-yellow/30 focus:w-72 transition-all placeholder-gray-500 shadow-inner">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm group-focus-within:text-up-yellow transition-colors"></i>
+                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="bg-[#111620] border border-up-border/60 text-white text-[15px] rounded-full pl-10 pr-5 py-2.5 w-64 focus:outline-none focus:border-up-yellow/70 focus:ring-1 focus:ring-up-yellow/30 focus:w-80 transition-all placeholder-gray-500 shadow-inner">
                     </form>
 
                     @auth
                         <div class="relative" x-data="{ userMenu: false }" @mouseenter="userMenu = true" @mouseleave="userMenu = false">
-                            <button class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition focus:outline-none">
-                                <img src="{{ auth()->user()->avatar ? asset('storage/'.auth()->user()->avatar) : 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=f97316&color=fff&size=32' }}" alt="Avatar" class="w-8 h-8 rounded-full border border-up-border shadow-sm">
-                                <div class="hidden md:flex flex-col items-start">
-                                    <span class="text-white text-xs font-bold leading-tight">{{ auth()->user()->name }}</span>
-                                    <span class="text-[10px] text-gray-400 leading-tight">Rp {{ number_format(auth()->user()->wallet_balance ?? 0, 0, ',', '.') }}</span>
+                            <button class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition focus:outline-none">
+                                <img src="{{ auth()->user()->avatar ? asset('storage/'.auth()->user()->avatar) : 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=f97316&color=fff&size=40' }}" alt="Avatar" class="w-10 h-10 rounded-full border border-up-border shadow-sm">
+                                <div class="hidden md:flex flex-col items-start min-w-[80px]">
+                                    <span class="text-white text-sm font-bold leading-tight">{{ auth()->user()->name }}</span>
+                                    <span class="text-xs text-gray-400 leading-tight">Rp {{ number_format(auth()->user()->wallet_balance ?? 0, 0, ',', '.') }}</span>
                                 </div>
-                                <i class="fas fa-caret-down text-gray-500 text-[10px] hidden md:block"></i>
+                                <i class="fas fa-caret-down text-gray-500 text-xs hidden md:block ml-1"></i>
                             </button>
                             <div x-show="userMenu" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0 -translate-y-1" class="absolute right-0 mt-2 w-56 bg-up-card border border-up-border rounded-xl shadow-2xl overflow-hidden z-50" style="display: none;">
                                 <div class="px-4 py-3 bg-[#191d2c] border-b border-up-border/50">
@@ -187,10 +187,10 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="bg-up-yellow hover:bg-[#d9831c] text-black text-[13px] font-bold px-5 py-2 rounded-lg shadow-sm transition">
+                        <a href="{{ route('login') }}" class="bg-up-yellow hover:bg-[#d9831c] text-black text-[14px] font-bold px-6 py-2.5 rounded-lg shadow-sm transition">
                             MASUK
                         </a>
-                        <a href="{{ route('register') }}" class="hidden md:inline-block border border-up-border text-gray-300 hover:border-up-yellow hover:text-up-yellow text-[13px] font-bold px-5 py-2 rounded-lg transition">
+                        <a href="{{ route('register') }}" class="hidden md:inline-block border border-up-border text-gray-300 hover:border-up-yellow hover:text-up-yellow text-[14px] font-bold px-6 py-2.5 rounded-lg transition">
                             DAFTAR
                         </a>
                     @endauth
