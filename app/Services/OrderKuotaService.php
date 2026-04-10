@@ -325,37 +325,70 @@ class OrderKuotaService implements ProviderSyncInterface
         $failed     = str_contains($bodyUpper, 'GAGAL');
         $processing = str_contains($bodyUpper, 'AKAN DIPROSES') || str_contains($bodyUpper, 'MENUNGGU');
 
-        // Extract customer name
+        // Extract SN field (contains structured data for multi-finance, etc.)
+        $snData = [];
+        if (preg_match('/SN:\s*(.+?)(?:\.\s*Hrg|\s*$)/i', $body, $snMatch)) {
+            $snRaw = trim($snMatch[1]);
+            // Parse KEY:VALUE pairs separated by /
+            foreach (explode('/', $snRaw) as $pair) {
+                $pair = trim($pair);
+                if (str_contains($pair, ':')) {
+                    [$key, $val] = explode(':', $pair, 2);
+                    $snData[strtoupper(trim($key))] = trim($val);
+                }
+            }
+        }
+
+        // Extract customer name — from SN NAMA field, or from "Nama: xxx" text
         $customerName = '';
-        if (preg_match('/Nama[:\s]+([^.\-\n]+)/i', $body, $m)) {
+        if (!empty($snData['NAMA'])) {
+            $customerName = $snData['NAMA'];
+        } elseif (preg_match('/Nama[:\s]+([^.\-\/\n]+)/i', $body, $m)) {
             $customerName = trim($m[1]);
         }
 
-        // Extract tagihan (bill amount)
+        // Extract tagihan (bill amount) — from SN TAG field, or from "Tagihan: Rp xxx" text
         $tagihan = 0;
-        if (preg_match('/Tagihan[:\s]*(?:Rp\.?\s*)([\d.,]+)/i', $body, $m)) {
+        if (!empty($snData['TAG'])) {
+            $tagihan = (int) str_replace(['.', ','], ['', ''], $snData['TAG']);
+        } elseif (preg_match('/Tagihan[:\s]*(?:Rp\.?\s*)([\d.,]+)/i', $body, $m)) {
             $tagihan = (int) str_replace(['.', ','], ['', ''], $m[1]);
         }
 
-        // Extract admin fee
+        // Extract admin fee — from SN ADMIN field, or from "Admin: Rp xxx" text
         $admin = 0;
-        if (preg_match('/Admin[:\s]*(?:Rp\.?\s*)([\d.,]+)/i', $body, $m)) {
+        if (isset($snData['ADMIN'])) {
+            $admin = (int) str_replace(['.', ','], ['', ''], $snData['ADMIN']);
+        } elseif (preg_match('/Admin[:\s]*(?:Rp\.?\s*)([\d.,]+)/i', $body, $m)) {
             $admin = (int) str_replace(['.', ','], ['', ''], $m[1]);
         }
 
-        // Extract total
+        // Extract total — from SN TTAG field, or from "Total: Rp xxx" text
         $total = 0;
-        if (preg_match('/Total[:\s]*(?:Rp\.?\s*)([\d.,]+)/i', $body, $m)) {
+        if (!empty($snData['TTAG'])) {
+            $total = (int) str_replace(['.', ','], ['', ''], $snData['TTAG']);
+        } elseif (preg_match('/Total[:\s]*(?:Rp\.?\s*)([\d.,]+)/i', $body, $m)) {
             $total = (int) str_replace(['.', ','], ['', ''], $m[1]);
         }
         if ($total === 0 && ($tagihan + $admin) > 0) {
             $total = $tagihan + $admin;
         }
 
-        // Extract periode
+        // Extract periode — from SN JATUH TEMPO field, or from "Periode: xxx" text
         $periode = '';
-        if (preg_match('/Periode[:\s]+([^.\-\n]+)/i', $body, $m)) {
+        if (!empty($snData['JATUH TEMPO'])) {
+            $periode = $snData['JATUH TEMPO'];
+        } elseif (preg_match('/Periode[:\s]+([^.\-\n]+)/i', $body, $m)) {
             $periode = trim($m[1]);
+        }
+
+        // Build extra desc from SN data
+        $desc = [];
+        if (!empty($snData['ANGSURAN'])) {
+            $desc['angsuran'] = 'Ke-' . ltrim($snData['ANGSURAN'], '0');
+        }
+        if (!empty($snData['TENOR'])) {
+            $desc['tenor'] = ltrim($snData['TENOR'], '0') . ' bulan';
         }
 
         // Build status message
@@ -387,6 +420,7 @@ class OrderKuotaService implements ProviderSyncInterface
             'status'        => $success ? 'Sukses' : ($processing ? 'Proses' : 'Gagal'),
             'rc'            => $success ? '00' : ($isInvalidNumber ? '14' : ($processing ? '68' : '99')),
             'provider'      => 'orderkuota',
+            'desc'          => !empty($desc) ? $desc : [],
             'raw'           => $body,
         ];
     }
