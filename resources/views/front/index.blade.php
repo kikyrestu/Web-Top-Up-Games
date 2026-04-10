@@ -620,7 +620,6 @@
                 </div>
                 <div class="p-3">
                     <h3 class="text-white text-[13px] font-bold truncate">{{ $game->name }}</h3>
-                    <p class="text-up-textmuted text-[10px] mt-0.5 font-medium uppercase truncate">{{ $game->publisher ?? 'Developer' }}</p>
                 </div>
             </a>
             @endforeach

@@ -100,8 +100,7 @@
         <img src="{{ $category->thumbnail ? asset('storage/'.$category->thumbnail) : 'https://placehold.co/150' }}" alt="{{ $category->name }}" class="w-24 h-24 md:w-40 md:h-40 rounded-xl object-cover border-2 md:border-4 border-[#1c1c1c] shadow-2xl shrink-0">
         <div class="pb-1 md:pb-2 flex-grow">
             <h1 class="text-2xl md:text-5xl font-black text-white uppercase italic tracking-wider mb-0.5 md:mb-1 drop-shadow-lg">{{ $category->name }}</h1>
-            <p class="text-gray-400 text-xs md:text-base mb-2 md:mb-4 font-medium">{{ $category->publisher ?? 'Publisher Unknown' }}</p>
-            <div class="flex flex-wrap gap-1 md:gap-2 text-[10px] md:text-xs font-semibold text-gray-300">
+            <div class="flex flex-wrap gap-1 md:gap-2 mt-2 md:mt-4 text-[10px] md:text-xs font-semibold text-gray-300">
                 <span class="bg-[#1c1c1c]/90 px-2 py-1 md:px-3 md:py-1.5 rounded text-[#f59e0b] border border-[#2d2d2d] flex items-center gap-1.5"><i class="fas fa-bolt"></i> Proses Cepat</span>
                 <span class="bg-[#1c1c1c]/90 px-2 py-1 md:px-3 md:py-1.5 rounded text-blue-400 border border-[#2d2d2d] flex items-center gap-1.5"><i class="fas fa-headset"></i> Layanan Chat 24/7</span>
                 <span class="bg-[#1c1c1c]/90 px-2 py-1 md:px-3 md:py-1.5 rounded text-green-400 border border-[#2d2d2d] flex items-center gap-1.5 hidden sm:flex"><i class="fas fa-shield-alt"></i> Pembayaran Aman</span>
