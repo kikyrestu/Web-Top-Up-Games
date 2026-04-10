@@ -95,10 +95,12 @@
 <body class="antialiased flex flex-col min-h-screen">
 
     <!-- Topbar -->
-    <div class="bg-up-darkest text-[#8a94ad] text-[10px] font-semibold py-1.5 px-4 flex justify-between items-center tracking-wider">
-        <div>INSTANT TOP UP! INSTANT PLAY!</div>
-        <div class="flex items-center space-x-3">
-            <span class="flex items-center"><img src="https://flagcdn.com/w20/id.png" alt="Bendera Indonesia" width="20" height="15" loading="lazy" decoding="async" class="w-4 h-3 mr-1"> Indonesia - IDR</span>
+    <div class="bg-up-darkest border-b border-up-border/30 hidden sm:block">
+        <div class="max-w-[1280px] mx-auto text-[#8a94ad] text-[10px] font-semibold py-1.5 px-4 flex justify-between items-center tracking-wider">
+            <div>INSTANT TOP UP! INSTANT PLAY!</div>
+            <div class="flex items-center space-x-3">
+                <span class="flex items-center"><img src="https://flagcdn.com/w20/id.png" alt="Bendera Indonesia" width="20" height="15" loading="lazy" decoding="async" class="w-4 h-3 mr-1"> Indonesia - IDR</span>
+            </div>
         </div>
     </div>
 
@@ -147,9 +149,9 @@
 
                 <!-- Right: Search + Auth -->
                 <div class="flex items-center gap-3 shrink-0">
-                    <form action="{{ route('front.index') }}" method="GET" class="hidden md:block relative">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="bg-[#111620] border border-up-border/60 text-white text-sm rounded-full pl-9 pr-4 py-2 w-52 focus:outline-none focus:border-up-yellow/70 focus:ring-1 focus:ring-up-yellow/30 focus:w-64 transition-all placeholder-gray-500">
+                    <form action="{{ route('front.index') }}" method="GET" class="hidden md:block relative group">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs group-focus-within:text-up-yellow transition-colors"></i>
+                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="bg-[#111620] border border-up-border/60 text-white text-sm rounded-full pl-10 pr-4 py-2 w-60 focus:outline-none focus:border-up-yellow/70 focus:ring-1 focus:ring-up-yellow/30 focus:w-72 transition-all placeholder-gray-500 shadow-inner">
                     </form>
 
                     @auth
