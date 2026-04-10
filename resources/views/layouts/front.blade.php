@@ -103,62 +103,69 @@
     </div>
 
     <!-- Main Navbar -->
-    <header class="bg-up-nav sticky top-0 z-50 shadow-md border-b border-up-border/50" x-data="{ mobileMenu: false }">
+    <header class="bg-up-nav sticky top-0 z-50 shadow-lg border-b border-up-border/30">
         <div class="max-w-[1280px] mx-auto px-4">
-            <div class="flex items-center justify-between h-16">
+            <div class="flex items-center justify-between h-[60px]">
                 
-                <!-- Left: Logo & Nav Links -->
-                <div class="flex items-center flex-1">
-                    <a href="{{ route('front.index') }}" class="mr-8 flex items-center gap-2">
-                        @if(!empty($global_site_logo))
-                            <img src="{{ asset('storage/' . $global_site_logo) }}" alt="{{ $global_site_name ?? 'Logo' }}" width="144" height="36" fetchpriority="high" decoding="async" class="h-9 w-auto object-contain">
-                        @endif
-                        <span class="text-white text-xl font-black tracking-tight flex items-center">
-                            {{ $global_site_name ?? 'PPOBKu' }}
-                        </span>
-                    </a>
-                    
-                    <nav class="hidden lg:flex space-x-6 text-xs font-bold text-gray-300">
-                        <a href="{{ route('front.index') }}" class="text-white hover:text-up-yellow transition"><i class="fas fa-home mr-1"></i> Beranda</a>
-                        <a href="{{ route('front.cek-pesanan') }}" class="hover:text-white transition"><i class="fas fa-search-dollar mr-1"></i> Cek Pesanan</a>
-                        <a href="{{ route('front.page', 'daftar-harga') }}" class="hover:text-white transition"><i class="fas fa-list-alt mr-1"></i> Daftar Harga</a>
-                        <a href="{{ route('front.article.index') }}" class="hover:text-white transition"><i class="fas fa-newspaper mr-1"></i> Artikel</a>
-                        <a href="{{ route('front.promo') }}" class="hover:text-[#f97316] transition"><i class="fas fa-tag mr-1 text-[#f97316]"></i> Promo</a>
-                        <a href="{{ route('front.calculator') }}" class="hover:text-white transition"><i class="fas fa-calculator mr-1"></i> Kalkulator</a>
+                <!-- Left: Logo -->
+                <a href="{{ route('front.index') }}" class="flex items-center gap-2.5 shrink-0">
+                    @if(!empty($global_site_logo))
+                        <img src="{{ asset('storage/' . $global_site_logo) }}" alt="{{ $global_site_name ?? 'Logo' }}" width="144" height="36" fetchpriority="high" decoding="async" class="h-8 w-auto object-contain">
+                    @endif
+                    <span class="text-white text-lg font-black tracking-tight hidden sm:block">{{ $global_site_name ?? 'PPOBKu' }}</span>
+                </a>
+
+                <!-- Center: Search Bar -->
+                <form action="{{ route('front.index') }}" method="GET" class="hidden md:flex flex-1 max-w-md mx-6 lg:mx-10">
+                    <div class="relative w-full">
+                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="w-full bg-[#111620] border border-up-border/60 text-white text-sm rounded-full pl-10 pr-4 py-2.5 focus:outline-none focus:border-up-yellow/70 focus:ring-1 focus:ring-up-yellow/30 transition placeholder-gray-500">
+                    </div>
+                </form>
+                
+                <!-- Right: Nav + Auth -->
+                <div class="flex items-center gap-1 lg:gap-2">
+                    <!-- Desktop Nav Links -->
+                    <nav class="hidden lg:flex items-center gap-1 mr-2" x-data="{ moreOpen: false }">
+                        <a href="{{ route('front.cek-pesanan') }}" class="px-3 py-2 rounded-lg text-[13px] font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition">
+                            <i class="fas fa-receipt mr-1.5 text-[11px]"></i>Cek Pesanan
+                        </a>
+                        <a href="{{ route('front.promo') }}" class="px-3 py-2 rounded-lg text-[13px] font-semibold text-[#f97316] hover:bg-[#f97316]/10 transition">
+                            <i class="fas fa-tag mr-1.5 text-[11px]"></i>Promo
+                        </a>
                         
-                        <!-- Dropdown Lainnya -->
-                        <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                            <button class="hover:text-white transition flex items-center focus:outline-none">
-                                <i class="fas fa-ellipsis-h mr-1"></i> Lainnya <i class="fas fa-caret-down ml-1 transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                        <!-- More Dropdown -->
+                        <div class="relative" @mouseenter="moreOpen = true" @mouseleave="moreOpen = false">
+                            <button class="px-3 py-2 rounded-lg text-[13px] font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition flex items-center gap-1 focus:outline-none">
+                                <i class="fas fa-ellipsis-h text-[11px]"></i>
+                                <i class="fas fa-caret-down text-[9px] transition-transform" :class="moreOpen ? 'rotate-180' : ''"></i>
                             </button>
-                            <!-- Dropdown Menu -->
-                            <div x-show="open" x-transition.opacity class="absolute top-full left-0 mt-4 w-48 bg-up-card border border-up-border rounded-lg shadow-xl py-2 z-50">
-                                <a href="{{ route('front.calculator') }}" class="block px-4 py-2 text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-calculator w-5"></i> Kalkulator MLBB</a>
-                                <a href="{{ route('front.page', 'kontak') }}" class="block px-4 py-2 text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-headset w-5"></i> Hubungi CS</a>
-                                <a href="{{ route('front.page', 'syarat-ketentuan') }}" class="block px-4 py-2 text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-book-open w-5"></i> Syarat & Ketentuan</a>
-                                <a href="{{ route('front.page', 'kebijakan-privasi') }}" class="block px-4 py-2 text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-shield-alt w-5"></i> Kebijakan Privasi</a>
+                            <div x-show="moreOpen" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0 -translate-y-1" class="absolute right-0 top-full mt-2 w-52 bg-up-card border border-up-border rounded-xl shadow-2xl py-1.5 z-50" style="display: none;">
+                                <a href="{{ route('front.page', 'daftar-harga') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-list-alt w-4 text-center text-gray-500"></i> Daftar Harga</a>
+                                <a href="{{ route('front.article.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-newspaper w-4 text-center text-gray-500"></i> Artikel</a>
+                                <a href="{{ route('front.calculator') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-calculator w-4 text-center text-gray-500"></i> Kalkulator</a>
+                                <div class="border-t border-up-border/40 my-1.5"></div>
+                                <a href="{{ route('front.page', 'kontak') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-headset w-4 text-center text-gray-500"></i> Hubungi CS</a>
+                                <a href="{{ route('front.page', 'syarat-ketentuan') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-book-open w-4 text-center text-gray-500"></i> Syarat & Ketentuan</a>
+                                <a href="{{ route('front.page', 'kebijakan-privasi') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-shield-alt w-4 text-center text-gray-500"></i> Kebijakan Privasi</a>
                             </div>
                         </div>
                     </nav>
-                </div>
 
-                <!-- Right: Search & Login -->
-                <div class="flex items-center space-x-4">
-                    <form action="{{ route('front.index') }}" method="GET" class="hidden md:block relative">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari produk, kategori, atau kode" class="bg-[#191d2c] border border-up-border text-white text-xs rounded-full pl-8 pr-4 py-2 w-64 focus:outline-none focus:border-up-yellow transition">
-                    </form>
+                    <!-- Divider -->
+                    <div class="hidden lg:block w-px h-6 bg-up-border/50 mx-1"></div>
+
                     @auth
-                        <div class="relative group" x-data="{ userMenu: false }" @mouseenter="userMenu = true" @mouseleave="userMenu = false">
-                            <button class="flex items-center gap-2 focus:outline-none">
-                                <img src="{{ auth()->user()->avatar ? asset('storage/'.auth()->user()->avatar) : 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=f97316&color=fff' }}" alt="Avatar" class="w-8 h-8 rounded-full border border-up-border shadow-sm">
-                                <div class="hidden md:flex flex-col items-start px-1">
-                                    <span class="text-white text-xs font-bold">{{ auth()->user()->name }}</span>
-                                    <span class="text-[9px] text-gray-400">{{ \App\Models\Setting::get('wallet_label', 'Saldo') }}: Rp {{ number_format(auth()->user()->wallet_balance ?? 0, 0, ',', '.') }}</span>
+                        <div class="relative" x-data="{ userMenu: false }" @mouseenter="userMenu = true" @mouseleave="userMenu = false">
+                            <button class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition focus:outline-none">
+                                <img src="{{ auth()->user()->avatar ? asset('storage/'.auth()->user()->avatar) : 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=f97316&color=fff&size=32' }}" alt="Avatar" class="w-8 h-8 rounded-full border border-up-border shadow-sm">
+                                <div class="hidden md:flex flex-col items-start">
+                                    <span class="text-white text-xs font-bold leading-tight">{{ auth()->user()->name }}</span>
+                                    <span class="text-[10px] text-gray-400 leading-tight">Rp {{ number_format(auth()->user()->wallet_balance ?? 0, 0, ',', '.') }}</span>
                                 </div>
-                                <i class="fas fa-caret-down text-gray-400 text-[10px] hidden md:block"></i>
+                                <i class="fas fa-caret-down text-gray-500 text-[10px] hidden md:block"></i>
                             </button>
-                            <div x-show="userMenu" x-transition.opacity class="absolute right-0 mt-3 w-56 bg-up-card border border-up-border rounded-xl shadow-2xl overflow-hidden z-50">
+                            <div x-show="userMenu" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0 -translate-y-1" class="absolute right-0 mt-2 w-56 bg-up-card border border-up-border rounded-xl shadow-2xl overflow-hidden z-50" style="display: none;">
                                 <div class="px-4 py-3 bg-[#191d2c] border-b border-up-border/50">
                                     <p class="text-sm font-bold text-white truncate">{{ auth()->user()->name }}</p>
                                     <p class="text-[10px] text-gray-400 font-mono mt-0.5 truncate">{{ auth()->user()->email ?? auth()->user()->phone ?? 'Guest' }}</p>
@@ -167,12 +174,11 @@
                                     <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-shield-alt w-5 text-center mr-1"></i> Admin Panel</a>
                                     <div class="border-t border-up-border/50"></div>
                                 @endif
-                                <a href="{{ route('member.dashboard') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-home w-5 text-center mr-1"></i> Dashboard Member</a>
+                                <a href="{{ route('member.dashboard') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-home w-5 text-center mr-1"></i> Dashboard</a>
                                 <a href="{{ route('member.wallet') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-wallet w-5 text-center mr-1"></i> Deposit Saldo</a>
-                                {{-- <a href="{{ route('member.commission') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-[#f97316] hover:bg-black/20 transition"><i class="fas fa-coins w-5 text-center mr-1 text-[#f97316]"></i> Komisi & Referral</a> --}}
                                 <a href="{{ route('member.transactions') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-history w-5 text-center mr-1"></i> Riwayat Transaksi</a>
                                 <a href="{{ route('member.favorites') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-heart w-5 text-center mr-1 text-rose-500"></i> Game Favorit</a>
-                                <a href="{{ route('member.profile') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-user-cog w-5 text-center mr-1"></i> Pengaturan Akun</a>
+                                <a href="{{ route('member.profile') }}" class="block px-4 py-2.5 text-xs text-gray-300 hover:text-up-yellow hover:bg-black/20 transition"><i class="fas fa-user-cog w-5 text-center mr-1"></i> Pengaturan</a>
                                 <form action="{{ route('logout') }}" method="POST" class="border-t border-up-border/50 mt-1">
                                     @csrf
                                     <button type="submit" class="w-full text-left block px-4 py-2.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-900/20 transition">
@@ -182,20 +188,17 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="bg-up-yellow hover:bg-[#d9831c] text-black text-xs font-bold px-5 py-2 rounded-lg shadow-sm transition">
+                        <a href="{{ route('login') }}" class="bg-up-yellow hover:bg-[#d9831c] text-black text-[13px] font-bold px-5 py-2 rounded-lg shadow-sm transition">
                             MASUK
                         </a>
-                        <a href="{{ route('register') }}" class="hidden md:inline-block border border-up-yellow text-up-yellow hover:bg-up-yellow hover:text-black text-xs font-bold px-5 py-2 rounded-lg transition shadow-sm">
+                        <a href="{{ route('register') }}" class="hidden md:inline-block border border-up-border text-gray-300 hover:border-up-yellow hover:text-up-yellow text-[13px] font-bold px-5 py-2 rounded-lg transition">
                             DAFTAR
                         </a>
                     @endauth
-
-                    <!-- Mobile Hamburger Dihapus -->
                 </div>
                 
             </div>
         </div>
-
     </header>
 
     <!-- Main Content -->
