@@ -107,7 +107,7 @@
     <!-- Main Navbar -->
     <header class="bg-up-nav sticky top-0 z-50 shadow-lg border-b border-up-border/30">
         <div class="max-w-[1280px] mx-auto px-4">
-            <div class="flex items-center justify-between h-[60px] gap-4">
+            <div class="flex items-center justify-between h-[72px] gap-4">
                 
                 <!-- Left: Logo -->
                 <a href="{{ route('front.index') }}" class="flex items-center gap-2.5 shrink-0">
