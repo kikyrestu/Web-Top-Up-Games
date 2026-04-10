@@ -149,11 +149,9 @@
 
                 <!-- Right: Search + Auth -->
                 <div class="flex items-center gap-3 shrink-0">
-                    <form action="{{ route('front.index') }}" method="GET" class="hidden lg:block relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                            <i class="fas fa-search text-gray-400 text-sm"></i>
-                        </div>
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="bg-[#111620] border border-up-border text-white text-sm rounded-lg w-[220px] pl-10 pr-4 py-2 focus:outline-none focus:border-up-yellow focus:ring-1 focus:ring-up-yellow transition-colors placeholder-gray-500">
+                    <form action="{{ route('front.index') }}" method="GET" class="hidden lg:block relative group">
+                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-[13px] group-focus-within:text-up-yellow transition-colors pointer-events-none"></i>
+                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari game atau produk..." class="bg-[#111620] border border-up-border/60 text-white text-sm rounded-lg w-[240px] pl-9 pr-4 py-2 focus:outline-none focus:border-up-yellow/70 focus:ring-1 focus:ring-up-yellow/30 transition-colors placeholder-gray-500 shadow-inner">
                     </form>
 
                     @auth
