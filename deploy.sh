@@ -76,7 +76,7 @@ ssh -o StrictHostKeyChecking=no -p "$SSH_PORT" -i "$SSH_KEY" "$SSH_HOST" bash -s
     php artisan config:cache 2>&1
     php artisan route:cache 2>&1
     php artisan view:cache 2>&1
-    php artisan storage:link 2>&1 || true
+    php artisan storage:link 2>/dev/null || true
 
     echo "✅ Deploy selesai!"
 REMOTE_SCRIPT

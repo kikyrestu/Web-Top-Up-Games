@@ -93,6 +93,12 @@ class Product extends Model
             return 0; // Postpaid has no markup
         }
 
+        // Skip markup for utility/check products (cek status, cek username, etc.)
+        $name = strtolower($this->name ?? '');
+        if (preg_match('/^cek\s|cek status|cek username|cek hutang|cek saldo|cek kuota/i', $name)) {
+            return 0;
+        }
+
         $commission = $this->getEffectiveCommission();
         if ($commission['type'] === 'flat') {
             return $commission['value'];
