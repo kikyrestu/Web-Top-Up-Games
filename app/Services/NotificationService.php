@@ -42,7 +42,7 @@ class NotificationService
 
     /**
      * Notify customer about their transaction.
-     * Sends email if customer_email is available.
+     * Sends email + WhatsApp if available.
      */
     public static function notifyCustomer(Transaction $transaction, string $event): void
     {
@@ -50,37 +50,88 @@ class NotificationService
             $transaction->load('items');
         }
 
-        $email = $transaction->customer_email;
-        if (empty($email)) return;
-
         $siteName = Setting::get('site_name', 'PPOBKu');
         $invoiceUrl = route('transaction.show', $transaction->invoice_number);
         $item       = $transaction->items->first();
         $productName = $item?->product_name ?? 'Produk';
 
-        $subject = match($event) {
-            'success' => "[{$siteName}] ✅ Transaksi Berhasil - #{$transaction->invoice_number}",
-            'failed'  => "[{$siteName}] ❌ Transaksi Gagal - #{$transaction->invoice_number}",
-            'paid'    => "[{$siteName}] 💳 Pembayaran Diterima - #{$transaction->invoice_number}",
-            default   => "[{$siteName}] Transaksi #{$transaction->invoice_number}",
+        // --- Email ---
+        $email = $transaction->customer_email;
+        if (!empty($email)) {
+            $subject = match($event) {
+                'new'     => "[{$siteName}] 🛒 Pesanan Dibuat - #{$transaction->invoice_number}",
+                'paid'    => "[{$siteName}] 💳 Pembayaran Diterima - #{$transaction->invoice_number}",
+                'success' => "[{$siteName}] ✅ Transaksi Berhasil - #{$transaction->invoice_number}",
+                'failed'  => "[{$siteName}] ❌ Transaksi Gagal - #{$transaction->invoice_number}",
+                default   => "[{$siteName}] Transaksi #{$transaction->invoice_number}",
+            };
+
+            $bodyHtml = self::buildCustomerEmailBody($transaction, $event, $siteName, $productName, $invoiceUrl);
+
+            try {
+                Mail::html($bodyHtml, function ($message) use ($email, $subject) {
+                    $message->to($email)->subject($subject);
+                });
+                Log::info("Customer email sent [{$event}] to {$email} for #{$transaction->invoice_number}");
+            } catch (\Exception $e) {
+                Log::warning('Customer email notification failed: ' . $e->getMessage());
+            }
+        }
+
+        // --- WhatsApp ---
+        $waNumber = $transaction->customer_whatsapp ?? $transaction->customer_contact ?? null;
+        if (!empty($waNumber) && Setting::get('wa_enabled') === '1') {
+            try {
+                $wa = app(WhatsAppService::class);
+                $waText = self::buildCustomerWhatsAppMessage($transaction, $event, $siteName, $productName, $invoiceUrl);
+                $wa->sendMessage($waNumber, $waText);
+                Log::info("Customer WA sent [{$event}] to {$waNumber} for #{$transaction->invoice_number}");
+            } catch (\Exception $e) {
+                Log::warning('Customer WA notification failed: ' . $e->getMessage());
+            }
+        }
+    }
+
+    protected static function buildCustomerWhatsAppMessage(Transaction $tx, string $event, string $siteName, string $productName, string $invoiceUrl): string
+    {
+        $statusLine = match($event) {
+            'new'     => "🛒 *Pesanan Dibuat*",
+            'paid'    => "💳 *Pembayaran Diterima*",
+            'success' => "✅ *Transaksi Berhasil!*",
+            'failed'  => "❌ *Transaksi Gagal*",
+            default   => "📋 *Update Transaksi*",
         };
 
-        $bodyHtml = self::buildCustomerEmailBody($transaction, $event, $siteName, $productName, $invoiceUrl);
+        $formattedTotal = number_format((float) $tx->total_amount, 0, ',', '.');
 
-        try {
-            Mail::html($bodyHtml, function ($message) use ($email, $subject) {
-                $message->to($email)->subject($subject);
-            });
-            Log::info("Customer email sent [{$event}] to {$email} for #{$transaction->invoice_number}");
-        } catch (\Exception $e) {
-            Log::warning('Customer email notification failed: ' . $e->getMessage());
+        $msg = "{$statusLine}\n\n"
+            . "Halo, berikut info transaksi kamu di *{$siteName}*:\n\n"
+            . "📄 Invoice: `{$tx->invoice_number}`\n"
+            . "🛍 Produk: {$productName}\n"
+            . "🎯 Target: {$tx->target_input}\n"
+            . "💵 Total: *Rp {$formattedTotal}*\n";
+
+        if ($event === 'success' && !empty($tx->sn)) {
+            $msg .= "🔑 SN: `{$tx->sn}`\n";
         }
+
+        if ($event === 'paid') {
+            $msg .= "\n⏳ Pesananmu sedang diproses, tunggu notifikasi selanjutnya ya!\n";
+        } elseif ($event === 'new') {
+            $msg .= "\n💡 Silakan segera lakukan pembayaran.\n";
+        } elseif ($event === 'failed') {
+            $msg .= "\n🔄 Dana akan dikembalikan jika pembayaran sudah diterima. Hubungi CS jika butuh bantuan.\n";
+        }
+
+        $msg .= "\n🔗 Detail: {$invoiceUrl}\n\nTerima kasih! 🙏\n_{$siteName}_";
+
+        return $msg;
     }
 
     protected static function buildCustomerEmailBody(Transaction $tx, string $event, string $siteName, string $productName, string $invoiceUrl): string
     {
-        $statusIcon  = $event === 'success' ? '✅' : ($event === 'failed' ? '❌' : '💳');
-        $statusText  = $event === 'success' ? 'Transaksi Berhasil!' : ($event === 'failed' ? 'Transaksi Gagal' : 'Pembayaran Diterima');
+        $statusIcon  = match($event) { 'success' => '✅', 'failed' => '❌', 'paid' => '💳', 'new' => '🛒', default => '📋' };
+        $statusText  = match($event) { 'success' => 'Transaksi Berhasil!', 'failed' => 'Transaksi Gagal', 'paid' => 'Pembayaran Diterima', 'new' => 'Pesanan Dibuat', default => 'Update Transaksi' };
         $formattedTotal = number_format((float) $tx->total_amount, 0, ',', '.');
 
         return <<<HTML

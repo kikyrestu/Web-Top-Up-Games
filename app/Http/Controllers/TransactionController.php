@@ -165,6 +165,13 @@ class TransactionController extends Controller
                 Log::warning('Notification dispatch failed: ' . $notifEx->getMessage());
             }
 
+            // Notify customer about new order
+            try {
+                \App\Services\NotificationService::notifyCustomer($transaction, 'new');
+            } catch (\Exception $notifEx) {
+                Log::warning('Customer notification failed (new): ' . $notifEx->getMessage());
+            }
+
             // Immediately trigger order to provider if paid with wallet
             if ($isWalletPayment) {
                 try {
@@ -299,11 +306,16 @@ class TransactionController extends Controller
                     'Top Up Saldo ' . $gateway->name
                 );
             } else {
-                // Regular transaction: Notify admin
+                // Regular transaction: Notify admin + customer
                 try {
                     \App\Services\NotificationService::notifyAdmin($transaction, 'paid');
                 } catch (\Exception $e) {
                     Log::warning('Notification failed (paid): ' . $e->getMessage());
+                }
+                try {
+                    \App\Services\NotificationService::notifyCustomer($transaction, 'paid');
+                } catch (\Exception $e) {
+                    Log::warning('Customer notification failed (paid): ' . $e->getMessage());
                 }
 
                 // Trigger order to provider via Background Job
@@ -334,6 +346,11 @@ class TransactionController extends Controller
                     \App\Services\NotificationService::notifyAdmin($transaction, 'failed');
                 } catch (\Exception $e) {
                     Log::warning('Notification failed (failed): ' . $e->getMessage());
+                }
+                try {
+                    \App\Services\NotificationService::notifyCustomer($transaction, 'failed');
+                } catch (\Exception $e) {
+                    Log::warning('Customer notification failed (failed): ' . $e->getMessage());
                 }
             }
         }

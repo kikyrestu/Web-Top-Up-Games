@@ -119,6 +119,7 @@ class ProcessProviderOrder implements ShouldQueue
                 
                 // If it was a paid transaction (not TOPUP), admin should handle refund via Notification
                 \App\Services\NotificationService::notifyAdmin($this->transaction, 'failed');
+                \App\Services\NotificationService::notifyCustomer($this->transaction, 'failed');
             }
             return;
         }
