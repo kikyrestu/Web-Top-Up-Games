@@ -105,7 +105,7 @@ class ImportOkeConnectProducts extends Command
                 if ($product) {
                     $product->update([
                         'price_capital'   => $price,
-                        'price_sell'      => Product::calculateSuggestedPrice($price, $product->category->type ?? 'prepaid'),
+                        'price_sell'      => round((float) $price + $product->calculateMarkup((float) $price), 2),
                         'status_provider' => $item['status_provider'] ?? 'available',
                     ]);
                 }

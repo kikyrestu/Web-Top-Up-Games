@@ -40,6 +40,8 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'sort_order' => 'integer',
             'input_fields' => 'nullable|json',
+            'commission_type' => 'nullable|in:flat,percentage',
+            'commission_value' => 'nullable|numeric|min:0',
         ]);
 
         $thumbnailPath = null;
@@ -59,6 +61,8 @@ class CategoryController extends Controller
             'is_popular' => $request->has('is_popular'),
             'is_new' => $request->has('is_new'),
             'sort_order' => $request->sort_order ?? 0,
+            'commission_type' => $request->commission_type ?: null,
+            'commission_value' => $request->filled('commission_value') ? $request->commission_value : null,
             'input_fields' => $request->input_fields
                 ? json_decode($request->input_fields, true)
                 : Category::detectInputFields($request->type, $request->name),
@@ -83,6 +87,8 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'sort_order' => 'integer',
             'input_fields' => 'nullable|json',
+            'commission_type' => 'nullable|in:flat,percentage',
+            'commission_value' => 'nullable|numeric|min:0',
         ]);
 
         $thumbnailPath = $category->thumbnail;
@@ -105,6 +111,8 @@ class CategoryController extends Controller
             'is_popular' => $request->has('is_popular'),
             'is_new' => $request->has('is_new'),
             'sort_order' => $request->sort_order ?? 0,
+            'commission_type' => $request->commission_type ?: null,
+            'commission_value' => $request->filled('commission_value') ? $request->commission_value : null,
             'input_fields' => $request->input_fields
                 ? json_decode($request->input_fields, true)
                 : Category::detectInputFields($request->type, $request->name),

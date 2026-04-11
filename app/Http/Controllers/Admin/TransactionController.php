@@ -29,7 +29,7 @@ class TransactionController extends Controller
 
     public function show(Transaction $transaction)
     {
-        $transaction->load(['items.product']);
+        $transaction->load(['items.product', 'items.apiProvider']);
         return view('admin.transactions.show', compact('transaction'));
     }
 

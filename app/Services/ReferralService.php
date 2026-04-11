@@ -181,7 +181,7 @@ class ReferralService
 
         if (!$value || $value <= 0) return 0;
 
-        $basePrice = (float) ($item->price ?? $product?->price_sell ?? 0);
+        $basePrice = (float) ($item->price_sell ?? $product?->price_sell ?? 0);
         $qty       = (int) ($item->quantity ?? 1);
 
         if ($type === 'flat') {

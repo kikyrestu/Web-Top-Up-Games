@@ -110,6 +110,26 @@
             <textarea name="description" id="description" rows="3" class="w-full p-3 bg-dark-800 border border-dark-600 text-white rounded-xl focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all shadow-inner placeholder-gray-600" placeholder="Deskripsi atau catatan untuk produk ini (opsional)...">{{ old('description') }}</textarea>
         </div>
 
+        <!-- Override Keuntungan per Produk -->
+        <div class="mb-5 bg-dark-800/30 p-4 rounded-xl border border-dark-700">
+            <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-1"><i class="fas fa-coins mr-1 text-brand-400"></i> Override Keuntungan (Opsional)</label>
+            <p class="text-gray-500 text-[11px] mb-3">Kosongkan = ikut setting kategori atau global. Hanya berlaku untuk produk prabayar.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-500 text-xs mb-1">Tipe Keuntungan</label>
+                    <select name="commission_type" class="w-full p-2.5 bg-dark-800 border border-dark-600 text-white rounded-xl text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                        <option value="">-- Ikut Kategori/Global --</option>
+                        <option value="percentage" {{ old('commission_type') === 'percentage' ? 'selected' : '' }}>Persentase (%)</option>
+                        <option value="flat" {{ old('commission_type') === 'flat' ? 'selected' : '' }}>Nominal Tetap (Rp)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-500 text-xs mb-1">Nilai Keuntungan</label>
+                    <input type="number" step="0.01" name="commission_value" value="{{ old('commission_value') }}" placeholder="Contoh: 5 untuk 5% atau 500" class="w-full p-2.5 bg-dark-800 border border-dark-600 text-white rounded-xl text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                </div>
+            </div>
+        </div>
+
         <div class="mb-6 bg-dark-800/30 p-5 rounded-xl border border-dark-700 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
             <div class="w-full md:w-2/3">
                 <label for="image" class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Gambar / Icon Produk</label>

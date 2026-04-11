@@ -108,7 +108,8 @@ class TransactionController extends Controller
                 'inquiry_ref' => $inquiryRef,
             ]);
 
-            $commissionAmount = $unitSellPrice - $unitCapital;
+            $markup = $product->calculateMarkup($unitCapital);
+            $commissionAmount = $inquiryRef ? 0 : $markup;
 
             TransactionItem::create([
                 'transaction_id' => $transaction->id,

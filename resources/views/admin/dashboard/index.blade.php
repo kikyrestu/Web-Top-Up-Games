@@ -68,6 +68,43 @@
     </div>
 </div>
 
+<!-- Profit Cards Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 border-l-4 border-emerald-500">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-emerald-900/50 text-emerald-400 mr-4">
+                <i class="fas fa-chart-line text-xl"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-400 font-medium">Total Keuntungan</p>
+                <p class="text-2xl font-bold text-emerald-400">Rp {{ number_format($totalProfit, 0, ',', '.') }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 border-l-4 border-cyan-500">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-cyan-900/50 text-cyan-400 mr-4">
+                <i class="fas fa-money-bill-wave text-xl"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-400 font-medium">Total Modal</p>
+                <p class="text-2xl font-bold text-white">Rp {{ number_format($totalModal, 0, ',', '.') }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 border-l-4 border-purple-500">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-purple-900/50 text-purple-400 mr-4">
+                <i class="fas fa-percentage text-xl"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-400 font-medium">Margin Rata-rata</p>
+                <p class="text-2xl font-bold text-white">{{ $totalModal > 0 ? number_format(($totalProfit / $totalModal) * 100, 1) : '0' }}%</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="grid grid-cols-1 gap-6">
     <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 overflow-x-auto">
         <h3 class="font-bold text-lg mb-4 text-white">Update Transaksi Terbaru</h3>

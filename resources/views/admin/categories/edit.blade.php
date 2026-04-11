@@ -118,6 +118,26 @@
             </div>
         </div>
 
+        <!-- Override Keuntungan per Kategori -->
+        <div class="mb-4 border border-gray-600 rounded-lg p-4 bg-gray-900/50">
+            <label class="block text-gray-300 text-sm font-bold mb-1"><i class="fas fa-coins mr-1"></i> Override Keuntungan (Opsional)</label>
+            <p class="text-gray-500 text-xs mb-3">Kosongkan untuk menggunakan pengaturan keuntungan global dari Settings. Hanya berlaku untuk produk prabayar.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-400 text-xs font-bold mb-1">Tipe Keuntungan</label>
+                    <select name="commission_type" class="w-full px-3 py-2 bg-gray-700 border-gray-600 text-white rounded focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
+                        <option value="" {{ empty(old('commission_type', $category->commission_type)) ? 'selected' : '' }}>-- Ikut Global --</option>
+                        <option value="percentage" {{ old('commission_type', $category->commission_type) === 'percentage' ? 'selected' : '' }}>Persentase (%)</option>
+                        <option value="flat" {{ old('commission_type', $category->commission_type) === 'flat' ? 'selected' : '' }}>Nominal Tetap (Rp)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs font-bold mb-1">Nilai Keuntungan</label>
+                    <input type="number" step="0.01" name="commission_value" value="{{ old('commission_value', $category->commission_value) }}" placeholder="Contoh: 5 untuk 5% atau 500" class="w-full px-3 py-2 bg-gray-700 border-gray-600 text-white rounded focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
+                </div>
+            </div>
+        </div>
+
         <div class="mb-4 flex space-x-4">
             <div class="w-1/2 flex items-end pb-2">
                 <label class="flex items-center space-x-2 cursor-pointer">

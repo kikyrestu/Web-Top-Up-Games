@@ -44,6 +44,8 @@ class ProductController extends Controller
             'price_capital' => 'required|numeric|min:0',
             'price_sell' => 'required|numeric|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'commission_type' => 'nullable|in:flat,percentage',
+            'commission_value' => 'nullable|numeric|min:0',
             'provider_mappings' => 'nullable|array|max:10',
             'provider_mappings.*.api_provider_id' => 'nullable|exists:api_providers,id',
             'provider_mappings.*.provider_product_code' => 'nullable|string|max:255',
@@ -105,6 +107,8 @@ class ProductController extends Controller
             'price_capital' => 'required|numeric|min:0',
             'price_sell' => 'required|numeric|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'commission_type' => 'nullable|in:flat,percentage',
+            'commission_value' => 'nullable|numeric|min:0',
             'provider_mappings' => 'nullable|array|max:10',
             'provider_mappings.*.api_provider_id' => 'nullable|exists:api_providers,id',
             'provider_mappings.*.provider_product_code' => 'nullable|string|max:255',
@@ -115,6 +119,8 @@ class ProductController extends Controller
 
         $data = $request->except('image', 'is_active', 'provider_mappings');
         $data['is_active'] = $request->has('is_active');
+        $data['commission_type'] = $request->commission_type ?: null;
+        $data['commission_value'] = $request->filled('commission_value') ? $request->commission_value : null;
 
         DB::transaction(function () use ($request, $product, $data) {
             if ($request->hasFile('image')) {

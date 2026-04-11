@@ -212,6 +212,18 @@ class FrontController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Recalculate display prices in cheapest_auto mode so frontend matches checkout
+        $pricingMode = Setting::get('pricing_mode', 'manual');
+        if ($pricingMode === 'cheapest_auto' && !Category::isPostpaidType($category->type)) {
+            foreach ($products as $product) {
+                $product->setRelation('category', $category);
+                $capital = (float) $product->price_capital;
+                if ($capital > 0) {
+                    $product->price_sell = round($capital + $product->calculateMarkup($capital), 2);
+                }
+            }
+        }
+
         $preselectedProductId = (int) $request->query('product', 0);
         if ($preselectedProductId > 0) {
             $existsInCategory = $products->contains(fn($product) => (int) $product->id === $preselectedProductId);

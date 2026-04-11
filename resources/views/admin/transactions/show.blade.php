@@ -91,14 +91,13 @@
                     @foreach($transaction->items as $item)
                     <tr>
                         <td class="px-4 py-3 font-medium text-gray-100">{{ $item->product_name }}</td>
-                        <td class="px-4 py-3">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
-                        <td class="px-4 py-3">{{ optional($item->product)->provider->name ?? 'Unknown' }}</td>
-                        <td class="px-4 py-3 text-green-600">
-                            @if($item->product)
-                                +Rp {{ number_format($item->price - $item->product->vendor_price, 0, ',', '.') }}
-                            @else
-                                -
-                            @endif
+                        <td class="px-4 py-3">
+                            <div>Rp {{ number_format($item->price_sell, 0, ',', '.') }}</div>
+                            <div class="text-xs text-gray-500">Modal: Rp {{ number_format($item->price_capital, 0, ',', '.') }}</div>
+                        </td>
+                        <td class="px-4 py-3">{{ optional($item->apiProvider)->name ?? 'Unknown' }}</td>
+                        <td class="px-4 py-3 text-green-400 font-bold">
+                            +Rp {{ number_format($item->commission_amount, 0, ',', '.') }}
                         </td>
                     </tr>
                     @endforeach

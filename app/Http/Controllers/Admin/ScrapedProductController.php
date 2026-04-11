@@ -213,8 +213,9 @@ class ScrapedProductController extends Controller
                     $product->update(['price_capital' => $cheapest]);
 
                     if ($pricingMode === 'cheapest_auto') {
+                        $cheapestFloat = (float) $cheapest;
                         $product->update([
-                            'price_sell' => \App\Models\Product::calculateSuggestedPrice((float) $cheapest, $category->type),
+                            'price_sell' => round($cheapestFloat + $product->calculateMarkup($cheapestFloat), 2),
                         ]);
                     }
                 }

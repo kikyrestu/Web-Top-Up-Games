@@ -92,9 +92,10 @@ class SyncProviderProducts extends Command
                         // Update actual product price and provider status
                         $product = \App\Models\Product::with('category')->find($existingMapping->product_id);
                         if ($product) {
+                            $capitalPrice = (float) $item['price'];
                             $product->update([
-                                'price_capital'    => $item['price'],
-                                'price_sell'       => \App\Models\Product::calculateSuggestedPrice($item['price'], $product->category->type ?? 'prepaid'),
+                                'price_capital'    => $capitalPrice,
+                                'price_sell'       => round($capitalPrice + $product->calculateMarkup($capitalPrice), 2),
                                 'status_provider'  => $item['status_provider'] ?? 'available',
                             ]);
                         }
